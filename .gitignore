@@ -1,0 +1,9 @@
+.venv/
+.env
+__pycache__/
+.pytest_cache/
+.cache/
+*.pyc
+*.log
+samples/nist-pmi-step-files.zip
+samples/nist-source/

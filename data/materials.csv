@@ -1,0 +1,5 @@
+material,density_kg_m3,price_per_kg,waste_factor
+AL5052,2680,900,1.15
+SUS304,7930,700,1.20
+SS400,7850,180,1.15
+

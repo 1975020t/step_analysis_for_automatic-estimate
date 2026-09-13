@@ -1,0 +1,10 @@
+process_code,display_name,calculation_type,unit_price,unit,aliases
+BASE_MILLING,基本切削加工,per_minute,120,minute,
+DRILLING,穴加工,per_hole,250,hole,
+SETUP,段取り,flat,3000,job,
+COUNTERSINK,皿穴加工,per_hole,600,hole,皿もみ|皿穴|countersink
+POLISH,研磨,flat,2500,job,研磨|磨き
+BUFF_400,#400バフ仕上げ,flat,3500,job,#400|400番バフ|バフ400|400番
+BUFF_MIRROR,鏡面バフ仕上げ,flat,6000,job,鏡面|鏡面磨き|ミラーバフ
+SURFACE_TREATMENT,表面処理,flat,5000,job,表面処理
+
