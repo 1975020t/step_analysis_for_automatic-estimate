@@ -31,6 +31,8 @@ def _extract_quantity(text: str, default: float = 1) -> float:
 class MockLLMClient:
     """APIキーなしで受入シナリオを再現する決定論的な解釈器。"""
 
+    mode = "mock"
+
     def interpret_quote_change(
         self,
         user_text: str,
@@ -135,6 +137,7 @@ class MockLLMClient:
 
 
 class OpenAILLMClient:
+    mode = "openai"
     def __init__(self, api_key: str, model: str = "gpt-4.1-mini") -> None:
         if not api_key or api_key.startswith("YOUR_"):
             raise ValueError("有効なOPENAI_API_KEYを設定してください")
@@ -169,10 +172,25 @@ class OpenAILLMClient:
 - 「バフ」だけで種類が不明→ status=needs_confirmation。空の工程操作は返してもよい。
 - マスタにない工程→ status=unknown。価格や工程を新規作成しない。"""
         context = {
-            "current_condition": condition.model_dump(),
-            "process_catalog": process_catalog,
+            "current_condition": {
+                "material_code": condition.material,
+                "quantity": condition.quantity,
+                "additional_processes": [
+                    {
+                        "process_code": item.process_code,
+                        "quantity": item.quantity,
+                        "unit": item.unit,
+                    }
+                    for item in condition.additional_processes
+                ],
+            },
+            "material_codes": ["AL5052", "SUS304", "SS400"],
+            "process_codes": [item["process_code"] for item in process_catalog],
             "pending_confirmation": pending_confirmation,
-            "recent_history": (chat_history or [])[-8:],
+            "recent_chat_text": [
+                {"role": item.get("role", "user"), "content": str(item.get("content", ""))}
+                for item in (chat_history or [])[-8:]
+            ],
             "user_text": user_text,
         }
         response = self.client.responses.parse(
@@ -193,6 +211,10 @@ def build_llm_client() -> BaseLLMClient:
     mode = os.getenv("LLM_MODE", "auto").strip().lower()
     api_key = os.getenv("OPENAI_API_KEY", "").strip()
     has_real_key = bool(api_key and not api_key.startswith("YOUR_"))
+    if mode == "openai" and not has_real_key:
+        raise RuntimeError("LLM_MODE=openaiですが、有効なOPENAI_API_KEYがありません")
     if mode in {"auto", "openai"} and has_real_key:
         return OpenAILLMClient(api_key, os.getenv("OPENAI_MODEL", "gpt-4.1-mini"))
+    if mode not in {"auto", "mock", "openai"}:
+        raise ValueError("LLM_MODEはauto、mock、openaiのいずれかで指定してください")
     return MockLLMClient()

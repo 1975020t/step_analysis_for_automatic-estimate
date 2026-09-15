@@ -1,5 +1,17 @@
 .venv/
 .env
+.env.local
+.streamlit/secrets.toml
+secrets.toml
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*.ppk
+*.jks
+src.zip
 __pycache__/
 .pytest_cache/
 .cache/

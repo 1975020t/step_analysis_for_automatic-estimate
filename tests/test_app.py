@@ -15,6 +15,7 @@ def test_initial_ui_has_step_input_and_analyze_action():
     assert len(app.get("file_uploader")) == 1
     assert app.get("file_uploader")[0].label == "STEPファイル"
     assert [button.label for button in app.button] == ["解析を実行"]
+    assert any("チャット解釈モード" in item.value for item in app.info)
 
 
 def test_success_ui_shows_all_five_results_together():
@@ -40,20 +41,21 @@ def test_success_ui_shows_all_five_results_together():
     app.run(timeout=20)
 
     assert not app.exception
-    assert [metric.label for metric in app.metric] == [
+    assert [metric.label for metric in app.metric][:5] == [
         "板厚",
         "展開面積",
         "切断長",
         "穴数",
         "曲げ回数",
     ]
-    assert [metric.value for metric in app.metric] == [
+    assert [metric.value for metric in app.metric][:5] == [
         "2 mm",
         "4,800.0 mm²",
         "320.0 mm",
         "2",
         "1",
     ]
+    assert any("チャット解釈モード" in item.value for item in app.info)
 
 
 def test_unsupported_ui_shows_reason_code_and_message():

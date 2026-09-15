@@ -11,6 +11,18 @@ class AnalysisStage(BaseModel):
     message: str
 
 
+class MetricQuality(BaseModel):
+    method: str
+    confidence: Literal["high", "medium", "low", "unavailable"]
+    evidence: list[str] = Field(default_factory=list)
+
+
+class ThicknessCandidate(BaseModel):
+    method: str
+    value_mm: float
+    support: float
+
+
 class SurfacePairEvidence(BaseModel):
     kind: Literal["planar", "cylindrical"]
     face_indices: tuple[int, int]
@@ -23,6 +35,8 @@ class BendEvidence(BaseModel):
     axis_direction: tuple[float, float, float]
     inner_radius_mm: float
     outer_radius_mm: float
+    angle_deg: float | None = None
+    bend_allowance_mm: float | None = None
     face_indices: list[int] = Field(default_factory=list)
 
 
@@ -42,10 +56,16 @@ class FlatPatternSummary(BaseModel):
     outer_boundary_count: int
     inner_boundary_count: int
     surface_region_count: int
+    outer_length_mm: float | None = None
+    inner_length_mm: float | None = None
+    bounding_box_mm: tuple[float, float] | None = None
+    outer_loops: list[list[tuple[float, float]]] = Field(default_factory=list)
+    inner_loops: list[list[tuple[float, float]]] = Field(default_factory=list)
+    bend_lines: list[list[tuple[float, float]]] = Field(default_factory=list)
 
 
 class SheetMetalAnalysis(BaseModel):
-    status: Literal["success", "unsupported", "error"]
+    status: Literal["success", "partial", "unsupported", "error"]
     file_name: str
     thickness_mm: float | None = None
     blank_area_mm2: float | None = None
@@ -53,6 +73,7 @@ class SheetMetalAnalysis(BaseModel):
     hole_count: int | None = None
     bend_count: int | None = None
     reason_code: str | None = None
+    reason_codes: list[str] = Field(default_factory=list)
     message: str | None = None
     flat_pattern: FlatPatternSummary | None = None
     stages: list[AnalysisStage] = Field(default_factory=list)
@@ -60,6 +81,9 @@ class SheetMetalAnalysis(BaseModel):
     bend_evidence: list[BendEvidence] = Field(default_factory=list)
     hole_evidence: list[HoleEvidence] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    assumptions: list[str] = Field(default_factory=list)
+    metric_quality: dict[str, MetricQuality] = Field(default_factory=dict)
+    thickness_candidates: list[ThicknessCandidate] = Field(default_factory=list)
 
 
 class CadFeatures(BaseModel):
@@ -109,6 +133,8 @@ class QuoteResult(BaseModel):
     final_price: float
     rounded_final_price: int
     estimated_minutes: float
+    is_estimate: bool = False
+    warnings: list[str] = Field(default_factory=list)
 
 
 class QuoteOperation(BaseModel):

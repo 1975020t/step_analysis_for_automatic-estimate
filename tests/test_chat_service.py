@@ -1,5 +1,9 @@
 from src.chat_service import ChatQuoteService
-from src.llm_client import MockLLMClient
+import json
+
+import pytest
+
+from src.llm_client import MockLLMClient, OpenAILLMClient, build_llm_client
 from src.master_loader import MasterLoader
 from src.models import ChatInterpretation, QuoteCondition, QuoteOperation
 
@@ -83,3 +87,56 @@ def test_quantity_operation_accepts_quantity_field_used_by_structured_output():
         "数量50個", QuoteCondition(material="AL5052", quantity=10)
     )
     assert result.condition.quantity == 50
+
+
+def test_openai_payload_is_geometry_and_price_free():
+    captured = {}
+
+    class Responses:
+        def parse(self, **kwargs):
+            captured.update(kwargs)
+            return type("Response", (), {"output_parsed": ChatInterpretation(status="unknown")})()
+
+    client = OpenAILLMClient.__new__(OpenAILLMClient)
+    client.client = type("Client", (), {"responses": Responses()})()
+    client.model = "test-model"
+    client.interpret_quote_change(
+        user_text="数量を2個にして",
+        condition=QuoteCondition(material="AL5052", quantity=1),
+        process_catalog=[{
+            "process_code": "COUNTERSINK", "display_name": "皿穴", "unit_price": 999,
+            "aliases": ["皿もみ"], "unit": "hole",
+        }],
+        chat_history=[{"role": "user", "content": "前の条件"}],
+    )
+    payload = json.loads(captured["input"][1]["content"])
+    assert set(payload) == {
+        "current_condition", "material_codes", "process_codes",
+        "pending_confirmation", "recent_chat_text", "user_text",
+    }
+    serialized = json.dumps(payload, ensure_ascii=False)
+    assert "unit_price" not in serialized
+    assert "display_name" not in serialized
+    assert ".step" not in serialized.lower()
+
+
+def test_openai_mode_without_key_does_not_fall_back_to_mock(monkeypatch):
+    monkeypatch.setenv("LLM_MODE", "openai")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    with pytest.raises(RuntimeError, match="OPENAI_API_KEY"):
+        build_llm_client()
+
+
+def test_api_failure_does_not_mutate_existing_condition():
+    class FailingClient:
+        def interpret_quote_change(self, **_kwargs):
+            raise RuntimeError("temporary API failure")
+
+    original = QuoteCondition(material="AL5052", quantity=10)
+    with pytest.raises(RuntimeError, match="temporary API failure"):
+        ChatQuoteService(FailingClient(), MasterLoader("data")).interpret_and_apply(
+            "数量を50個にして", original
+        )
+    assert original.material == "AL5052"
+    assert original.quantity == 10
+    assert original.additional_processes == []
