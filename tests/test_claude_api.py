@@ -34,7 +34,9 @@ def test_replay_mode_never_calls_the_api(tmp_path):
 
 
 def test_live_call_without_key_is_a_clear_configuration_error(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.claude_api._load_dotenv", lambda: None)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("ANALYSIS_ANTHROPIC_API_KEY", raising=False)
     client = ClaudeClient(model="test-model", mode="live", cache_dir=tmp_path, api_key="")
     with pytest.raises(ClaudeConfigError):
         client.complete_json("sys", "user", SCHEMA)
@@ -112,6 +114,7 @@ def test_real_sdk_request_and_response_path_with_mocked_http(tmp_path):
 
 
 def test_project_specific_key_name_is_preferred(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.claude_api._load_dotenv", lambda: None)  # ignore any local .env
     monkeypatch.setenv("ANTHROPIC_API_KEY", "generic")
     monkeypatch.setenv("ANALYSIS_ANTHROPIC_API_KEY", "project")
     assert ClaudeClient(mode="live", cache_dir=tmp_path)._api_key == "project"
