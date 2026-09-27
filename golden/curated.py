@@ -88,11 +88,14 @@ def curated_parts() -> list[SheetPart]:
     return parts
 
 
-def build_curated(out_dir: Path) -> list[dict]:
+def build_curated(out_dir: Path, truth_version: str = "v1") -> list[dict]:
     truths = []
     for part in curated_parts():
         built = part.build()
         if not SheetPart.is_consistent(built[2]):
             raise RuntimeError(f"curated part {part.name} is inconsistent: {built[2]['_checks']}")
+        if truth_version == "v2":
+            from golden.truth_v2 import apply_v2
+            apply_v2(built)
         truths.append(part.export(out_dir, built))
     return truths
