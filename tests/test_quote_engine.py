@@ -45,7 +45,7 @@ def test_additional_processes_use_master_prices_and_removal_restores_price():
             material="AL5052", quantity=10, additional_processes=[countersink, buff]
         ),
     )
-    assert changed.subtotal_cost - base.subtotal_cost == 12_000 + 35_000
+    assert changed.subtotal_cost - base.subtotal_cost == pytest.approx(12_000 + 35_000)
     removed = quote_engine.calculate(analysis(), base_condition)
     assert removed.final_price == base.final_price
 

@@ -5,7 +5,7 @@ Levels (see analysis/golden_eval_baseline.md):
   Lv1  parallel bends only: L / U / Z / hat / multi-step chains, holes on any panel
   Lv2  base + one level of flanges on 2-4 sides (tray), partial-width flanges with reliefs
   Lv3  Lv2 plus flanges on flanges (return flanges, steps) up to depth 3
-  Lv4  must be REJECTED by the analyzer: hems (180 deg bends)
+  Lv4  hems (180 deg bends): must be analyzed AND reported as hems (priced as a separate process)
 
 Every sample is built and checked for self-consistency (valid single solid, folded volume ==
 unfolded volume at K=0.5, unfolded outline is one polygon). Inconsistent samples - e.g.
@@ -218,10 +218,10 @@ class Sampler:
         return part
 
     def lv4(self, name):
-        """Hem: 180-degree bend with a small radius. Analyzer must refuse it."""
+        """Hem: 180-degree bend with a small radius (open hem). Analyzer must unfold it and report it."""
         t = self.thickness()
         W, H = self.rng.uniform(30, 150), self.rng.uniform(20, 200)
-        part = SheetPart(name, t, box(0, 0, W, H), note="ヘム（対象外であるべき）")
+        part = SheetPart(name, t, box(0, 0, W, H), note="ヘム（180°曲げ）")
         r = round(t * self.rng.choice([0.5, 1.0]), 3)
         part.flange(part.base, ((W, 0), (W, H)), self.rng.uniform(max(4 * t, 6), min(W * 0.8, 30)),
                     angle=180.0, radius=r, up=True)

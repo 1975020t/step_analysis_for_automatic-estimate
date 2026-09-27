@@ -41,7 +41,7 @@ CadQuery/OpenCASCADEを使用し、FreeCADへの実行時依存はありませ�
 
 以下は理由付き `unsupported`、または安全に取得できる項目だけを返す対象です。
 
-- ヘム、ロール、円錐
+- ロール、円錐（ヘムは解析対象へ変更予定。[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md) 参照）
 - 複数Solid、アセンブリ、溶接構造
 - 密閉箱、展開経路が閉路または曖昧な箱、展開時に重なるフランジ
 - 深絞り、ルーバー、ビード、エンボス、バーリング、自由曲面主体の成形品
@@ -71,11 +71,24 @@ CadQuery/OpenCASCADEを使用し、FreeCADへの実行時依存はありませ�
 
 OpenAIへ送信するのは、チャット文章、現在の材料・数量・追加工程条件、利用可能な材料コード・工程コードだけです。STEP、3D/2D画像、形状座標、寸法、面積、単価、見積金額は送信しません。3Dメッシュと2D輪郭はローカルで生成します。
 
+ただし、解析ロジックへのLLM活用を検証する Claude API（後述）では、形状由来の解析情報（面・寸法・座標の要約など）を送信することがあります（2026-09-27 承認済み）。チャット機能の送信範囲は上記のまま変わりません。
+
 `.env`、`.env.local`、`secrets.toml`、秘密鍵形式はGit除外されています。プッシュ前に次を実行します。
 
 ```powershell
 .venv\Scripts\python.exe scripts\check_secrets.py --history
 ```
+
+## Claude API（解析へのLLM活用の検証）
+
+`.env` に `ANTHROPIC_API_KEY` を書くだけで使えます（雛形は `.env.example`）。疎通確認とLLM版解析器の評価：
+
+```powershell
+.venv\Scripts\python.exe scripts\check_claude_api.py
+.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --tolerance 0.10 --analyzer src.llm_assisted_analyzer:LLMAssistedAnalyzer --limit 10 --workers 1
+```
+
+同じ問い合わせの応答は `.claude_cache/` に保存して再利用します（`CLAUDE_CACHE_MODE`）。テストはAPIを呼びません。
 
 ## テスト
 
@@ -87,14 +100,14 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 
 ## ゴールデンデータによる評価
 
-実部品のGolden Dataが入手できるまでの代替として、正解値付きの板金部品を生成して解析ロジックを定量評価します。複雑度をLv0（平板）〜Lv3（多段フランジ）、Lv4（弾くべき形状）に分けて、レベル別の正解率と危険誤答率を出します。
+実部品のGolden Dataが入手できるまでの代替として、正解値付きの板金部品を生成して解析ロジックを定量評価します。複雑度をLv0（平板）〜Lv3（多段フランジ）、Lv4（ヘム）に分けて、レベル別の正解率と危険誤答率を出します。
 
 ```powershell
 .venv\Scripts\python.exe scripts\generate_golden.py --per-level 100 --seed 1 --out golden_data
-.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --report analysis\golden_eval_baseline.md
+.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --verify-frozen --tolerance 0.10 --gate --report analysis\golden_eval_latest.md
 ```
 
-設計・レベル定義・限界は [analysis/golden_data_design.md](analysis/golden_data_design.md)、最新の結果は [analysis/golden_eval_baseline.md](analysis/golden_eval_baseline.md) を参照してください。
+解析ロジック改善の作業指示と受入条件は [analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md) にあります。設計・レベル定義・限界は [analysis/golden_data_design.md](analysis/golden_data_design.md)、最新の結果は [analysis/golden_eval_baseline.md](analysis/golden_eval_baseline.md) を参照してください。
 
 ## 現時点の評価制約
 
