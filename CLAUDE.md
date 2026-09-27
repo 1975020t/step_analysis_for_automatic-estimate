@@ -33,14 +33,14 @@ python scripts/check_claude_api.py                                        # Clau
 - `src/quote_engine.py` 見積計算。`is_estimate`（概算表示）は解析結果の status / 信頼度から決まる
 - `src/claude_api.py` Claude APIクライアント（応答キャッシュ、トークン集計）
 - `src/llm_assisted_analyzer.py` LLMを使う解析器のサンプル（`--analyzer` で評価できる）
-- `golden/` ゴールデンデータ生成器、`golden/datasets/golden_v1.json` が凍結した正解値
+- `golden/` ゴールデンデータ生成器、`golden/datasets/golden_v1.json` が開発用の凍結正解値（508件）、`holdout_v1.json` が最終判定用（200件、開発中は開かない）
 - `scripts/evaluate_golden.py` 評価ハーネス
 - `analysis/prototypes/unfold_prototype.py` 汎用展開の参考実装（本番コードではない。方向性は引き継ぎ資料の「ルールベース：初回の改善方向」）
 
 ## 守ること
 
 1. **正解データを変えて合格させない。** `golden/sheetgen.py`・`golden/sampler.py`・`golden/datasets/` は変更しない。生成器の不具合を見つけたら `golden_v2` を新設し、`golden_v1` は残して報告する
-2. **ホールドアウトで調整しない。** seed=2 のデータは最終判定のときだけ生成する
+2. **ホールドアウトで調整しない。** 正解値 `golden/datasets/holdout_v1.json` は開かない。seed=2 のデータは最終判定のときだけ生成する
 3. **金額をLLMに計算させない。** 金額はマスターCSVとルールで決定論的に計算する
 4. **LLMの出力をそのまま数値に使わない。** 数値を出す場合は幾何計算で検算する。形状データをClaude APIへ送ることは承認済み
 5. **pytest からAPIを呼ばない。** 記録済みの応答か偽のクライアントを使う

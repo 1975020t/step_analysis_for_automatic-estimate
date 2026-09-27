@@ -14,7 +14,7 @@ STEP形式の板金部品から、見積に使う値（板厚・展開面積・�
 |---|---|
 | 解析成功 | 各レベル（**Lv0〜Lv4それぞれ**）で **90%以上**。成功とは、板厚・展開面積・切断長の誤差が **±10%以内**、かつ曲げ数・穴数・ヘム（170°以上の曲げ）の数が正解と一致すること |
 | 危険誤答 | 各レベルで **2%以下**。値が誤っているのに見積が「概算」表示にならないもの |
-| 汎化 | 下記の **ホールドアウト（seed=2）** でも上の2条件を満たす |
+| 汎化 | 下記の **ホールドアウト（`holdout_v1`：seed=2、各レベル40件、計200件）** でも上の2条件を満たす。1レベル40件なので、解析成功90%は失敗4件まで、危険誤答2%以下は実質0件を意味する |
 | 回帰 | `python -m pytest -q` がすべてパスする |
 | 性能 | 1部品あたりの平均処理時間が5秒以内（LLMを使う場合はAPIの待ち時間込みで10秒以内） |
 
@@ -28,8 +28,8 @@ python scripts/evaluate_golden.py --data golden_data --verify-frozen --tolerance
 最終判定（ホールドアウト。開発の最後に実行する）:
 
 ```
-python scripts/generate_golden.py --per-level 100 --seed 2 --out golden_holdout
-python scripts/evaluate_golden.py --data golden_holdout --tolerance 0.10 --gate --report analysis/golden_eval_holdout.md
+python scripts/generate_golden.py --per-level 40 --seed 2 --no-curated --out golden_holdout
+python scripts/evaluate_golden.py --data golden_holdout --verify-frozen golden/datasets/holdout_v1.json --tolerance 0.10 --gate --report analysis/golden_eval_holdout.md
 ```
 
 ## 完了時に残すもの
@@ -117,8 +117,8 @@ Lv0は現行の平板処理で100%。確認した失敗例でも面積の誤差�
 
 ## 制約
 
-- **正解データを変えて合格させない**：`golden/sheetgen.py`、`golden/sampler.py`、`golden/datasets/golden_v1.json` は変更しない。生成器の不具合を見つけた場合は、新しいデータセット版（`golden_v2`）を作り、`golden_v1` は残して報告する
-- **ホールドアウトで調整しない**：seed=2 のデータは最終判定のときだけ生成する。結果が悪くても、ホールドアウトの部品を見て直さず、開発データ側で原因を探す
+- **正解データを変えて合格させない**：`golden/sheetgen.py`、`golden/sampler.py`、`golden/datasets/`（`golden_v1.json`・`holdout_v1.json`）は変更しない。生成器の不具合を見つけた場合は、新しいデータセット版（`golden_v2`）を作り、`golden_v1` は残して報告する
+- **ホールドアウトで調整しない**：正解値は `golden/datasets/holdout_v1.json` に凍結済み。このファイルは開かず、seed=2 のデータは最終判定のときだけ生成する。結果が悪くても、ホールドアウトの部品を見て直さず、開発データ側で原因を探す
 - **既存インターフェースを維持する**：`SheetMetalAnalysis` のフィールド、`status` の意味、`metric_quality` の形式（UIと見積が依存）
 - **金額はLLMに計算させない**：金額はマスターCSVとルールで決定論的に計算する
 - 評価レポートの数字はハーネスの出力をそのまま使い、推測で書かない
