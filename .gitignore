@@ -25,3 +25,4 @@ golden_data/
 golden_holdout/
 # Claude API response cache (may contain part geometry summaries)
 .claude_cache/
+golden_seed*/
