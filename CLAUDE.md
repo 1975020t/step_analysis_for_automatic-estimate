@@ -35,6 +35,7 @@ python scripts/check_claude_api.py                                        # Clau
 - `src/llm_assisted_analyzer.py` LLMを使う解析器のサンプル（`--analyzer` で評価できる）
 - `golden/` ゴールデンデータ生成器、`golden/datasets/golden_v1.json` が凍結した正解値
 - `scripts/evaluate_golden.py` 評価ハーネス
+- `analysis/prototypes/unfold_prototype.py` 汎用展開の参考実装（本番コードではない。方向性は引き継ぎ資料の「ルールベース：初回の改善方向」）
 
 ## 守ること
 
