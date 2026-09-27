@@ -1,0 +1,101 @@
+level,name,outcome,run,err_blank_area_mm2,err_cut_length_mm,err_thickness_mm,got_bends,got_hems,got_holes,llm_cache_hits,llm_calls,llm_input_tokens,llm_model,llm_output_tokens,llm_seconds,method,note,quote_is_estimate,reason,seconds,status,truth_bends,truth_hems,truth_holes
+Lv0,Lv0_0000,CORRECT,0,8e-06,-0.0,0.0,0,0,6,0,1,1394,claude-sonnet-5,235,4.6,geometric_planar_boundary,平板,False,,11.59,success,0,0,6
+Lv0,Lv0_0001,CORRECT,0,2e-06,-0.0,0.0,0,0,3,0,1,1395,claude-sonnet-5,291,5.97,geometric_planar_boundary,平板,False,,6.09,success,0,0,3
+Lv0,Lv0_0002,CORRECT,0,4e-06,-0.0,0.0,0,0,9,0,1,1394,claude-sonnet-5,279,4.32,geometric_planar_boundary,平板,False,,11.1,success,0,0,9
+Lv0,Lv0_0003,CORRECT,0,2e-06,-0.0,0.0,0,0,2,0,1,1394,claude-sonnet-5,292,4.37,geometric_planar_boundary,平板,False,,4.47,success,0,0,2
+Lv0,Lv0_0004,CORRECT,0,1e-05,0.0,0.0,0,0,5,0,1,1394,claude-sonnet-5,269,4.24,geometric_planar_boundary,平板,False,,11.18,success,0,0,5
+Lv0,Lv0_0005,CORRECT,0,8e-06,0.0,0.0,0,0,4,0,1,1394,claude-sonnet-5,289,3.98,geometric_planar_boundary,平板,False,,4.08,success,0,0,4
+Lv0,Lv0_0006,CORRECT,0,1.5e-05,-0.0,0.0,0,0,2,0,1,1394,claude-sonnet-5,236,3.5,geometric_planar_boundary,平板,False,,10.25,success,0,0,2
+Lv0,Lv0_0007,CORRECT,0,8e-06,0.0,0.0,0,0,5,0,1,1394,claude-sonnet-5,269,4.27,geometric_planar_boundary,平板,False,,4.43,success,0,0,5
+Lv0,Lv0_0008,CORRECT,0,2.2e-05,-0.0,0.0,0,0,5,0,1,1394,claude-sonnet-5,347,4.92,geometric_planar_boundary,平板,False,,5.0,success,0,0,5
+Lv0,Lv0_0009,CORRECT,0,2.2e-05,0.0,0.0,0,0,9,0,1,1394,claude-sonnet-5,285,4.09,geometric_planar_boundary,平板,False,,4.24,success,0,0,9
+Lv0,Lv0_0010,CORRECT,0,8e-06,0.0,0.0,0,0,4,0,1,1394,claude-sonnet-5,300,4.68,geometric_planar_boundary,平板,False,,4.81,success,0,0,4
+Lv0,Lv0_0011,CORRECT,0,1e-06,-0.0,0.0,0,0,4,0,1,1394,claude-sonnet-5,246,4.14,geometric_planar_boundary,平板,False,,4.25,success,0,0,4
+Lv0,Lv0_0012,CORRECT,0,0.0,-0.0,0.0,0,0,2,0,1,1394,claude-sonnet-5,286,4.35,geometric_planar_boundary,平板,False,,4.43,success,0,0,2
+Lv0,Lv0_0013,CORRECT,0,1.3e-05,0.0,0.0,0,0,7,0,1,1394,claude-sonnet-5,312,4.27,geometric_planar_boundary,平板,False,,4.45,success,0,0,7
+Lv0,Lv0_0014,CORRECT,0,5e-06,0.0,0.0,0,0,9,0,1,1395,claude-sonnet-5,274,4.08,geometric_planar_boundary,平板,False,,4.26,success,0,0,9
+Lv0,Lv0_0015,CORRECT,0,1.2e-05,0.0,0.0,0,0,8,0,1,1394,claude-sonnet-5,316,4.86,geometric_planar_boundary,平板,False,,4.99,success,0,0,8
+Lv0,Lv0_0016,CORRECT,0,1.2e-05,0.0,0.0,0,0,5,0,1,1394,claude-sonnet-5,303,4.81,geometric_planar_boundary,平板,False,,4.93,success,0,0,5
+Lv0,Lv0_0017,CORRECT,0,3e-06,-0.0,0.0,0,0,5,0,1,1394,claude-sonnet-5,229,3.37,geometric_planar_boundary,平板,False,,3.5,success,0,0,5
+Lv0,Lv0_0018,CORRECT,0,2e-06,-0.0,0.0,0,0,6,0,1,1394,claude-sonnet-5,297,4.56,geometric_planar_boundary,平板,False,,4.7,success,0,0,6
+Lv0,Lv0_0019,CORRECT,0,5e-06,-0.0,0.0,0,0,7,0,1,1394,claude-sonnet-5,323,4.97,geometric_planar_boundary,平板,False,,5.06,success,0,0,7
+Lv1,Lv1_0000,CORRECT,0,7e-06,0.0,0.0,2,0,4,0,1,1498,claude-sonnet-5,403,7.6,geometric_graph_unfold,平行曲げ Z,False,,7.72,success,2,0,4
+Lv1,Lv1_0001,CORRECT,0,3e-06,0.0,0.0,2,0,3,0,1,1498,claude-sonnet-5,323,5.13,geometric_graph_unfold,平行曲げ Z,False,,5.25,success,2,0,3
+Lv1,Lv1_0002,CORRECT,0,1.7e-05,-0.0,0.0,2,0,5,0,1,1498,claude-sonnet-5,282,4.03,geometric_graph_unfold,平行曲げ Z,False,,4.2,success,2,0,5
+Lv1,Lv1_0003,CORRECT,0,6e-06,-0.0,0.0,4,0,10,0,1,1605,claude-sonnet-5,342,5.8,geometric_graph_unfold,平行曲げ hat,False,,6.12,success,4,0,10
+Lv1,Lv1_0004,CORRECT,0,-0.0,0.0,0.0,2,0,0,0,1,1498,claude-sonnet-5,290,4.37,geometric_graph_unfold,平行曲げ chain,False,,4.47,success,2,0,0
+Lv1,Lv1_0005,CORRECT,0,9e-06,-0.0,0.0,4,0,9,0,1,1605,claude-sonnet-5,242,3.53,geometric_graph_unfold,平行曲げ hat,False,,3.77,success,4,0,9
+Lv1,Lv1_0006,CORRECT,0,1e-05,-0.0,0.0,4,0,12,0,1,1605,claude-sonnet-5,276,4.22,geometric_graph_unfold,平行曲げ hat,False,,4.55,success,4,0,12
+Lv1,Lv1_0007,CORRECT,0,4e-06,0.0,0.0,2,0,8,0,1,1498,claude-sonnet-5,251,4.01,geometric_graph_unfold,平行曲げ Z,False,,4.19,success,2,0,8
+Lv1,Lv1_0008,CORRECT,0,3e-06,0.0,0.0,4,0,7,0,1,1604,claude-sonnet-5,382,5.97,geometric_graph_unfold,平行曲げ hat,False,,6.21,success,4,0,7
+Lv1,Lv1_0009,CORRECT,0,8e-06,0.0,0.0,2,0,6,0,1,1499,claude-sonnet-5,315,4.81,geometric_graph_unfold,平行曲げ U,False,,5.0,success,2,0,6
+Lv1,Lv1_0010,CORRECT,0,1e-06,0.0,0.0,2,0,2,0,1,1499,claude-sonnet-5,244,3.42,geometric_graph_unfold,平行曲げ Z,False,,3.57,success,2,0,2
+Lv1,Lv1_0011,CORRECT,0,1e-06,0.0,0.0,2,0,2,0,1,1498,claude-sonnet-5,323,4.83,geometric_graph_unfold,平行曲げ Z,False,,4.95,success,2,0,2
+Lv1,Lv1_0012,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,7,0,1,1604,claude-sonnet-5,514,8.05,geometric_graph_unfold,平行曲げ chain,True,LLM_REVIEW_FLAGGED,8.34,partial,4,0,7
+Lv1,Lv1_0013,CORRECT,0,2e-06,-0.0,0.0,4,0,4,0,1,1605,claude-sonnet-5,269,4.2,geometric_graph_unfold,平行曲げ hat,False,,4.39,success,4,0,4
+Lv1,Lv1_0014,CORRECT,0,2e-06,-0.0,0.0,3,0,4,0,1,1551,claude-sonnet-5,274,4.18,geometric_graph_unfold,平行曲げ chain,False,,4.37,success,3,0,4
+Lv1,Lv1_0015,CORRECT,0,1.1e-05,0.0,0.0,2,0,5,0,1,1499,claude-sonnet-5,282,4.57,geometric_graph_unfold,平行曲げ U,False,,4.7,success,2,0,5
+Lv1,Lv1_0016,CORRECT,0,3e-06,-0.0,0.0,2,0,8,0,1,1499,claude-sonnet-5,315,5.09,geometric_graph_unfold,平行曲げ chain,False,,5.33,success,2,0,8
+Lv1,Lv1_0017,CORRECT,0,5e-06,0.0,0.0,1,0,6,0,1,1446,claude-sonnet-5,287,4.35,geometric_graph_unfold,平行曲げ L,False,,4.52,success,1,0,6
+Lv1,Lv1_0018,CORRECT,0,-0.0,-0.0,0.0,2,0,0,0,1,1498,claude-sonnet-5,328,5.13,geometric_graph_unfold,平行曲げ Z,False,,5.24,success,2,0,0
+Lv1,Lv1_0019,CORRECT_FLAGGED,0,5e-06,0.0,0.0,3,0,4,0,1,1550,claude-sonnet-5,474,6.99,geometric_graph_unfold,平行曲げ chain,True,LLM_REVIEW_FLAGGED,7.18,partial,3,0,4
+Lv2,Lv2_0000,CORRECT,0,1e-05,0.0,0.0,3,0,8,0,1,1551,claude-sonnet-5,329,5.08,geometric_graph_unfold,底面＋1段フランジ,False,,5.41,success,3,0,8
+Lv2,Lv2_0001,CORRECT,0,2e-06,-0.0,0.0,2,0,8,0,1,1499,claude-sonnet-5,298,4.98,geometric_graph_unfold,底面＋1段フランジ,False,,5.27,success,2,0,8
+Lv2,Lv2_0002,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,3,0,1,1604,claude-sonnet-5,533,7.8,geometric_graph_unfold,底面＋1段フランジ,True,LLM_REVIEW_FLAGGED,8.2,partial,4,0,3
+Lv2,Lv2_0003,CORRECT,0,1e-06,-0.0,0.0,3,0,6,0,1,1551,claude-sonnet-5,265,3.87,geometric_graph_unfold,底面＋1段フランジ,False,,4.15,success,3,0,6
+Lv2,Lv2_0004,CORRECT_FLAGGED,0,3e-06,0.0,0.0,3,0,7,0,1,1551,claude-sonnet-5,650,10.09,geometric_graph_unfold,底面＋1段フランジ,True,LLM_REVIEW_FLAGGED,10.43,partial,3,0,7
+Lv2,Lv2_0005,CORRECT,0,1e-06,0.0,0.0,2,0,3,0,1,1499,claude-sonnet-5,248,3.56,geometric_graph_unfold,底面＋1段フランジ,False,,3.79,success,2,0,3
+Lv2,Lv2_0006,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,5,0,1,1604,claude-sonnet-5,512,7.92,geometric_graph_unfold,底面＋1段フランジ,True,LLM_REVIEW_FLAGGED,8.26,partial,4,0,5
+Lv2,Lv2_0007,CORRECT,0,0.0,0.0,0.0,3,0,3,0,1,1551,claude-sonnet-5,304,4.87,geometric_graph_unfold,底面＋1段フランジ,False,,5.31,success,3,0,3
+Lv2,Lv2_0008,CORRECT,0,3e-06,0.0,0.0,3,0,7,0,1,1550,claude-sonnet-5,369,5.74,geometric_graph_unfold,底面＋1段フランジ,False,,6.02,success,3,0,7
+Lv2,Lv2_0009,CORRECT,0,0.0,-0.0,0.0,2,0,1,0,1,1498,claude-sonnet-5,338,4.42,geometric_graph_unfold,底面＋1段フランジ,False,,4.59,success,2,0,1
+Lv2,Lv2_0010,CORRECT,0,1e-06,-0.0,0.0,2,0,3,0,1,1498,claude-sonnet-5,257,3.79,geometric_graph_unfold,底面＋1段フランジ,False,,4.0,success,2,0,3
+Lv2,Lv2_0011,CORRECT_FLAGGED,0,4e-06,0.0,0.0,4,0,11,0,1,1604,claude-sonnet-5,506,8.2,geometric_graph_unfold,底面＋1段フランジ,True,LLM_REVIEW_FLAGGED,8.82,partial,4,0,11
+Lv2,Lv2_0012,CORRECT,0,2e-06,-0.0,0.0,2,0,6,0,1,1498,claude-sonnet-5,255,3.9,geometric_graph_unfold,底面＋1段フランジ,False,,4.14,success,2,0,6
+Lv2,Lv2_0013,CORRECT,0,1.4e-05,0.0,0.0,2,0,7,0,1,1498,claude-sonnet-5,262,3.59,geometric_graph_unfold,底面＋1段フランジ,False,,3.93,success,2,0,7
+Lv2,Lv2_0014,CORRECT,0,4e-06,0.0,0.0,3,0,6,0,1,1550,claude-sonnet-5,282,4.04,geometric_graph_unfold,底面＋1段フランジ,False,,4.32,success,3,0,6
+Lv2,Lv2_0015,CORRECT,0,3e-06,0.0,0.0,2,0,5,0,1,1498,claude-sonnet-5,281,4.15,geometric_graph_unfold,底面＋1段フランジ,False,,4.44,success,2,0,5
+Lv2,Lv2_0016,CORRECT,0,0.0,-0.0,0.0,2,0,1,0,1,1498,claude-sonnet-5,270,3.89,geometric_graph_unfold,底面＋1段フランジ,False,,4.13,success,2,0,1
+Lv2,Lv2_0017,CORRECT,0,6e-06,-0.0,0.0,4,0,7,0,1,1604,claude-sonnet-5,267,3.98,geometric_graph_unfold,底面＋1段フランジ,False,,4.41,success,4,0,7
+Lv2,Lv2_0018,CORRECT,0,8e-06,0.0,0.0,2,0,8,0,1,1498,claude-sonnet-5,246,3.56,geometric_graph_unfold,底面＋1段フランジ,False,,3.9,success,2,0,8
+Lv2,Lv2_0019,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,4,0,1,1603,claude-sonnet-5,460,7.28,geometric_graph_unfold,底面＋1段フランジ,True,LLM_REVIEW_FLAGGED,7.64,partial,4,0,4
+Lv3,Lv3_0000,CORRECT_FLAGGED,0,4e-06,-0.0,0.0,7,0,13,0,1,1761,claude-sonnet-5,569,8.88,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,9.54,partial,7,0,13
+Lv3,Lv3_0001,CORRECT,0,1e-06,0.0,0.0,5,0,1,0,1,1655,claude-sonnet-5,325,4.67,geometric_graph_unfold,多段フランジ,False,,5.07,success,5,0,1
+Lv3,Lv3_0002,CORRECT_FLAGGED,0,3e-06,0.0,0.0,6,0,7,0,1,1708,claude-sonnet-5,469,7.13,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,7.67,partial,6,0,7
+Lv3,Lv3_0003,CORRECT_FLAGGED,0,5e-06,0.0,0.0,6,0,5,0,1,1708,claude-sonnet-5,437,6.47,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,7.07,partial,6,0,5
+Lv3,Lv3_0004,CORRECT_FLAGGED,0,8e-06,0.0,0.0,6,0,10,0,1,1707,claude-sonnet-5,481,7.41,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,8.04,partial,6,0,10
+Lv3,Lv3_0005,CORRECT_FLAGGED,0,6e-06,-0.0,0.0,5,0,4,0,1,1655,claude-sonnet-5,445,6.99,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,7.33,partial,5,0,4
+Lv3,Lv3_0006,CORRECT,0,6e-06,-0.0,0.0,4,0,5,0,1,1602,claude-sonnet-5,515,7.93,geometric_graph_unfold,多段フランジ,False,,8.22,success,4,0,5
+Lv3,Lv3_0007,CORRECT,0,4e-06,-0.0,0.0,4,0,9,0,1,1603,claude-sonnet-5,238,4.2,geometric_graph_unfold,多段フランジ,False,,4.6,success,4,0,9
+Lv3,Lv3_0008,CORRECT,0,2e-06,0.0,0.0,5,0,8,0,1,1657,claude-sonnet-5,374,5.22,geometric_graph_unfold,多段フランジ,False,,5.73,success,5,0,8
+Lv3,Lv3_0009,CORRECT,0,8e-06,0.0,0.0,8,0,9,0,1,1812,claude-sonnet-5,361,5.5,geometric_graph_unfold,多段フランジ,False,,6.11,success,8,0,9
+Lv3,Lv3_0010,CORRECT,0,4e-06,-0.0,0.0,5,0,6,0,1,1657,claude-sonnet-5,420,6.46,geometric_graph_unfold,多段フランジ,False,,6.89,success,5,0,6
+Lv3,Lv3_0011,CORRECT,0,1e-06,0.0,0.0,4,0,5,0,1,1604,claude-sonnet-5,336,4.94,geometric_graph_unfold,多段フランジ,False,,5.35,success,4,0,5
+Lv3,Lv3_0012,CORRECT,0,4e-06,0.0,0.0,4,0,3,0,1,1604,claude-sonnet-5,424,6.41,geometric_graph_unfold,多段フランジ,False,,6.67,success,4,0,3
+Lv3,Lv3_0013,CORRECT_FLAGGED,0,8e-06,0.0,0.0,5,0,11,0,1,1655,claude-sonnet-5,534,7.92,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,8.42,partial,5,0,11
+Lv3,Lv3_0014,CORRECT,0,1e-06,-0.0,0.0,6,0,3,0,1,1706,claude-sonnet-5,333,4.73,geometric_graph_unfold,多段フランジ,False,,5.19,success,6,0,3
+Lv3,Lv3_0015,CORRECT,0,1e-06,-0.0,0.0,4,0,2,0,1,1603,claude-sonnet-5,269,3.97,geometric_graph_unfold,多段フランジ,False,,4.2,success,4,0,2
+Lv3,Lv3_0016,CORRECT,0,6e-06,0.0,0.0,7,0,10,0,1,1763,claude-sonnet-5,376,5.79,geometric_graph_unfold,多段フランジ,False,,6.48,success,7,0,10
+Lv3,Lv3_0017,CORRECT_FLAGGED,0,1e-05,0.0,0.0,4,0,11,0,1,1604,claude-sonnet-5,568,8.74,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,9.2,partial,4,0,11
+Lv3,Lv3_0018,CORRECT,0,5e-06,-0.0,0.0,4,0,9,0,1,1603,claude-sonnet-5,302,4.89,geometric_graph_unfold,多段フランジ,False,,5.25,success,4,0,9
+Lv3,Lv3_0019,CORRECT_FLAGGED,0,4e-06,-0.0,0.0,4,0,5,0,1,1603,claude-sonnet-5,457,6.88,geometric_graph_unfold,多段フランジ,True,LLM_REVIEW_FLAGGED,7.36,partial,4,0,5
+Lv4,Lv4_0000,CORRECT,0,0.0,0.0,0.0,1,1,0,0,1,1445,claude-sonnet-5,303,4.61,geometric_graph_unfold,ヘム（180°曲げ）,False,,4.69,success,1,1,0
+Lv4,Lv4_0001,CORRECT_FLAGGED,0,0.0,-0.0,0.0,1,1,0,0,1,1445,claude-sonnet-5,503,7.75,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.84,partial,1,1,0
+Lv4,Lv4_0002,CORRECT_FLAGGED,0,5e-06,0.0,0.0,1,1,3,0,1,1445,claude-sonnet-5,480,7.57,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.66,partial,1,1,3
+Lv4,Lv4_0003,CORRECT,0,1e-06,-0.0,0.0,2,1,5,0,1,1498,claude-sonnet-5,350,4.51,geometric_graph_unfold,ヘム（180°曲げ）,False,,4.66,success,2,1,5
+Lv4,Lv4_0004,CORRECT,0,0.0,-0.0,0.0,1,1,0,0,1,1445,claude-sonnet-5,287,4.43,geometric_graph_unfold,ヘム（180°曲げ）,False,,4.51,success,1,1,0
+Lv4,Lv4_0005,CORRECT_FLAGGED,0,4e-06,0.0,0.0,1,1,3,0,1,1446,claude-sonnet-5,412,5.98,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,6.11,partial,1,1,3
+Lv4,Lv4_0006,CORRECT_FLAGGED,0,-0.0,-0.0,0.0,2,1,1,0,1,1498,claude-sonnet-5,480,7.51,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.63,partial,2,1,1
+Lv4,Lv4_0007,CORRECT,0,1e-06,-0.0,0.0,1,1,3,0,1,1446,claude-sonnet-5,380,6.16,geometric_graph_unfold,ヘム（180°曲げ）,False,,6.28,success,1,1,3
+Lv4,Lv4_0008,CORRECT_FLAGGED,0,2e-06,0.0,0.0,2,1,3,0,1,1498,claude-sonnet-5,482,7.3,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.46,partial,2,1,3
+Lv4,Lv4_0009,CORRECT_FLAGGED,0,6e-06,0.0,0.0,1,1,5,0,1,1445,claude-sonnet-5,445,7.28,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.42,partial,1,1,5
+Lv4,Lv4_0010,CORRECT,0,0.0,-0.0,0.0,2,1,0,0,1,1498,claude-sonnet-5,425,5.87,geometric_graph_unfold,ヘム（180°曲げ）,False,,5.98,success,2,1,0
+Lv4,Lv4_0011,CORRECT,0,3e-06,-0.0,0.0,2,1,3,0,1,1498,claude-sonnet-5,336,5.14,geometric_graph_unfold,ヘム（180°曲げ）,False,,5.28,success,2,1,3
+Lv4,Lv4_0012,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,1,1,1,0,1,1445,claude-sonnet-5,477,7.24,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.34,partial,1,1,1
+Lv4,Lv4_0013,CORRECT_FLAGGED,0,5e-06,-0.0,0.0,1,1,3,0,1,1445,claude-sonnet-5,451,6.74,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,6.85,partial,1,1,3
+Lv4,Lv4_0014,CORRECT,0,0.0,-0.0,0.0,1,1,0,0,1,1446,claude-sonnet-5,300,4.32,geometric_graph_unfold,ヘム（180°曲げ）,False,,4.4,success,1,1,0
+Lv4,Lv4_0015,CORRECT,0,0.0,0.0,0.0,2,1,0,0,1,1498,claude-sonnet-5,390,6.17,geometric_graph_unfold,ヘム（180°曲げ）,False,,6.27,success,2,1,0
+Lv4,Lv4_0016,CORRECT_FLAGGED,0,3e-06,0.0,0.0,2,1,4,0,1,1498,claude-sonnet-5,505,7.08,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.24,partial,2,1,4
+Lv4,Lv4_0017,CORRECT,0,3e-06,-0.0,0.0,2,1,1,0,1,1499,claude-sonnet-5,305,4.97,geometric_graph_unfold,ヘム（180°曲げ）,False,,5.08,success,2,1,1
+Lv4,Lv4_0018,CORRECT_FLAGGED,0,3e-06,0.0,0.0,2,1,3,0,1,1498,claude-sonnet-5,453,7.02,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,7.15,partial,2,1,3
+Lv4,Lv4_0019,CORRECT_FLAGGED,0,0.0,0.0,0.0,2,1,0,0,1,1498,claude-sonnet-5,465,6.64,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_REVIEW_FLAGGED,6.75,partial,2,1,0
