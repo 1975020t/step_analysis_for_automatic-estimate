@@ -1,6 +1,8 @@
 # ルールベースとLLM（Claude API）の比較
 
-2026-09-27。解析ロジック改善（汎用展開＋自己検算）と並行して、Claude API を解析に使う2方式を試し、ルールベースのみと比べた。
+2026-09-27。解析ロジック改善（汎用展開＋自己検算）と並行して、Claude API を解析に使う方式を試し、ルールベースのみと比べた。
+
+> **コード整理（同日）**：比較用に残すのは LLM単独の解析器 `src.llm_only_analyzer:LLMOnlyAnalyzer` だけにした。下の「レビュー」「独立カウント」の2方式のクラスは削除した（結果の記録は `analysis/llm_eval/` に残す）。LLM単独方式の評価は、APIのクレジット残高が尽きているため未実施（下記「LLM単独の解析器」参照）。
 
 ## 結論
 
@@ -11,7 +13,7 @@
 - 処理時間は1件あたり0.2秒 → 5.9〜14.8秒（独立カウント方式は受入条件の10秒を超える）
 - 旧ロジックに対しては、LLMレビューが危険誤答を24件→13件に減らしたが、0にはできなかった。危険誤答をなくしたのは幾何の自己検算（展開面積と体積÷板厚、切断長と切断面積÷板厚の一致など）である
 
-## 試した方式
+## 試した方式（削除済み）
 
 どちらも LLM は数値を出さない・変えない。結果を「より慎重な方向」（success → partial ＝概算、または unsupported）にだけ動かせる。
 
@@ -48,11 +50,20 @@ Lv0（平板）でも穴数は11/20件しか合わず、角穴の側面（平面
 - 実CADデータで出てくる対象外形状（成形、ルーバー等）の分類と、見積担当への確認事項の提示
 - 図面・注記など、形状以外の情報（材質、表面処理、数量）の読み取り
 
-## 再現手順
+## LLM単独の解析器（比較用に残す）
+
+`src.llm_only_analyzer:LLMOnlyAnalyzer`。ルールベースの解析器は呼ばない。
+
+- Claude に渡すもの：STEPから読んだソリッドの体積・表面積・外寸、B-Rep面の一覧（上の独立カウントと同じ表）、Kファクター
+- Claude が返すもの：板厚、展開面積、切断長、穴数、曲げごとの角度と内R（ヘムは170°以上の曲げとして評価される）、形状の分類と根拠
+- 結果は常に `partial`（見積は「概算」、`LLM_ONLY_UNVERIFIED`、信頼度 low）。LLMの数値を幾何計算で検算していないため、確定値としては出さない。したがってハーネス上は「危険誤答」にはならず、値が合えば「正解だが概算」、外れれば「誤り（概算表示あり）」になる。比べる指標は「解析成功」（値が合っている割合）と処理時間・トークン数
+- API失敗は `error`（`LLM_API_ERROR`）、応答が不正なら `unsupported`（`LLM_OUTPUT_INVALID`）で、金額は出さない
+
+評価は未実施。独立カウントでの結果（曲げ数41%、穴数38%）から、面積・切断長まで求める単独解析の成功率はそれ以下と見込むが、数字は実測してから記載する。クレジット補充後に次を実行する：
 
 ```
-python scripts/evaluate_golden.py --data golden_data --tolerance 0.10 --limit 20 --workers 4 --analyzer src.llm_assisted_analyzer:LLMAssistedAnalyzer
-python scripts/evaluate_golden.py --data golden_data --tolerance 0.10 --limit 20 --workers 4 --analyzer src.llm_assisted_analyzer:LLMCrossCheckAnalyzer
+python scripts/evaluate_golden.py --data golden_data --tolerance 0.10 --limit 20 --workers 4 \
+    --analyzer src.llm_only_analyzer:LLMOnlyAnalyzer --report analysis/llm_eval/llm_only20.md --csv analysis/llm_eval/llm_only20.csv
 ```
 
-応答は `.claude_cache/` に保存される（Git管理外）。部品ごとの結果（LLMの数えた値 `llm_bend_count` 等を含む）は `analysis/llm_eval/*.csv`。
+応答は `.claude_cache/` に保存される（Git管理外）。これまでの部品ごとの結果（LLMの数えた値 `llm_bend_count` 等を含む）は `analysis/llm_eval/*.csv`。

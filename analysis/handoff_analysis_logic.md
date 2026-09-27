@@ -65,7 +65,7 @@ python scripts/evaluate_golden.py --data golden_holdout --verify-frozen golden/d
 
 ### 1. 展開を「面グラフをたどる汎用展開」に置き換える（最優先）
 
-3つのパターン別処理（`src/sheetmetal_unfold.py`）をやめ、1つのアルゴリズムで全形状を展開する。参考実装が [prototypes/unfold_prototype.py](prototypes/unfold_prototype.py) にある（約100行、本番品質ではない）。
+3つのパターン別処理（`src/sheetmetal_unfold.py`）をやめ、1つのアルゴリズムで全形状を展開する。参考実装が `analysis/prototypes/unfold_prototype.py` にあった（約100行、本番品質ではない。`src/sheetmetal_unfold.py` に置き換えたため削除済み）。
 
 考え方:
 
@@ -129,7 +129,7 @@ Lv0は現行の平板処理で100%。確認した失敗例でも面積の誤差�
 
 - 準備済みのもの：
   - `src/claude_api.py`：クライアント。キーは `.env` の `ANTHROPIC_API_KEY`、モデルは `ANTHROPIC_MODEL`
-  - `src/llm_assisted_analyzer.py`：サンプルの解析器。ルールベースの結果をClaudeがレビューし、慎重な方向にのみ変更する。作り替えてよい
+  - `src/llm_assisted_analyzer.py`：サンプルの解析器。ルールベースの結果をClaudeがレビューし、慎重な方向にのみ変更する。作り替えてよい（→ LLM単独の比較用解析器 `src/llm_only_analyzer.py` に作り替え済み）
   - `scripts/check_claude_api.py`：APIキーの疎通確認
 - ハーネスで評価する：`--analyzer module:Class` で解析器を差し替える。`--repeat 3` で結果のばらつき、`--limit` で件数を絞った試行ができる。トークン数はレポートに自動で集計される
 - キャッシュ：`CLAUDE_CACHE_MODE=record`（既定）では同じ問い合わせの応答を `.claude_cache/` に保存して再利用する。**pytest ではAPIを呼ばず**、記録済みの応答か偽のクライアントを使う（例：`tests/test_claude_api.py`）
