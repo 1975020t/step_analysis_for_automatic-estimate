@@ -16148,7 +16148,7 @@
   {
    "name": "Lv4_0000",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 3093.7246,
@@ -16177,7 +16177,7 @@
   {
    "name": "Lv4_0001",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 6124.3844,
@@ -16206,7 +16206,7 @@
   {
    "name": "Lv4_0002",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 3.2,
    "k_factor": 0.5,
    "blank_area_mm2": 21402.4225,
@@ -16235,7 +16235,7 @@
   {
    "name": "Lv4_0003",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 21184.8101,
@@ -16271,7 +16271,7 @@
   {
    "name": "Lv4_0004",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 13691.5605,
@@ -16300,7 +16300,7 @@
   {
    "name": "Lv4_0005",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 5950.1514,
@@ -16329,7 +16329,7 @@
   {
    "name": "Lv4_0006",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 11540.6598,
@@ -16365,7 +16365,7 @@
   {
    "name": "Lv4_0007",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 7952.0047,
@@ -16394,7 +16394,7 @@
   {
    "name": "Lv4_0008",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 20416.354,
@@ -16430,7 +16430,7 @@
   {
    "name": "Lv4_0009",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 5493.2346,
@@ -16459,7 +16459,7 @@
   {
    "name": "Lv4_0010",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 9502.0546,
@@ -16495,7 +16495,7 @@
   {
    "name": "Lv4_0011",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 20194.467,
@@ -16531,7 +16531,7 @@
   {
    "name": "Lv4_0012",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 24426.9514,
@@ -16560,7 +16560,7 @@
   {
    "name": "Lv4_0013",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 14579.4203,
@@ -16589,7 +16589,7 @@
   {
    "name": "Lv4_0014",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 12879.2636,
@@ -16618,7 +16618,7 @@
   {
    "name": "Lv4_0015",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 8342.9441,
@@ -16654,7 +16654,7 @@
   {
    "name": "Lv4_0016",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 31936.7699,
@@ -16690,7 +16690,7 @@
   {
    "name": "Lv4_0017",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 3880.0131,
@@ -16726,7 +16726,7 @@
   {
    "name": "Lv4_0018",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 3.2,
    "k_factor": 0.5,
    "blank_area_mm2": 11039.5407,
@@ -16762,7 +16762,7 @@
   {
    "name": "Lv4_0019",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 18317.9881,
@@ -16798,7 +16798,7 @@
   {
    "name": "Lv4_0020",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 11189.0946,
@@ -16827,7 +16827,7 @@
   {
    "name": "Lv4_0021",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 19456.8387,
@@ -16856,7 +16856,7 @@
   {
    "name": "Lv4_0022",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 21668.6248,
@@ -16885,7 +16885,7 @@
   {
    "name": "Lv4_0023",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 14410.9709,
@@ -16921,7 +16921,7 @@
   {
    "name": "Lv4_0024",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 33381.138,
@@ -16957,7 +16957,7 @@
   {
    "name": "Lv4_0025",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 23993.7539,
@@ -16986,7 +16986,7 @@
   {
    "name": "Lv4_0026",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 7507.5425,
@@ -17015,7 +17015,7 @@
   {
    "name": "Lv4_0027",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 17885.4547,
@@ -17044,7 +17044,7 @@
   {
    "name": "Lv4_0028",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 11007.1568,
@@ -17073,7 +17073,7 @@
   {
    "name": "Lv4_0029",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 21363.6781,
@@ -17109,7 +17109,7 @@
   {
    "name": "Lv4_0030",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 16772.8602,
@@ -17145,7 +17145,7 @@
   {
    "name": "Lv4_0031",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 1969.4482,
@@ -17174,7 +17174,7 @@
   {
    "name": "Lv4_0032",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 6863.5205,
@@ -17203,7 +17203,7 @@
   {
    "name": "Lv4_0033",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 3.2,
    "k_factor": 0.5,
    "blank_area_mm2": 9901.0865,
@@ -17232,7 +17232,7 @@
   {
    "name": "Lv4_0034",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 27663.3847,
@@ -17268,7 +17268,7 @@
   {
    "name": "Lv4_0035",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 8747.8301,
@@ -17304,7 +17304,7 @@
   {
    "name": "Lv4_0036",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 3928.2762,
@@ -17340,7 +17340,7 @@
   {
    "name": "Lv4_0037",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 3.2,
    "k_factor": 0.5,
    "blank_area_mm2": 9046.1643,
@@ -17369,7 +17369,7 @@
   {
    "name": "Lv4_0038",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 13451.7846,
@@ -17405,7 +17405,7 @@
   {
    "name": "Lv4_0039",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 13177.2081,
@@ -17441,7 +17441,7 @@
   {
    "name": "Lv4_0040",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 24990.5622,
@@ -17477,7 +17477,7 @@
   {
    "name": "Lv4_0041",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 15768.4324,
@@ -17506,7 +17506,7 @@
   {
    "name": "Lv4_0042",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 5298.8358,
@@ -17535,7 +17535,7 @@
   {
    "name": "Lv4_0043",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 22877.9549,
@@ -17564,7 +17564,7 @@
   {
    "name": "Lv4_0044",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 16396.5853,
@@ -17600,7 +17600,7 @@
   {
    "name": "Lv4_0045",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 9242.1952,
@@ -17629,7 +17629,7 @@
   {
    "name": "Lv4_0046",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 23649.1758,
@@ -17665,7 +17665,7 @@
   {
    "name": "Lv4_0047",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 2703.4341,
@@ -17701,7 +17701,7 @@
   {
    "name": "Lv4_0048",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 15175.2962,
@@ -17730,7 +17730,7 @@
   {
    "name": "Lv4_0049",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 7182.0699,
@@ -17766,7 +17766,7 @@
   {
    "name": "Lv4_0050",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 3.2,
    "k_factor": 0.5,
    "blank_area_mm2": 8199.9061,
@@ -17795,7 +17795,7 @@
   {
    "name": "Lv4_0051",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 12148.5052,
@@ -17831,7 +17831,7 @@
   {
    "name": "Lv4_0052",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 21193.2727,
@@ -17860,7 +17860,7 @@
   {
    "name": "Lv4_0053",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 16060.6417,
@@ -17896,7 +17896,7 @@
   {
    "name": "Lv4_0054",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 8116.4762,
@@ -17925,7 +17925,7 @@
   {
    "name": "Lv4_0055",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 30942.8709,
@@ -17961,7 +17961,7 @@
   {
    "name": "Lv4_0056",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 24043.8989,
@@ -17997,7 +17997,7 @@
   {
    "name": "Lv4_0057",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 4430.6749,
@@ -18033,7 +18033,7 @@
   {
    "name": "Lv4_0058",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 10003.6632,
@@ -18062,7 +18062,7 @@
   {
    "name": "Lv4_0059",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 15423.3649,
@@ -18091,7 +18091,7 @@
   {
    "name": "Lv4_0060",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 4205.5903,
@@ -18127,7 +18127,7 @@
   {
    "name": "Lv4_0061",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 20926.835,
@@ -18163,7 +18163,7 @@
   {
    "name": "Lv4_0062",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 12846.2728,
@@ -18199,7 +18199,7 @@
   {
    "name": "Lv4_0063",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 11723.3307,
@@ -18228,7 +18228,7 @@
   {
    "name": "Lv4_0064",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 7014.5574,
@@ -18257,7 +18257,7 @@
   {
    "name": "Lv4_0065",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 4473.9421,
@@ -18293,7 +18293,7 @@
   {
    "name": "Lv4_0066",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 6211.6983,
@@ -18329,7 +18329,7 @@
   {
    "name": "Lv4_0067",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 1409.0772,
@@ -18358,7 +18358,7 @@
   {
    "name": "Lv4_0068",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 7667.0543,
@@ -18387,7 +18387,7 @@
   {
    "name": "Lv4_0069",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 18969.0004,
@@ -18416,7 +18416,7 @@
   {
    "name": "Lv4_0070",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 4619.7769,
@@ -18445,7 +18445,7 @@
   {
    "name": "Lv4_0071",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 15807.0369,
@@ -18481,7 +18481,7 @@
   {
    "name": "Lv4_0072",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 26045.1809,
@@ -18510,7 +18510,7 @@
   {
    "name": "Lv4_0073",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 16297.7898,
@@ -18546,7 +18546,7 @@
   {
    "name": "Lv4_0074",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 22583.8853,
@@ -18575,7 +18575,7 @@
   {
    "name": "Lv4_0075",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 3047.3099,
@@ -18604,7 +18604,7 @@
   {
    "name": "Lv4_0076",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 16840.5836,
@@ -18640,7 +18640,7 @@
   {
    "name": "Lv4_0077",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 0.8,
    "k_factor": 0.5,
    "blank_area_mm2": 7469.8291,
@@ -18676,7 +18676,7 @@
   {
    "name": "Lv4_0078",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 9762.2413,
@@ -18705,7 +18705,7 @@
   {
    "name": "Lv4_0079",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 4616.3015,
@@ -18741,7 +18741,7 @@
   {
    "name": "Lv4_0080",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 29560.7737,
@@ -18770,7 +18770,7 @@
   {
    "name": "Lv4_0081",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 6406.6509,
@@ -18799,7 +18799,7 @@
   {
    "name": "Lv4_0082",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 22367.4855,
@@ -18835,7 +18835,7 @@
   {
    "name": "Lv4_0083",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 17535.4426,
@@ -18864,7 +18864,7 @@
   {
    "name": "Lv4_0084",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 3.2,
    "k_factor": 0.5,
    "blank_area_mm2": 2050.9198,
@@ -18900,7 +18900,7 @@
   {
    "name": "Lv4_0085",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 3396.4469,
@@ -18929,7 +18929,7 @@
   {
    "name": "Lv4_0086",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 4754.1296,
@@ -18958,7 +18958,7 @@
   {
    "name": "Lv4_0087",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 18538.5685,
@@ -18987,7 +18987,7 @@
   {
    "name": "Lv4_0088",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 35158.8671,
@@ -19023,7 +19023,7 @@
   {
    "name": "Lv4_0089",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 2859.4955,
@@ -19052,7 +19052,7 @@
   {
    "name": "Lv4_0090",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.6,
    "k_factor": 0.5,
    "blank_area_mm2": 4014.9968,
@@ -19081,7 +19081,7 @@
   {
    "name": "Lv4_0091",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.3,
    "k_factor": 0.5,
    "blank_area_mm2": 11903.7365,
@@ -19110,7 +19110,7 @@
   {
    "name": "Lv4_0092",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 17340.014,
@@ -19139,7 +19139,7 @@
   {
    "name": "Lv4_0093",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 12194.2729,
@@ -19175,7 +19175,7 @@
   {
    "name": "Lv4_0094",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.0,
    "k_factor": 0.5,
    "blank_area_mm2": 12275.9196,
@@ -19211,7 +19211,7 @@
   {
    "name": "Lv4_0095",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 7536.506,
@@ -19240,7 +19240,7 @@
   {
    "name": "Lv4_0096",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 1.2,
    "k_factor": 0.5,
    "blank_area_mm2": 15010.545,
@@ -19269,7 +19269,7 @@
   {
    "name": "Lv4_0097",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 4017.0641,
@@ -19305,7 +19305,7 @@
   {
    "name": "Lv4_0098",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 2.0,
    "k_factor": 0.5,
    "blank_area_mm2": 14413.2383,
@@ -19334,7 +19334,7 @@
   {
    "name": "Lv4_0099",
    "level": "Lv4",
-   "note": "ヘム（対象外であるべき）",
+   "note": "ヘム（180°曲げ）",
    "thickness_mm": 4.5,
    "k_factor": 0.5,
    "blank_area_mm2": 16012.4335,
