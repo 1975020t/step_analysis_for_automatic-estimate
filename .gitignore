@@ -19,3 +19,6 @@ __pycache__/
 *.log
 samples/nist-pmi-step-files.zip
 samples/nist-source/
+
+# generated golden data (regenerate with scripts/generate_golden.py)
+golden_data/
