@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import math
 from collections import defaultdict, deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -38,17 +38,14 @@ class BendDevelopment:
     """Development data of one bend face on the walked side."""
 
     face_index: int
-    parent_index: int
     angle_rad: float
     inner_radius: float
-    face_radius: float
     axis_length: float
     end_arc_count: int = 0
 
 
 @dataclass
 class UnfoldChecks:
-    side_faces: int = 0
     missing_pairs: int = 0            # skin pairs with no face on the walked side
     both_sides_pairs: int = 0         # skin pairs with both faces on the walked side (walk crossed the sheet)
     flatness_mm: float = 0.0          # max out-of-plane distance of developed planar geometry
@@ -60,7 +57,6 @@ class UnfoldChecks:
     cut_error: float | None = None    # developed cut length vs cut-surface area/thickness (+K correction)
     holes_on_bends: int = 0           # inner loops touching a bend face (hole crossing a bend)
     cuts_on_bends: int = 0            # boundary edges on a bend face other than its two end arcs
-    notes: list[str] = field(default_factory=list)
 
     def failures(self, flat_tol: float, area_tol: float, cut_tol: float) -> list[str]:
         problems = []
@@ -88,7 +84,6 @@ class UnfoldResult:
     flat: FlatPatternSummary
     checks: UnfoldChecks
     bends: list[BendDevelopment]
-    side: set[int]
     hole_faces: list[set[int]]
 
 
@@ -153,8 +148,7 @@ class SheetMetalUnfolder:
                         continue
                     bend_maps[other] = bend_map
                     developments.append(BendDevelopment(
-                        face_index=other, parent_index=current, angle_rad=bend_map.theta,
-                        inner_radius=bend_map.inner_radius, face_radius=bend_map.radius,
+                        face_index=other, angle_rad=bend_map.theta, inner_radius=bend_map.inner_radius,
                         axis_length=_axis_extent(faces[other], bend_map.origin, bend_map.axis)))
                     transform[other] = transform[current]  # placeholder: cylinder uses bend_map
                     queue.append(other)
@@ -178,7 +172,7 @@ class SheetMetalUnfolder:
                 queue.append(other)
 
         side = set(transform)
-        checks = UnfoldChecks(side_faces=len(side))
+        checks = UnfoldChecks()
         for pair in pairs:
             members = (pair.first in side) + (pair.second in side)
             checks.missing_pairs += members == 0
@@ -290,7 +284,7 @@ class SheetMetalUnfolder:
             outer_loops=outer_loops, inner_loops=inner_loops,
             bend_lines=[line for line in bend_lines if line],
         )
-        return UnfoldResult(flat=flat, checks=checks, bends=developments, side=side, hole_faces=hole_faces)
+        return UnfoldResult(flat=flat, checks=checks, bends=developments, hole_faces=hole_faces)
 
     # ------------------------------------------------------------------ helpers
     @staticmethod

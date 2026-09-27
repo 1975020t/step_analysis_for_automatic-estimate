@@ -100,14 +100,12 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 
 ```powershell
 .venv\Scripts\python.exe scripts\check_claude_api.py
-.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --tolerance 0.10 --analyzer src.llm_assisted_analyzer:LLMAssistedAnalyzer --limit 20 --workers 4
-.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --tolerance 0.10 --analyzer src.llm_assisted_analyzer:LLMCrossCheckAnalyzer --limit 20 --workers 4
+.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --tolerance 0.10 --analyzer src.llm_only_analyzer:LLMOnlyAnalyzer --limit 20 --workers 4
 ```
 
-- `LLMAssistedAnalyzer`：ルールベースの結果の要約をClaudeがレビューし、慎重な方向にだけ変える
-- `LLMCrossCheckAnalyzer`：B-Rep面の一覧からClaudeが曲げ数・ヘム数・穴数を独立に数え、ルールベースと違えば概算にする
+`LLMOnlyAnalyzer`（`src/llm_only_analyzer.py`）は、ルールベースとの比較用の「LLM単独」解析器です。STEPから読んだソリッドの体積・表面積・外寸とB-Rep面の一覧（種類、面積、法線・軸、半径、角度範囲、隣接面）だけをClaudeに渡し、板厚・展開面積・切断長・穴数・曲げ（角度・内R）をすべてClaudeに求めさせます。ルールベースの解析器は呼びません。
 
-どちらもLLMは数値を出しません。比較の結果、既定の解析器には採用していません（新ルールベースでは直す誤りがなく、誤警報と処理時間だけが増えるため）。数値・トークン数・処理時間は [analysis/llm_comparison.md](analysis/llm_comparison.md)。
+幾何計算で検算していない値なので、結果は常に `partial`（見積は「概算」、reason code `LLM_ONLY_UNVERIFIED`、信頼度 low）です。金額は従来どおりマスターとルールで計算します。既定の解析器には採用していません。比較の数値は [analysis/llm_comparison.md](analysis/llm_comparison.md)。
 
 同じ問い合わせの応答は `.claude_cache/` に保存して再利用します（`CLAUDE_CACHE_MODE`）。テストはAPIを呼びません。
 

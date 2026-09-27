@@ -32,10 +32,9 @@ python scripts/check_claude_api.py                                        # Clau
 - `src/sheetmetal_geometry.py` 公差、面隣接グラフ、2Dループ処理
 - `src/quote_engine.py` 見積計算。`is_estimate`（概算表示）は解析結果の status / 信頼度から決まる
 - `src/claude_api.py` Claude APIクライアント（応答キャッシュ、トークン集計）
-- `src/llm_assisted_analyzer.py` LLMを使う解析器のサンプル（`--analyzer` で評価できる）
+- `src/llm_only_analyzer.py` LLM単独の解析器（比較用。結果は常に概算。`--analyzer src.llm_only_analyzer:LLMOnlyAnalyzer` で評価できる）
 - `golden/` ゴールデンデータ生成器、`golden/datasets/golden_v1.json` が開発用の凍結正解値（508件）、`holdout_v1.json` が最終判定用（200件、開発中は開かない）
 - `scripts/evaluate_golden.py` 評価ハーネス
-- `analysis/prototypes/unfold_prototype.py` 汎用展開の参考実装（本番コードではない。方向性は引き継ぎ資料の「ルールベース：初回の改善方向」）
 
 ## 守ること
 

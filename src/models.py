@@ -86,21 +86,6 @@ class SheetMetalAnalysis(BaseModel):
     thickness_candidates: list[ThicknessCandidate] = Field(default_factory=list)
 
 
-class CadFeatures(BaseModel):
-    file_name: str = ""
-    solid_count: int = 1
-    bbox_x_mm: float
-    bbox_y_mm: float
-    bbox_z_mm: float
-    volume_mm3: float
-    surface_area_mm2: float
-    face_count: int
-    edge_count: int
-    vertex_count: int
-    estimated_hole_count: int = 0
-    estimated_hole_diameters_mm: list[float] = Field(default_factory=list)
-
-
 class AdditionalProcess(BaseModel):
     process_code: str
     quantity: float = Field(default=1, gt=0)

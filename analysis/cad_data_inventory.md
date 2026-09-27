@@ -5,7 +5,7 @@
 - データ: NIST MBE PMI Validation and Conformance Testing Project STC-06〜STC-10
 - 形式: STEP AP242
 - 解析: CadQuery / OpenCASCADE
-- 解析スクリプト: `scripts/analyze_samples.py`
+- 解析スクリプト: `scripts/analyze_samples.py`（2026-09-27 に削除。同梱サンプル `samples/nist_stc06.step` も削除。以下は当時の記録）
 - 調査日: 2026-08-18
 
 NIST公式配布ZIPからSTC-06〜10を取得し、アプリ同梱サンプルにはSTC-06を採用した。以下の実測表は解析スクリプトの結果を反映する。
