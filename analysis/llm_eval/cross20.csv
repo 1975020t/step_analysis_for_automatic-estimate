@@ -1,0 +1,101 @@
+level,name,outcome,run,err_blank_area_mm2,err_cut_length_mm,err_thickness_mm,got_bends,got_hems,got_holes,llm_bend_count,llm_cache_hits,llm_calls,llm_hem_count,llm_hole_count,llm_input_tokens,llm_model,llm_output_tokens,llm_seconds,method,note,quote_is_estimate,reason,seconds,status,truth_bends,truth_hems,truth_holes
+Lv0,Lv0_0000,CORRECT,0,8e-06,-0.0,0.0,0,0,6,0,0,1,0,6,4187,claude-sonnet-5,683,8.8,geometric_planar_boundary,平板,False,,13.52,success,0,0,6
+Lv0,Lv0_0001,CORRECT,0,2e-06,-0.0,0.0,0,0,3,0,0,1,0,3,2671,claude-sonnet-5,602,8.03,geometric_planar_boundary,平板,False,,8.16,success,0,0,3
+Lv0,Lv0_0002,CORRECT_FLAGGED,0,4e-06,-0.0,0.0,0,0,9,0,0,1,0,8,4265,claude-sonnet-5,712,8.54,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,13.23,partial,0,0,9
+Lv0,Lv0_0003,CORRECT,0,2e-06,-0.0,0.0,0,0,2,0,0,1,0,2,2260,claude-sonnet-5,540,8.21,geometric_planar_boundary,平板,False,,8.31,success,0,0,2
+Lv0,Lv0_0004,CORRECT,0,1e-05,0.0,0.0,0,0,5,0,0,1,0,5,2509,claude-sonnet-5,470,7.2,geometric_planar_boundary,平板,False,,11.33,success,0,0,5
+Lv0,Lv0_0005,CORRECT,0,8e-06,0.0,0.0,0,0,4,0,0,1,0,4,2338,claude-sonnet-5,383,4.95,geometric_planar_boundary,平板,False,,5.06,success,0,0,4
+Lv0,Lv0_0006,CORRECT,0,1.5e-05,-0.0,0.0,0,0,2,0,0,1,0,2,1876,claude-sonnet-5,419,5.8,geometric_planar_boundary,平板,False,,10.55,success,0,0,2
+Lv0,Lv0_0007,CORRECT_FLAGGED,0,8e-06,0.0,0.0,0,0,5,0,0,1,0,3,3334,claude-sonnet-5,670,10.88,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,11.04,partial,0,0,5
+Lv0,Lv0_0008,CORRECT,0,2.2e-05,-0.0,0.0,0,0,5,0,0,1,0,5,2212,claude-sonnet-5,511,8.03,geometric_planar_boundary,平板,False,,12.39,success,0,0,5
+Lv0,Lv0_0009,CORRECT_FLAGGED,0,2.2e-05,0.0,0.0,0,0,9,0,0,1,0,7,3282,claude-sonnet-5,631,6.96,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,7.12,partial,0,0,9
+Lv0,Lv0_0010,CORRECT_FLAGGED,0,8e-06,0.0,0.0,0,0,4,0,0,1,0,3,2984,claude-sonnet-5,960,13.64,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,17.95,partial,0,0,4
+Lv0,Lv0_0011,CORRECT,0,1e-06,-0.0,0.0,0,0,4,0,0,1,0,4,2835,claude-sonnet-5,499,7.29,geometric_planar_boundary,平板,False,,7.45,success,0,0,4
+Lv0,Lv0_0012,CORRECT,0,0.0,-0.0,0.0,0,0,2,0,0,1,0,2,2114,claude-sonnet-5,449,7.09,geometric_planar_boundary,平板,False,,7.17,success,0,0,2
+Lv0,Lv0_0013,CORRECT_FLAGGED,0,1.3e-05,0.0,0.0,0,0,7,0,0,1,0,6,3857,claude-sonnet-5,877,11.57,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,11.77,partial,0,0,7
+Lv0,Lv0_0014,CORRECT_FLAGGED,0,5e-06,0.0,0.0,0,0,9,0,0,1,0,7,3989,claude-sonnet-5,793,9.43,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,9.62,partial,0,0,9
+Lv0,Lv0_0015,CORRECT_FLAGGED,0,1.2e-05,0.0,0.0,0,0,8,0,0,1,0,5,3135,claude-sonnet-5,614,9.28,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,9.43,partial,0,0,8
+Lv0,Lv0_0016,CORRECT_FLAGGED,0,1.2e-05,0.0,0.0,0,0,5,0,0,1,0,4,2834,claude-sonnet-5,764,10.15,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,10.3,partial,0,0,5
+Lv0,Lv0_0017,CORRECT_FLAGGED,0,3e-06,-0.0,0.0,0,0,5,0,0,1,0,6,3044,claude-sonnet-5,553,7.88,geometric_planar_boundary,平板,True,LLM_CROSSCHECK_MISMATCH,8.02,partial,0,0,5
+Lv0,Lv0_0018,CORRECT,0,2e-06,-0.0,0.0,0,0,6,0,0,1,0,6,3184,claude-sonnet-5,663,9.25,geometric_planar_boundary,平板,False,,9.45,success,0,0,6
+Lv0,Lv0_0019,CORRECT,0,5e-06,-0.0,0.0,0,0,7,0,0,1,0,7,2436,claude-sonnet-5,399,5.57,geometric_planar_boundary,平板,False,,5.67,success,0,0,7
+Lv1,Lv1_0000,CORRECT_FLAGGED,0,7e-06,0.0,0.0,2,0,4,3,0,1,0,4,2921,claude-sonnet-5,817,12.01,geometric_graph_unfold,平行曲げ Z,True,LLM_CROSSCHECK_MISMATCH,12.18,partial,2,0,4
+Lv1,Lv1_0001,CORRECT,0,3e-06,0.0,0.0,2,0,3,2,0,1,0,3,2811,claude-sonnet-5,768,10.87,geometric_graph_unfold,平行曲げ Z,False,,11.0,success,2,0,3
+Lv1,Lv1_0002,CORRECT_FLAGGED,0,1.7e-05,-0.0,0.0,2,0,5,2,0,1,0,6,3570,claude-sonnet-5,703,8.65,geometric_graph_unfold,平行曲げ Z,True,LLM_CROSSCHECK_MISMATCH,8.84,partial,2,0,5
+Lv1,Lv1_0003,CORRECT_FLAGGED,0,6e-06,-0.0,0.0,4,0,10,7,0,1,2,6,5440,claude-sonnet-5,2024,26.81,geometric_graph_unfold,平行曲げ hat,True,LLM_CROSSCHECK_MISMATCH,27.16,partial,4,0,10
+Lv1,Lv1_0004,CORRECT,0,-0.0,0.0,0.0,2,0,0,2,0,1,0,0,2470,claude-sonnet-5,412,6.21,geometric_graph_unfold,平行曲げ chain,False,,6.32,success,2,0,0
+Lv1,Lv1_0005,CORRECT_FLAGGED,0,9e-06,-0.0,0.0,4,0,9,7,0,1,2,6,4611,claude-sonnet-5,1407,19.37,geometric_graph_unfold,平行曲げ hat,True,LLM_CROSSCHECK_MISMATCH,19.61,partial,4,0,9
+Lv1,Lv1_0006,CORRECT_FLAGGED,0,1e-05,-0.0,0.0,4,0,12,6,0,1,0,7,5660,claude-sonnet-5,1238,17.04,geometric_graph_unfold,平行曲げ hat,True,LLM_CROSSCHECK_MISMATCH,17.4,partial,4,0,12
+Lv1,Lv1_0007,CORRECT_FLAGGED,0,4e-06,0.0,0.0,2,0,8,2,0,1,0,7,3904,claude-sonnet-5,976,12.15,geometric_graph_unfold,平行曲げ Z,True,LLM_CROSSCHECK_MISMATCH,12.34,partial,2,0,8
+Lv1,Lv1_0008,CORRECT_FLAGGED,0,3e-06,0.0,0.0,4,0,7,6,0,1,0,6,4565,claude-sonnet-5,778,11.3,geometric_graph_unfold,平行曲げ hat,True,LLM_CROSSCHECK_MISMATCH,11.57,partial,4,0,7
+Lv1,Lv1_0009,CORRECT_FLAGGED,0,8e-06,0.0,0.0,2,0,6,4,0,1,0,4,3989,claude-sonnet-5,1221,16.45,geometric_graph_unfold,平行曲げ U,True,LLM_CROSSCHECK_MISMATCH,16.66,partial,2,0,6
+Lv1,Lv1_0010,CORRECT_FLAGGED,0,1e-06,0.0,0.0,2,0,2,3,0,1,0,2,3235,claude-sonnet-5,659,8.8,geometric_graph_unfold,平行曲げ Z,True,LLM_CROSSCHECK_MISMATCH,8.96,partial,2,0,2
+Lv1,Lv1_0011,CORRECT_FLAGGED,0,1e-06,0.0,0.0,2,0,2,2,0,1,0,1,2698,claude-sonnet-5,942,12.93,geometric_graph_unfold,平行曲げ Z,True,LLM_CROSSCHECK_MISMATCH,13.05,partial,2,0,2
+Lv1,Lv1_0012,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,7,7,0,1,1,4,5152,claude-sonnet-5,985,13.22,geometric_graph_unfold,平行曲げ chain,True,LLM_CROSSCHECK_MISMATCH,13.52,partial,4,0,7
+Lv1,Lv1_0013,CORRECT_FLAGGED,0,2e-06,-0.0,0.0,4,0,4,6,0,1,0,3,4065,claude-sonnet-5,876,11.62,geometric_graph_unfold,平行曲げ hat,True,LLM_CROSSCHECK_MISMATCH,11.83,partial,4,0,4
+Lv1,Lv1_0014,CORRECT_FLAGGED,0,2e-06,-0.0,0.0,3,0,4,5,0,1,0,4,3873,claude-sonnet-5,924,12.67,geometric_graph_unfold,平行曲げ chain,True,LLM_CROSSCHECK_MISMATCH,12.87,partial,3,0,4
+Lv1,Lv1_0015,CORRECT_FLAGGED,0,1.1e-05,0.0,0.0,2,0,5,4,0,1,0,5,3038,claude-sonnet-5,743,10.53,geometric_graph_unfold,平行曲げ U,True,LLM_CROSSCHECK_MISMATCH,10.69,partial,2,0,5
+Lv1,Lv1_0016,CORRECT_FLAGGED,0,3e-06,-0.0,0.0,2,0,8,4,0,1,2,6,4381,claude-sonnet-5,1494,21.84,geometric_graph_unfold,平行曲げ chain,True,LLM_CROSSCHECK_MISMATCH,22.08,partial,2,0,8
+Lv1,Lv1_0017,CORRECT_FLAGGED,0,5e-06,0.0,0.0,1,0,6,2,0,1,1,4,3213,claude-sonnet-5,1663,25.42,geometric_graph_unfold,平行曲げ L,True,LLM_CROSSCHECK_MISMATCH,25.59,partial,1,0,6
+Lv1,Lv1_0018,CORRECT,0,-0.0,-0.0,0.0,2,0,0,2,0,1,0,0,2477,claude-sonnet-5,541,7.4,geometric_graph_unfold,平行曲げ Z,False,,7.51,success,2,0,0
+Lv1,Lv1_0019,CORRECT_FLAGGED,0,5e-06,0.0,0.0,3,0,4,6,0,1,0,3,3872,claude-sonnet-5,1251,17.95,geometric_graph_unfold,平行曲げ chain,True,LLM_CROSSCHECK_MISMATCH,18.16,partial,3,0,4
+Lv2,Lv2_0000,CORRECT_FLAGGED,0,1e-05,0.0,0.0,3,0,8,6,0,1,0,7,5435,claude-sonnet-5,1063,15.14,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,15.47,partial,3,0,8
+Lv2,Lv2_0001,CORRECT_FLAGGED,0,2e-06,-0.0,0.0,2,0,8,4,0,1,0,7,5304,claude-sonnet-5,1397,19.52,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,19.84,partial,2,0,8
+Lv2,Lv2_0002,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,3,7,0,1,1,2,5868,claude-sonnet-5,1532,20.34,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,20.77,partial,4,0,3
+Lv2,Lv2_0003,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,3,0,6,7,0,1,1,2,4776,claude-sonnet-5,3212,47.93,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,48.2,partial,3,0,6
+Lv2,Lv2_0004,CORRECT_FLAGGED,0,3e-06,0.0,0.0,3,0,7,7,0,1,0,6,5779,claude-sonnet-5,1699,24.63,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,24.98,partial,3,0,7
+Lv2,Lv2_0005,CORRECT_FLAGGED,0,1e-06,0.0,0.0,2,0,3,4,0,1,0,4,4000,claude-sonnet-5,805,11.16,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,11.38,partial,2,0,3
+Lv2,Lv2_0006,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,5,7,0,1,1,4,5542,claude-sonnet-5,1731,24.19,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,24.54,partial,4,0,5
+Lv2,Lv2_0007,CORRECT_FLAGGED,0,0.0,0.0,0.0,3,0,3,7,0,1,0,2,5739,claude-sonnet-5,1030,13.92,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,14.33,partial,3,0,3
+Lv2,Lv2_0008,CORRECT_FLAGGED,0,3e-06,0.0,0.0,3,0,7,4,0,1,0,6,5250,claude-sonnet-5,1577,21.97,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,22.28,partial,3,0,7
+Lv2,Lv2_0009,CORRECT_FLAGGED,0,0.0,-0.0,0.0,2,0,1,3,0,1,1,1,3545,claude-sonnet-5,970,14.26,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,14.43,partial,2,0,1
+Lv2,Lv2_0010,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,2,0,3,4,0,1,0,3,4360,claude-sonnet-5,827,12.22,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,12.45,partial,2,0,3
+Lv2,Lv2_0011,CORRECT_FLAGGED,0,4e-06,0.0,0.0,4,0,11,9,0,1,0,10,7661,claude-sonnet-5,1065,15.18,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,15.79,partial,4,0,11
+Lv2,Lv2_0012,CORRECT_FLAGGED,0,2e-06,-0.0,0.0,2,0,6,5,0,1,0,6,4332,claude-sonnet-5,1394,18.68,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,18.92,partial,2,0,6
+Lv2,Lv2_0013,CORRECT_FLAGGED,0,1.4e-05,0.0,0.0,2,0,7,5,0,1,0,6,5113,claude-sonnet-5,1852,26.29,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,26.6,partial,2,0,7
+Lv2,Lv2_0014,CORRECT_FLAGGED,0,4e-06,0.0,0.0,3,0,6,4,0,1,0,4,4836,claude-sonnet-5,1166,17.84,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,18.11,partial,3,0,6
+Lv2,Lv2_0015,CORRECT_FLAGGED,0,3e-06,0.0,0.0,2,0,5,4,0,1,0,3,4310,claude-sonnet-5,1868,26.23,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,26.5,partial,2,0,5
+Lv2,Lv2_0016,CORRECT_FLAGGED,0,0.0,-0.0,0.0,2,0,1,4,0,1,1,2,3917,claude-sonnet-5,1539,21.09,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,21.32,partial,2,0,1
+Lv2,Lv2_0017,CORRECT_FLAGGED,0,6e-06,-0.0,0.0,4,0,7,8,0,1,0,4,6223,claude-sonnet-5,1703,21.91,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,22.33,partial,4,0,7
+Lv2,Lv2_0018,CORRECT_FLAGGED,0,8e-06,0.0,0.0,2,0,8,4,0,1,0,6,4853,claude-sonnet-5,1302,17.39,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,17.67,partial,2,0,8
+Lv2,Lv2_0019,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,4,4,0,1,0,2,5533,claude-sonnet-5,1150,18.89,geometric_graph_unfold,底面＋1段フランジ,True,LLM_CROSSCHECK_MISMATCH,19.27,partial,4,0,4
+Lv3,Lv3_0000,CORRECT_FLAGGED,0,4e-06,-0.0,0.0,7,0,13,12,0,1,2,8,8849,claude-sonnet-5,1592,19.87,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,20.54,partial,7,0,13
+Lv3,Lv3_0001,CORRECT_FLAGGED,0,1e-06,0.0,0.0,5,0,1,7,0,1,0,1,5890,claude-sonnet-5,986,13.82,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,14.23,partial,5,0,1
+Lv3,Lv3_0002,CORRECT_FLAGGED,0,3e-06,0.0,0.0,6,0,7,10,0,1,0,6,7420,claude-sonnet-5,1368,19.85,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,20.41,partial,6,0,7
+Lv3,Lv3_0003,CORRECT_FLAGGED,0,5e-06,0.0,0.0,6,0,5,10,0,1,0,1,7601,claude-sonnet-5,1665,23.14,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,23.77,partial,6,0,5
+Lv3,Lv3_0004,CORRECT_FLAGGED,0,8e-06,0.0,0.0,6,0,10,10,0,1,0,6,8001,claude-sonnet-5,1218,15.62,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,16.23,partial,6,0,10
+Lv3,Lv3_0005,CORRECT_FLAGGED,0,6e-06,-0.0,0.0,5,0,4,6,0,1,0,3,5767,claude-sonnet-5,1305,16.63,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,17.0,partial,5,0,4
+Lv3,Lv3_0006,CORRECT_FLAGGED,0,6e-06,-0.0,0.0,4,0,5,6,0,1,1,4,5438,claude-sonnet-5,1121,14.32,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,14.63,partial,4,0,5
+Lv3,Lv3_0007,CORRECT_FLAGGED,0,4e-06,-0.0,0.0,4,0,9,7,0,1,0,10,6307,claude-sonnet-5,1148,16.3,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,16.75,partial,4,0,9
+Lv3,Lv3_0008,CORRECT_FLAGGED,0,2e-06,0.0,0.0,5,0,8,10,0,1,2,6,7294,claude-sonnet-5,1043,13.28,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,13.81,partial,5,0,8
+Lv3,Lv3_0009,CORRECT_FLAGGED,0,8e-06,0.0,0.0,8,0,9,8,0,1,0,6,8256,claude-sonnet-5,1456,17.86,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,18.5,partial,8,0,9
+Lv3,Lv3_0010,CORRECT_FLAGGED,0,4e-06,-0.0,0.0,5,0,6,8,0,1,1,4,6647,claude-sonnet-5,974,11.49,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,11.92,partial,5,0,6
+Lv3,Lv3_0011,CORRECT_FLAGGED,0,1e-06,0.0,0.0,4,0,5,6,0,1,0,4,6127,claude-sonnet-5,914,12.93,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,13.36,partial,4,0,5
+Lv3,Lv3_0012,CORRECT_FLAGGED,0,4e-06,0.0,0.0,4,0,3,6,0,1,1,2,4858,claude-sonnet-5,1204,16.57,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,16.86,partial,4,0,3
+Lv3,Lv3_0013,CORRECT_FLAGGED,0,8e-06,0.0,0.0,5,0,11,9,0,1,0,4,7228,claude-sonnet-5,1466,17.02,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,17.54,partial,5,0,11
+Lv3,Lv3_0014,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,6,0,3,8,0,1,0,4,6673,claude-sonnet-5,1463,19.28,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,19.77,partial,6,0,3
+Lv3,Lv3_0015,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,4,0,2,6,0,1,0,2,4508,claude-sonnet-5,973,12.62,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,12.86,partial,4,0,2
+Lv3,Lv3_0016,CORRECT_FLAGGED,0,6e-06,0.0,0.0,7,0,10,13,0,1,0,6,8659,claude-sonnet-5,1119,13.24,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,13.97,partial,7,0,10
+Lv3,Lv3_0017,CORRECT_FLAGGED,0,1e-05,0.0,0.0,4,0,11,10,0,1,1,7,7273,claude-sonnet-5,1972,28.89,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,29.38,partial,4,0,11
+Lv3,Lv3_0018,CORRECT_FLAGGED,0,5e-06,-0.0,0.0,4,0,9,6,0,1,0,6,6003,claude-sonnet-5,1034,12.98,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,13.36,partial,4,0,9
+Lv3,Lv3_0019,CORRECT_FLAGGED,0,4e-06,-0.0,0.0,4,0,5,9,0,1,0,2,5770,claude-sonnet-5,1062,13.64,geometric_graph_unfold,多段フランジ,True,LLM_CROSSCHECK_MISMATCH,14.03,partial,4,0,5
+Lv4,Lv4_0000,CORRECT_FLAGGED,0,0.0,0.0,0.0,1,1,0,1,0,1,0,0,2062,claude-sonnet-5,527,7.4,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,7.49,partial,1,1,0
+Lv4,Lv4_0001,CORRECT_FLAGGED,0,0.0,-0.0,0.0,1,1,0,1,0,1,0,0,2065,claude-sonnet-5,713,10.7,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,10.79,partial,1,1,0
+Lv4,Lv4_0002,CORRECT_FLAGGED,0,5e-06,0.0,0.0,1,1,3,1,0,1,0,3,2401,claude-sonnet-5,795,10.92,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,11.02,partial,1,1,3
+Lv4,Lv4_0003,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,2,1,5,4,0,1,1,6,3337,claude-sonnet-5,1385,20.48,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,20.64,partial,2,1,5
+Lv4,Lv4_0004,CORRECT_FLAGGED,0,0.0,-0.0,0.0,1,1,0,1,0,1,0,0,2064,claude-sonnet-5,590,8.32,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,8.4,partial,1,1,0
+Lv4,Lv4_0005,CORRECT_FLAGGED,0,4e-06,0.0,0.0,1,1,3,1,0,1,0,4,2995,claude-sonnet-5,908,12.64,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,12.78,partial,1,1,3
+Lv4,Lv4_0006,CORRECT,0,-0.0,-0.0,0.0,2,1,1,2,0,1,1,1,2828,claude-sonnet-5,660,9.43,geometric_graph_unfold,ヘム（180°曲げ）,False,,9.58,success,2,1,1
+Lv4,Lv4_0007,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,1,1,3,1,0,1,0,4,2934,claude-sonnet-5,988,14.38,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,14.52,partial,1,1,3
+Lv4,Lv4_0008,CORRECT_FLAGGED,0,2e-06,0.0,0.0,2,1,3,4,0,1,1,3,3414,claude-sonnet-5,862,11.8,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,12.0,partial,2,1,3
+Lv4,Lv4_0009,CORRECT_FLAGGED,0,6e-06,0.0,0.0,1,1,5,2,0,1,1,5,3216,claude-sonnet-5,782,9.82,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,10.0,partial,1,1,5
+Lv4,Lv4_0010,CORRECT_FLAGGED,0,0.0,-0.0,0.0,2,1,0,3,0,1,1,0,2477,claude-sonnet-5,699,10.11,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,10.23,partial,2,1,0
+Lv4,Lv4_0011,CORRECT_FLAGGED,0,3e-06,-0.0,0.0,2,1,3,3,0,1,1,3,3114,claude-sonnet-5,1274,18.41,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,18.58,partial,2,1,3
+Lv4,Lv4_0012,CORRECT_FLAGGED,0,1e-06,-0.0,0.0,1,1,1,2,0,1,1,2,2475,claude-sonnet-5,855,13.06,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,13.18,partial,1,1,1
+Lv4,Lv4_0013,CORRECT_FLAGGED,0,5e-06,-0.0,0.0,1,1,3,1,0,1,0,4,2698,claude-sonnet-5,910,14.6,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,14.77,partial,1,1,3
+Lv4,Lv4_0014,CORRECT_FLAGGED,0,0.0,-0.0,0.0,1,1,0,1,0,1,0,0,2066,claude-sonnet-5,518,7.03,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,7.12,partial,1,1,0
+Lv4,Lv4_0015,CORRECT,0,0.0,0.0,0.0,2,1,0,2,0,1,1,0,2480,claude-sonnet-5,582,8.23,geometric_graph_unfold,ヘム（180°曲げ）,False,,8.35,success,2,1,0
+Lv4,Lv4_0016,CORRECT_FLAGGED,0,3e-06,0.0,0.0,2,1,4,4,0,1,1,3,3462,claude-sonnet-5,1213,17.13,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,17.32,partial,2,1,4
+Lv4,Lv4_0017,CORRECT_FLAGGED,0,3e-06,-0.0,0.0,2,1,1,3,0,1,1,1,2588,claude-sonnet-5,655,8.94,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,9.1,partial,2,1,1
+Lv4,Lv4_0018,CORRECT_FLAGGED,0,3e-06,0.0,0.0,2,1,3,3,0,1,1,4,3114,claude-sonnet-5,932,13.15,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,13.31,partial,2,1,3
+Lv4,Lv4_0019,CORRECT_FLAGGED,0,0.0,0.0,0.0,2,1,0,3,0,1,1,0,2483,claude-sonnet-5,817,11.43,geometric_graph_unfold,ヘム（180°曲げ）,True,LLM_CROSSCHECK_MISMATCH,11.58,partial,2,1,0

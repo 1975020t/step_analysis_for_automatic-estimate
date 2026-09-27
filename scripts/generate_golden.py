@@ -20,9 +20,12 @@ from golden.sampler import LEVELS, generate  # noqa: E402
 
 
 def _one(job):
-    level, index, seed, out = job
+    level, index, seed, out, truth_version = job
     try:
         part, built = generate(level, index, seed)
+        if truth_version == "v2":
+            from golden.truth_v2 import apply_v2
+            apply_v2(built)
         return part.export(Path(out) / level, built)
     except Exception as exc:
         return {"name": f"{level}_{index:04d}", "level": level, "error": str(exc)}
@@ -36,20 +39,22 @@ def main(argv=None):
     parser.add_argument("--out", default="golden_data")
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--no-curated", action="store_true")
+    parser.add_argument("--truth-version", choices=["v1", "v2"], default="v1",
+                        help="v2: hole count from the unfolded solid (fixes relief notches counted as holes)")
     args = parser.parse_args(argv)
 
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    jobs = [(lv, i, args.seed, str(out)) for lv in args.levels for i in range(args.per_level)]
+    jobs = [(lv, i, args.seed, str(out), args.truth_version) for lv in args.levels for i in range(args.per_level)]
     started = time.time()
     with Pool(args.workers) as pool:
         truths = list(pool.imap(_one, jobs, chunksize=4))
     if not args.no_curated:
         from golden.curated import build_curated
-        truths += build_curated(out / "curated")
+        truths += build_curated(out / "curated", truth_version=args.truth_version)
     failed = [t for t in truths if "error" in t]
     (out / "index.json").write_text(json.dumps(
-        {"seed": args.seed, "per_level": args.per_level, "parts": [t for t in truths if "error" not in t],
+        {"seed": args.seed, "per_level": args.per_level, "truth_version": args.truth_version, "parts": [t for t in truths if "error" not in t],
          "generation_failures": failed}, ensure_ascii=False, indent=2))
     print(f"generated {len(truths) - len(failed)} parts ({len(failed)} failed) in {time.time() - started:.0f}s -> {out}")
     return 0 if not failed else 1

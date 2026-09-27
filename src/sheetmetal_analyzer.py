@@ -6,19 +6,21 @@ from tempfile import NamedTemporaryFile
 from typing import BinaryIO
 
 from src.models import (
-    AnalysisStage, HoleEvidence, MetricQuality, SheetMetalAnalysis, SurfacePairEvidence,
+    AnalysisStage, FlatPatternSummary, HoleEvidence, MetricQuality, SheetMetalAnalysis, SurfacePairEvidence,
 )
 from src.sheetmetal_geometry import (
-    ToleranceContext, build_topology_graph, connected_components, polyline_length, validate_shape,
+    ToleranceContext, build_topology_graph, connected_components, validate_shape,
 )
 from src.sheetmetal_recognition import SheetMetalRecognition
-from src.sheetmetal_unfold import SheetMetalUnfolder
+from src.sheetmetal_unfold import SheetMetalUnfolder, UnfoldResult
 
 
 class SheetMetalAnalyzer:
     """Coordinate safe, evidence-based analysis of one constant-thickness part."""
 
     AREA_CONSISTENCY_TOLERANCE = 0.08
+    AREA_CHECK_TOLERANCE = 0.01   # developed area vs volume / thickness
+    CUT_CHECK_TOLERANCE = 0.01    # developed cut length vs cut-surface area / thickness
     MAX_SHEET_SLENDERNESS = 0.20
 
     def __init__(self, k_factor: float = 0.33, k_factor_is_default: bool = True) -> None:
@@ -175,57 +177,91 @@ class SheetMetalAnalyzer:
                 file_name, "unsupported", "FLAT_PATTERN_FAILED",
                 "展開形状の切断境界を特定できません。", "展開形状作成", stages,
             )
-        components = connected_components(topology, cut_indices)
-        if not components:
-            return self._failure(
-                file_name, "unsupported", "FLAT_PATTERN_FAILED",
-                "展開形状の境界接続関係を求められません。", "展開形状作成", stages,
-            )
         for index in cut_indices:
             topology.nodes[index].role = "cut_or_feature"
         cut_area = sum(faces[index].Area() for index in cut_indices)
+        cut_components = connected_components(topology, cut_indices)
         bends = recognition.bend_evidence(faces, pairs, thickness, topology, self.k_factor)
-        flat = SheetMetalUnfolder(recognition, self.k_factor).build(
-            faces, pairs, bends, thickness, cut_area, topology
-        )
-        hole_components = recognition.hole_components(faces, components, thickness, bends)
-        hole_count = len(flat.inner_loops) if flat.inner_loops else len(hole_components)
 
-        has_estimated_internal = False
-        if flat.method == "geometric_prismatic_unfold":
-            residual = max(0.0, cut_area / thickness - float(flat.outer_length_mm or flat.cut_length_mm))
-            threshold = max(2.0, float(flat.outer_length_mm or 0.0) * 0.02)
-            if residual > threshold:
-                flat.inner_length_mm = round(residual, 6)
-                flat.cut_length_mm = round(float(flat.outer_length_mm or flat.cut_length_mm) + residual, 6)
-                flat.inner_boundary_count = len(hole_components)
-                flat.boundary_count = 1 + len(hole_components)
-                flat.method = "geometric_prismatic_unfold_with_estimated_internal_boundaries"
-                has_estimated_internal = True
+        unfold: UnfoldResult | None = None
+        unfold_error = ""
+        try:
+            unfold = SheetMetalUnfolder(recognition, self.k_factor).build(
+                faces, pairs, thickness, topology, volume=solid.Volume(), cut_area=cut_area,
+            )
+        except Exception as exc:  # the estimate below is flagged, never silently exact
+            unfold_error = str(exc)
 
-        is_geometric = flat.method.startswith("geometric")
-        status = "success" if is_geometric and not has_estimated_internal else "partial"
-        confidence = "medium" if (self.k_factor_is_default and bends) or not is_geometric or has_estimated_internal else "high"
         warnings = ["見積用の展開です。加工順序・金型情報は生成しません。"]
         assumptions: list[str] = []
         reason_codes: list[str] = []
+        check_problems: list[str] = []
         if self.k_factor_is_default and bends:
             assumptions.append("Kファクターはデモ既定値0.33を使用しました。")
             warnings.append("Kファクターが未指定のため、曲げ展開値は概算・加工条件要確認です。")
-        if not is_geometric:
+
+        if unfold is not None:
+            flat = unfold.flat
+            checks = unfold.checks
+            self._apply_bend_development(bends, unfold, thickness)
+            check_problems = checks.failures(
+                flat_tol=self._flatness_tolerance(thickness, tolerance.linear_mm),
+                area_tol=self.AREA_CHECK_TOLERANCE, cut_tol=self.CUT_CHECK_TOLERANCE,
+            )
+            developed_bend_faces = {development.face_index + 1 for development in unfold.bends}
+            undeveloped = [bend.bend_id for bend in bends if not developed_bend_faces & set(bend.face_indices)]
+            if undeveloped:
+                check_problems.append(f"展開されない曲げ {len(undeveloped)}箇所")
+            if len(cut_components) != flat.boundary_count:
+                check_problems.append(
+                    f"切断面の連結成分 {len(cut_components)} と展開図の輪郭数 {flat.boundary_count} が不一致")
+            hole_count = flat.inner_boundary_count
+            hole_faces = unfold.hole_faces
+            if checks.holes_on_bends or checks.cuts_on_bends:
+                reason_codes.append("INTERNAL_BOUNDARY_ESTIMATED")
+                warnings.append("曲げ部にかかる穴・切欠きがあります。展開値は概算・要確認です。")
+            if check_problems:
+                reason_codes.append("FLAT_PATTERN_UNVERIFIED")
+                warnings.append("展開図の自己検算が一致しません（" + "、".join(check_problems) + "）。値は概算です。")
+        else:
+            k_area = sum(
+                math.radians(bend.angle_deg or 0.0) * thickness * (self.k_factor - 0.5)
+                * self._bend_axis_length(faces, bend) for bend in bends
+            )
+            flat = FlatPatternSummary(
+                method="analytical_neutral_surface_estimate",
+                area_mm2=round(solid.Volume() / thickness + k_area, 6),
+                cut_length_mm=round(cut_area / thickness, 6), boundary_count=len(cut_components),
+                outer_boundary_count=1 if cut_components else 0,
+                inner_boundary_count=max(0, len(cut_components) - 1), surface_region_count=len(pairs),
+            )
+            hole_count = max(0, len(cut_components) - 1)
+            hole_faces = sorted(cut_components, key=lambda c: -sum(faces[i].Area() for i in c))[1:]
             reason_codes.append("FLAT_PATTERN_ESTIMATED")
-            warnings.append("2D輪郭を一意に構築できず、面積・切断長は解析曲面による概算です。")
-        if has_estimated_internal:
-            reason_codes.append("INTERNAL_BOUNDARY_ESTIMATED")
-            warnings.append("曲げ部品の穴・切欠き位置は表示せず、切断側面から追加境界長だけを概算しました。")
+            warnings.append("2D展開図を構築できず、面積・切断長は体積・切断面積からの概算です。")
+            check_problems.append(unfold_error or "展開失敗")
+
+        verified = unfold is not None and not check_problems
+        exact = verified and "INTERNAL_BOUNDARY_ESTIMATED" not in reason_codes
+        status = "success" if exact else "partial"
+        k_default = self.k_factor_is_default and bool(bends)
+        confidence = "high" if exact and not k_default else "medium"
+        if not verified:
+            confidence = "low" if unfold is None else "medium"
         stages.extend([
             AnalysisStage(
                 name="曲げ判定", status="success",
                 message=f"平面―円筒―平面の隣接関係から曲げを{len(bends)}箇所と判定しました。",
             ),
             AnalysisStage(
-                name="展開形状作成", status="success",
-                message="2D閉ループを構築しました。" if is_geometric else "解析曲面による概算へ切り替えました。",
+                name="展開形状作成", status="success" if unfold is not None else "failed",
+                message=("面隣接グラフをたどり、片側の表面を基準面へ展開しました。" if unfold is not None
+                         else f"2D展開図を構築できませんでした: {unfold_error}"),
+            ),
+            AnalysisStage(
+                name="自己検算", status="success" if verified else "failed",
+                message=("面積（体積÷板厚）・切断長（切断面積÷板厚）・外形の単一性・経路整合がすべて一致しました。"
+                         if verified else "、".join(check_problems)),
             ),
             AnalysisStage(
                 name="展開値取得", status="success",
@@ -241,42 +277,67 @@ class SheetMetalAnalyzer:
         holes = [HoleEvidence(
             hole_id=index + 1, face_indices=[face_index + 1 for face_index in sorted(component)],
             cut_surface_area_mm2=round(sum(faces[face_index].Area() for face_index in component), 6),
-        ) for index, component in enumerate(hole_components)]
-        while len(holes) < hole_count:
-            loop = flat.inner_loops[len(holes)]
-            holes.append(HoleEvidence(
-                hole_id=len(holes) + 1, face_indices=[],
-                cut_surface_area_mm2=round(polyline_length(loop) * thickness, 6),
-            ))
+        ) for index, component in enumerate(hole_faces)]
+        check_evidence = []
+        if unfold is not None:
+            if unfold.checks.area_error is not None:
+                check_evidence.append(f"体積検算差 {unfold.checks.area_error:+.3%}")
+            if unfold.checks.cut_error is not None:
+                check_evidence.append(f"切断面積検算差 {unfold.checks.cut_error:+.3%}")
         return SheetMetalAnalysis(
             status=status, file_name=file_name, thickness_mm=round(thickness, 6),
             blank_area_mm2=round(flat.area_mm2, 6), cut_length_mm=round(flat.cut_length_mm, 6),
             hole_count=hole_count, bend_count=len(bends),
             reason_code=reason_codes[0] if reason_codes else None, reason_codes=reason_codes,
-            message="一定板厚の板金部品として幾何展開しました。" if is_geometric else "一部項目を概算しました。",
+            message=("一定板厚の板金部品として幾何展開し、自己検算が一致しました。" if exact
+                     else "一部項目を概算しました。担当者の確認が必要です。"),
             flat_pattern=flat, stages=stages, thickness_evidence=thickness_evidence,
             bend_evidence=bends, hole_evidence=holes, warnings=warnings, assumptions=assumptions,
             metric_quality={
                 "thickness_mm": MetricQuality(
                     method="multi_evidence_cluster", confidence="high",
-                    evidence=["対向平面/同軸円筒", "短辺", "面積支持", "体積整合性"],
+                    evidence=["対向平面/同軸円筒", "短辺", "面積支持", f"体積整合性 {area_error:.2%}"],
                 ),
                 "blank_area_mm2": MetricQuality(
-                    method=flat.method, confidence=confidence,
-                    evidence=[f"体積検算差 {area_error:.2%}"],
+                    method=flat.method, confidence=confidence, evidence=check_evidence[:1],
                 ),
                 "cut_length_mm": MetricQuality(
-                    method="2d_boundary" if is_geometric and not has_estimated_internal else "cut_surface_area_over_thickness",
-                    confidence=confidence,
+                    method="2d_boundary" if unfold is not None else "cut_surface_area_over_thickness",
+                    confidence=confidence, evidence=check_evidence[1:],
                 ),
                 "hole_count": MetricQuality(
-                    method="2d_loop_containment" if flat.inner_loops else "topology_feature_components",
-                    confidence="high" if flat.inner_loops else "medium",
+                    method="2d_loop_containment" if unfold is not None else "cut_face_components",
+                    confidence="high" if verified else "medium",
+                    evidence=[f"切断面の連結成分 {len(cut_components)}"],
                 ),
                 "bend_count": MetricQuality(method="plane_cylinder_plane_adjacency", confidence="high"),
             },
             thickness_candidates=recognition.candidate_models(candidates, faces, thickness),
         )
+
+    def _apply_bend_development(self, bends, unfold: UnfoldResult, thickness: float) -> None:
+        """Use the developed sweep angle (exact, from the cylinder parameter range) in bend evidence."""
+        by_face = {development.face_index + 1: development for development in unfold.bends}
+        for bend in bends:
+            development = next((by_face[i] for i in bend.face_indices if i in by_face), None)
+            if development is None:
+                continue
+            bend.angle_deg = round(math.degrees(development.angle_rad), 6)
+            bend.bend_allowance_mm = round(
+                development.angle_rad * (development.inner_radius + self.k_factor * thickness), 6)
+
+    def _bend_axis_length(self, faces, bend) -> float:
+        values = []
+        for index in bend.face_indices:
+            for vertex in faces[index - 1].Vertices():
+                delta = [float(vertex.X) - bend.axis_point_mm[0], float(vertex.Y) - bend.axis_point_mm[1],
+                         float(vertex.Z) - bend.axis_point_mm[2]]
+                values.append(sum(a * b for a, b in zip(delta, bend.axis_direction)))
+        return max(values) - min(values) if values else 0.0
+
+    @staticmethod
+    def _flatness_tolerance(thickness: float, linear: float) -> float:
+        return max(1e-3, linear * 100, thickness * 1e-3)
 
     @staticmethod
     def _failure(

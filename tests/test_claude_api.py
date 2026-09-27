@@ -109,3 +109,40 @@ def test_real_sdk_request_and_response_path_with_mocked_http(tmp_path):
     assert seen["body"]["tool_choice"] == {"type": "tool", "name": "report"}
     assert client.usage.input_tokens == 123 and client.usage.output_tokens == 45
     assert not list(tmp_path.glob("*.json"))  # live mode does not cache
+
+
+def test_crosscheck_only_downgrades_on_disagreement():
+    from src.llm_assisted_analyzer import LLMCrossCheckAnalyzer
+
+    agree = {"bend_count": 1, "hem_count": 0, "hole_count": 0}
+    assert LLMCrossCheckAnalyzer.apply(_result(), agree).status == "success"
+
+    disagree = LLMCrossCheckAnalyzer.apply(_result(), {**agree, "hole_count": 2})
+    assert disagree.status == "partial"
+    assert "LLM_CROSSCHECK_MISMATCH" in disagree.reason_codes
+    assert (disagree.blank_area_mm2, disagree.hole_count) == (100.0, 0)  # numbers untouched
+
+
+def test_crosscheck_analyzer_end_to_end_with_a_fake_client(tmp_path):
+    cq = pytest.importorskip("cadquery")
+    from src.llm_assisted_analyzer import LLMCrossCheckAnalyzer
+
+    shape = cq.Workplane("XY").box(100, 50, 2.0).faces(">Z").workplane().hole(10).val()
+    path = tmp_path / "plate.step"
+    cq.exporters.export(shape, str(path))
+    seen = {}
+
+    def fake(request):
+        seen["user"] = request["messages"][0]["content"]
+        return _tool_response({"part_type": "平板", "thickness_mm": 2.0, "bend_count": 0, "hem_count": 0,
+                               "hole_count": 1, "reasoning": "test"})
+
+    client = ClaudeClient(model="test-model", mode="record", cache_dir=tmp_path / "cache", api_key="dummy")
+    client._live = fake
+    analyzer = LLMCrossCheckAnalyzer(k_factor=0.5, k_factor_is_default=False, client=client)
+    result = analyzer.analyze(path)
+
+    assert result.status == "success"
+    assert '"type": "CYLINDER"' in seen["user"]  # the face table, not the rule-based result, is sent
+    assert "blank_area" not in seen["user"]
+    assert analyzer.last_usage["llm_hole_count"] == 1
