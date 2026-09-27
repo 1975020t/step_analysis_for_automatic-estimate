@@ -1,0 +1,7749 @@
+{
+ "dataset": "holdout_v1",
+ "description": "Final-acceptance holdout. Do NOT open or tune against it during development. Regenerate STEP files with: python scripts/generate_golden.py --per-level 40 --seed 2 --no-curated --out golden_holdout",
+ "seed": 2,
+ "per_level": 40,
+ "parts": [
+  {
+   "name": "Lv0_0000",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 17467.0796,
+   "cut_length_mm": 888.3052,
+   "hole_count": 5,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    133.653,
+    140.357
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0001",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 15868.5174,
+   "cut_length_mm": 926.435,
+   "hole_count": 5,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    274.838,
+    61.053
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0002",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 3854.7602,
+   "cut_length_mm": 314.7212,
+   "hole_count": 1,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    70.132,
+    58.001
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    2,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0003",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19364.5286,
+   "cut_length_mm": 762.8775,
+   "hole_count": 3,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    174.875,
+    115.288
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    3,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0004",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 38707.7259,
+   "cut_length_mm": 1362.1957,
+   "hole_count": 6,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    238.575,
+    175.149
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    4,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0005",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 6552.7398,
+   "cut_length_mm": 788.4569,
+   "hole_count": 8,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    48.341,
+    169.077
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    5,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0006",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 18676.9694,
+   "cut_length_mm": 651.6622,
+   "hole_count": 2,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    148.063,
+    130.722
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    6,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0007",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 4542.1185,
+   "cut_length_mm": 437.6534,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    54.07,
+    90.932
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    7,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0008",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 9843.1322,
+   "cut_length_mm": 830.6415,
+   "hole_count": 8,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    190.291,
+    57.341
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    8,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0009",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 10176.3414,
+   "cut_length_mm": 896.4375,
+   "hole_count": 10,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    95.159,
+    122.023
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    9,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0010",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 16584.2412,
+   "cut_length_mm": 654.4197,
+   "hole_count": 3,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    96.391,
+    176.23
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    10,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0011",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 8012.467,
+   "cut_length_mm": 654.8851,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    70.473,
+    131.182
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    11,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0012",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 21295.8034,
+   "cut_length_mm": 923.9339,
+   "hole_count": 7,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    150.659,
+    149.711
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0013",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 8973.4512,
+   "cut_length_mm": 764.0576,
+   "hole_count": 8,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    69.475,
+    146.31
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    13,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0014",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 24302.1957,
+   "cut_length_mm": 1173.5446,
+   "hole_count": 5,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    175.138,
+    155.427
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    14,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0015",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 9067.0793,
+   "cut_length_mm": 785.0458,
+   "hole_count": 8,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    100.508,
+    107.937
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    15,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0016",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 13746.4208,
+   "cut_length_mm": 637.4903,
+   "hole_count": 2,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    86.552,
+    167.39
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    16,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0017",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 38294.7091,
+   "cut_length_mm": 1070.6689,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    257.947,
+    153.029
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    17,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0018",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 7308.023,
+   "cut_length_mm": 601.0277,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    40.66,
+    190.098
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0019",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 12319.6302,
+   "cut_length_mm": 692.4499,
+   "hole_count": 3,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    200.876,
+    65.082
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    19,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0020",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 26348.9484,
+   "cut_length_mm": 835.9162,
+   "hole_count": 1,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    271.778,
+    99.097
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    20,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0021",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 14353.682,
+   "cut_length_mm": 743.6893,
+   "hole_count": 1,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    288.686,
+    50.244
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    21,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0022",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 13409.3088,
+   "cut_length_mm": 625.4788,
+   "hole_count": 3,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    86.294,
+    161.378
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0023",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 14582.8655,
+   "cut_length_mm": 830.4426,
+   "hole_count": 7,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    110.234,
+    142.812
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    23,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0024",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 4066.4726,
+   "cut_length_mm": 323.5577,
+   "hole_count": 0,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    130.655,
+    31.124
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    24,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0025",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 40009.1925,
+   "cut_length_mm": 1019.3872,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    234.128,
+    173.852
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    25,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0026",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 2204.7693,
+   "cut_length_mm": 309.3632,
+   "hole_count": 2,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    71.0,
+    35.432
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    26,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0027",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 24993.7236,
+   "cut_length_mm": 986.8869,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    210.198,
+    126.921
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    27,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0028",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 17454.5597,
+   "cut_length_mm": 771.7069,
+   "hole_count": 1,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    277.801,
+    64.339
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    28,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0029",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 36783.89,
+   "cut_length_mm": 1261.3521,
+   "hole_count": 9,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    218.953,
+    177.198
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    29,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0030",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5626.1883,
+   "cut_length_mm": 740.7036,
+   "hole_count": 10,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    157.32,
+    41.215
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    30,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0031",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 1527.8303,
+   "cut_length_mm": 205.0727,
+   "hole_count": 1,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    45.929,
+    36.709
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    31,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0032",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 13313.8653,
+   "cut_length_mm": 1123.2796,
+   "hole_count": 10,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    161.068,
+    96.49
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    32,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0033",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 42164.3051,
+   "cut_length_mm": 1145.8412,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    285.606,
+    151.963
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    33,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0034",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 7199.7888,
+   "cut_length_mm": 460.6088,
+   "hole_count": 2,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    49.789,
+    148.035
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    34,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0035",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 35344.582,
+   "cut_length_mm": 1033.9599,
+   "hole_count": 3,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    258.065,
+    141.437
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    35,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0036",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 6028.4425,
+   "cut_length_mm": 883.3788,
+   "hole_count": 10,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    218.573,
+    32.327
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    36,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0037",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 6046.6528,
+   "cut_length_mm": 559.4311,
+   "hole_count": 5,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    130.918,
+    50.991
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    37,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0038",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 12911.1242,
+   "cut_length_mm": 685.9534,
+   "hole_count": 4,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    184.036,
+    73.858
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    38,
+    0
+   ]
+  },
+  {
+   "name": "Lv0_0039",
+   "level": "Lv0",
+   "note": "平板",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 8183.679,
+   "cut_length_mm": 759.8278,
+   "hole_count": 6,
+   "bend_count": 0,
+   "flat_bbox_mm": [
+    106.647,
+    92.369
+   ],
+   "bends": [],
+   "seed": [
+    2,
+    39,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0000",
+   "level": "Lv1",
+   "note": "平行曲げ Z",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 9343.6114,
+   "cut_length_mm": 681.0647,
+   "hole_count": 5,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    168.457,
+    59.182
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 59.1822,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 59.1822,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0001",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 34290.0448,
+   "cut_length_mm": 832.4719,
+   "hole_count": 1,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    270.434,
+    127.203
+   ],
+   "bends": [
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 127.2032,
+     "bend_allowance_mm": 0.5236
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 127.2032,
+     "bend_allowance_mm": 1.309
+    }
+   ],
+   "seed": [
+    2,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0002",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 33876.6709,
+   "cut_length_mm": 903.1428,
+   "hole_count": 2,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    179.015,
+    193.426
+   ],
+   "bends": [
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 193.4263,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 193.4263,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 193.4263,
+     "bend_allowance_mm": 1.6755
+    }
+   ],
+   "seed": [
+    2,
+    2,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0003",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 11811.3429,
+   "cut_length_mm": 760.3232,
+   "hole_count": 4,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    251.291,
+    49.058
+   ],
+   "bends": [
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 49.0582,
+     "bend_allowance_mm": 4.1888
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 49.0582,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "down",
+     "length_mm": 49.0582,
+     "bend_allowance_mm": 12.5664
+    }
+   ],
+   "seed": [
+    2,
+    3,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0004",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 13206.9807,
+   "cut_length_mm": 519.3938,
+   "hole_count": 2,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    138.438,
+    96.168
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 96.1681,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 96.1681,
+     "bend_allowance_mm": 2.3562
+    }
+   ],
+   "seed": [
+    2,
+    4,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0005",
+   "level": "Lv1",
+   "note": "平行曲げ hat",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 30777.9711,
+   "cut_length_mm": 1152.5628,
+   "hole_count": 6,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    264.31,
+    122.119
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 122.1194,
+     "bend_allowance_mm": 12.5664
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 122.1194,
+     "bend_allowance_mm": 12.5664
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "down",
+     "length_mm": 122.1194,
+     "bend_allowance_mm": 12.5664
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "down",
+     "length_mm": 122.1194,
+     "bend_allowance_mm": 12.5664
+    }
+   ],
+   "seed": [
+    2,
+    5,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0006",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 15605.6251,
+   "cut_length_mm": 676.2131,
+   "hole_count": 4,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    185.41,
+    85.69
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 85.6897,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    6,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0007",
+   "level": "Lv1",
+   "note": "平行曲げ hat",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 18010.1487,
+   "cut_length_mm": 742.3947,
+   "hole_count": 5,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    188.805,
+    97.574
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 97.5741,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 97.5741,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 97.5741,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 97.5741,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    7,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0008",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5811.45,
+   "cut_length_mm": 448.5242,
+   "hole_count": 1,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    170.834,
+    34.44
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 34.4396,
+     "bend_allowance_mm": 3.6128
+    }
+   ],
+   "seed": [
+    2,
+    8,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0009",
+   "level": "Lv1",
+   "note": "平行曲げ hat",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 33036.0168,
+   "cut_length_mm": 858.4752,
+   "hole_count": 6,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    232.92,
+    142.458
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 142.4577,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 142.4577,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 142.4577,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 142.4577,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    9,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0010",
+   "level": "Lv1",
+   "note": "平行曲げ hat",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 42651.2792,
+   "cut_length_mm": 1250.3859,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    285.841,
+    154.752
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 154.752,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 154.752,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 154.752,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 154.752,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    10,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0011",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 10566.4261,
+   "cut_length_mm": 869.4874,
+   "hole_count": 6,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    255.991,
+    44.291
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "up",
+     "length_mm": 44.2914,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 44.2914,
+     "bend_allowance_mm": 1.5708
+    }
+   ],
+   "seed": [
+    2,
+    11,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0012",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 4341.0068,
+   "cut_length_mm": 495.4983,
+   "hole_count": 5,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    127.835,
+    37.801
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 37.8014,
+     "bend_allowance_mm": 5.4192
+    }
+   ],
+   "seed": [
+    2,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0013",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19904.5719,
+   "cut_length_mm": 718.5056,
+   "hole_count": 3,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    138.268,
+    147.515
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 147.5147,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 147.5147,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    13,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0014",
+   "level": "Lv1",
+   "note": "平行曲げ Z",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 20117.2782,
+   "cut_length_mm": 964.3576,
+   "hole_count": 7,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    245.861,
+    86.841
+   ],
+   "bends": [
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 4.8,
+     "direction": "up",
+     "length_mm": 86.8412,
+     "bend_allowance_mm": 3.351
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 4.8,
+     "direction": "down",
+     "length_mm": 86.8412,
+     "bend_allowance_mm": 3.351
+    }
+   ],
+   "seed": [
+    2,
+    14,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0015",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 23231.7817,
+   "cut_length_mm": 1062.9074,
+   "hole_count": 8,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    140.246,
+    178.093
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 178.0935,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    15,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0016",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 27979.8813,
+   "cut_length_mm": 1097.4912,
+   "hole_count": 11,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    229.217,
+    126.735
+   ],
+   "bends": [
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 126.7348,
+     "bend_allowance_mm": 0.9425
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 126.7348,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 126.7348,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    16,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0017",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 26475.3863,
+   "cut_length_mm": 771.5123,
+   "hole_count": 4,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    168.803,
+    158.59
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 158.5901,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 158.5901,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    17,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0018",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 33052.9648,
+   "cut_length_mm": 1117.7944,
+   "hole_count": 7,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    255.241,
+    134.246
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.0,
+     "direction": "up",
+     "length_mm": 134.2462,
+     "bend_allowance_mm": 7.854
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.0,
+     "direction": "up",
+     "length_mm": 134.2462,
+     "bend_allowance_mm": 7.854
+    }
+   ],
+   "seed": [
+    2,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0019",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5667.9679,
+   "cut_length_mm": 527.2604,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    182.76,
+    32.385
+   ],
+   "bends": [
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 32.3847,
+     "bend_allowance_mm": 2.0944
+    }
+   ],
+   "seed": [
+    2,
+    19,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0020",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19557.6374,
+   "cut_length_mm": 949.4825,
+   "hole_count": 7,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    219.568,
+    94.747
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 94.7468,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 94.7468,
+     "bend_allowance_mm": 7.0686
+    }
+   ],
+   "seed": [
+    2,
+    20,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0021",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 15934.7746,
+   "cut_length_mm": 951.421,
+   "hole_count": 8,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    166.282,
+    102.823
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.0,
+     "direction": "up",
+     "length_mm": 102.8229,
+     "bend_allowance_mm": 7.854
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 102.8229,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    21,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0022",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 23807.4288,
+   "cut_length_mm": 887.993,
+   "hole_count": 5,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    141.165,
+    175.188
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 175.1883,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0023",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 12121.6882,
+   "cut_length_mm": 674.7672,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    212.105,
+    59.792
+   ],
+   "bends": [
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 59.7918,
+     "bend_allowance_mm": 1.1781
+    }
+   ],
+   "seed": [
+    2,
+    23,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0024",
+   "level": "Lv1",
+   "note": "平行曲げ hat",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 21572.9116,
+   "cut_length_mm": 977.4238,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    178.633,
+    127.417
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 127.4167,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 127.4167,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 127.4167,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 127.4167,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    24,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0025",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 11407.9786,
+   "cut_length_mm": 530.0822,
+   "hole_count": 1,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    173.746,
+    66.535
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.0,
+     "direction": "up",
+     "length_mm": 66.5347,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 66.5347,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    25,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0026",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 36071.3602,
+   "cut_length_mm": 900.9206,
+   "hole_count": 4,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    203.593,
+    178.881
+   ],
+   "bends": [
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 178.8807,
+     "bend_allowance_mm": 0.6283
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 178.8807,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    26,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0027",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 16192.5536,
+   "cut_length_mm": 568.9549,
+   "hole_count": 1,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    110.256,
+    148.429
+   ],
+   "bends": [
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 4.8,
+     "direction": "up",
+     "length_mm": 148.4289,
+     "bend_allowance_mm": 5.0265
+    }
+   ],
+   "seed": [
+    2,
+    27,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0028",
+   "level": "Lv1",
+   "note": "平行曲げ Z",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19084.2363,
+   "cut_length_mm": 952.164,
+   "hole_count": 9,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    190.265,
+    106.09
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 106.0899,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 106.0899,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    28,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0029",
+   "level": "Lv1",
+   "note": "平行曲げ hat",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 18834.3451,
+   "cut_length_mm": 748.083,
+   "hole_count": 4,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    212.971,
+    90.966
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 90.9658,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 90.9658,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 90.9658,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 90.9658,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    29,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0030",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 38645.6244,
+   "cut_length_mm": 1127.5356,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    279.473,
+    142.258
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 142.2581,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "down",
+     "length_mm": 142.2581,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 142.2581,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 142.2581,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    30,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0031",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 11935.1194,
+   "cut_length_mm": 620.7292,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    96.099,
+    129.208
+   ],
+   "bends": [
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 129.2077,
+     "bend_allowance_mm": 2.0944
+    }
+   ],
+   "seed": [
+    2,
+    31,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0032",
+   "level": "Lv1",
+   "note": "平行曲げ chain",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 12170.3078,
+   "cut_length_mm": 823.7133,
+   "hole_count": 9,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    147.012,
+    89.389
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 89.3888,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 89.3888,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "down",
+     "length_mm": 89.3888,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    32,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0033",
+   "level": "Lv1",
+   "note": "平行曲げ Z",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 21805.3795,
+   "cut_length_mm": 907.601,
+   "hole_count": 7,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    165.806,
+    138.133
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 138.1328,
+     "bend_allowance_mm": 3.6128
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.15,
+     "direction": "down",
+     "length_mm": 138.1328,
+     "bend_allowance_mm": 3.6128
+    }
+   ],
+   "seed": [
+    2,
+    33,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0034",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5880.3855,
+   "cut_length_mm": 436.4087,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    149.548,
+    40.216
+   ],
+   "bends": [
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 40.216,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    34,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0035",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 6016.4501,
+   "cut_length_mm": 633.0441,
+   "hole_count": 6,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    222.197,
+    28.095
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 28.0949,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 28.0949,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    35,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0036",
+   "level": "Lv1",
+   "note": "平行曲げ hat",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 4046.2979,
+   "cut_length_mm": 448.5932,
+   "hole_count": 9,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    108.287,
+    39.357
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 39.3573,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 39.3573,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 39.3573,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 39.3573,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    36,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0037",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5750.3132,
+   "cut_length_mm": 337.525,
+   "hole_count": 1,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    108.883,
+    52.952
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 52.952,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    37,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0038",
+   "level": "Lv1",
+   "note": "平行曲げ L",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 38328.2305,
+   "cut_length_mm": 814.7362,
+   "hole_count": 1,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    212.582,
+    180.536
+   ],
+   "bends": [
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 180.536,
+     "bend_allowance_mm": 1.6755
+    }
+   ],
+   "seed": [
+    2,
+    38,
+    0
+   ]
+  },
+  {
+   "name": "Lv1_0039",
+   "level": "Lv1",
+   "note": "平行曲げ U",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 40060.6884,
+   "cut_length_mm": 887.9871,
+   "hole_count": 2,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    211.37,
+    190.546
+   ],
+   "bends": [
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 190.5456,
+     "bend_allowance_mm": 11.3097
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 190.5456,
+     "bend_allowance_mm": 11.3097
+    }
+   ],
+   "seed": [
+    2,
+    39,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0000",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19598.9983,
+   "cut_length_mm": 1050.4793,
+   "hole_count": 6,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    299.879,
+    73.215
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 256.5745,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 39.2611,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0001",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 18510.6155,
+   "cut_length_mm": 792.924,
+   "hole_count": 4,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    98.492,
+    213.468
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.45,
+     "direction": "up",
+     "length_mm": 47.0806,
+     "bend_allowance_mm": 7.2257
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 170.9069,
+     "bend_allowance_mm": 5.4192
+    }
+   ],
+   "seed": [
+    2,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0002",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 54821.8809,
+   "cut_length_mm": 1178.098,
+   "hole_count": 3,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    342.939,
+    190.078
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 249.0601,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 249.0601,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 105.7405,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 57.0185,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    2,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0003",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 39305.0137,
+   "cut_length_mm": 1058.4711,
+   "hole_count": 4,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    292.785,
+    151.953
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 111.8831,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 158.6629,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    3,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0004",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 61492.0181,
+   "cut_length_mm": 1325.3401,
+   "hole_count": 6,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    306.639,
+    231.776
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 3.45,
+     "direction": "up",
+     "length_mm": 100.2105,
+     "bend_allowance_mm": 4.8171
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.6,
+     "direction": "up",
+     "length_mm": 162.7813,
+     "bend_allowance_mm": 9.0321
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 204.3786,
+     "bend_allowance_mm": 5.4192
+    }
+   ],
+   "seed": [
+    2,
+    4,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0005",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 44493.6892,
+   "cut_length_mm": 1380.4972,
+   "hole_count": 9,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    212.988,
+    260.132
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 125.1131,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 0.4,
+     "direction": "down",
+     "length_mm": 94.3567,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 163.6715,
+     "bend_allowance_mm": 0.6283
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 162.0715,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    5,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0006",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 25055.1148,
+   "cut_length_mm": 1093.9469,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    162.382,
+    212.108
+   ],
+   "bends": [
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 119.1983,
+     "bend_allowance_mm": 2.0944
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 122.3983,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "down",
+     "length_mm": 98.7177,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 44.6201,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    6,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0007",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 18705.9085,
+   "cut_length_mm": 810.4633,
+   "hole_count": 2,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    314.953,
+    68.141
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 38.0603,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 217.9662,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 40.0603,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    7,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0008",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 55961.8865,
+   "cut_length_mm": 1389.443,
+   "hole_count": 8,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    319.525,
+    191.273
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 138.408,
+     "bend_allowance_mm": 5.4192
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.6,
+     "direction": "up",
+     "length_mm": 243.2072,
+     "bend_allowance_mm": 9.0321
+    }
+   ],
+   "seed": [
+    2,
+    8,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0009",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 25986.0994,
+   "cut_length_mm": 1170.9439,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    172.617,
+    230.912
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 59.6974,
+     "bend_allowance_mm": 7.0686
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 114.5878,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 119.0878,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 59.6974,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    9,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0010",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 28267.138,
+   "cut_length_mm": 1022.0772,
+   "hole_count": 3,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    168.008,
+    264.754
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 59.7023,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 60.2027,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 61.4027,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 181.4955,
+     "bend_allowance_mm": 0.9425
+    }
+   ],
+   "seed": [
+    2,
+    10,
+    1
+   ]
+  },
+  {
+   "name": "Lv2_0011",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 40962.1783,
+   "cut_length_mm": 1188.2373,
+   "hole_count": 7,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    139.067,
+    305.887
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 133.0675,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 133.8675,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    11,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0012",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 51813.3487,
+   "cut_length_mm": 1386.9782,
+   "hole_count": 5,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    316.293,
+    229.222
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 65.6046,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 196.582,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 91.5601,
+     "bend_allowance_mm": 5.3014
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 164.5849,
+     "bend_allowance_mm": 15.9043
+    }
+   ],
+   "seed": [
+    2,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0013",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 31724.2124,
+   "cut_length_mm": 1377.0345,
+   "hole_count": 9,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    315.31,
+    160.414
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 32.0337,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 183.6587,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 186.8587,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 16.7042,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    13,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0014",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 70525.8082,
+   "cut_length_mm": 1316.493,
+   "hole_count": 5,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    269.646,
+    268.498
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 249.7425,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.6,
+     "direction": "down",
+     "length_mm": 209.6235,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    14,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0015",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 65225.7777,
+   "cut_length_mm": 1223.1869,
+   "hole_count": 5,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    291.062,
+    239.899
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 243.6942,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 242.0942,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 151.843,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    15,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0016",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 38861.2779,
+   "cut_length_mm": 1191.3272,
+   "hole_count": 3,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    364.805,
+    133.097
+   ],
+   "bends": [
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 273.8016,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 273.8016,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.8,
+     "direction": "up",
+     "length_mm": 25.0074,
+     "bend_allowance_mm": 10.0531
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 26.8065,
+     "bend_allowance_mm": 12.5664
+    }
+   ],
+   "seed": [
+    2,
+    16,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0017",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 7151.0344,
+   "cut_length_mm": 628.1361,
+   "hole_count": 5,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    137.655,
+    74.117
+   ],
+   "bends": [
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 41.7985,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 56.4301,
+     "bend_allowance_mm": 1.6755
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 40.1985,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    17,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0018",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 28699.2488,
+   "cut_length_mm": 1200.1072,
+   "hole_count": 11,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    170.875,
+    231.428
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 90.9745,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 110.0092,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 110.0092,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 92.5745,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0019",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 61711.2062,
+   "cut_length_mm": 1150.5293,
+   "hole_count": 2,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    288.52,
+    219.392
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 175.4641,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 264.597,
+     "bend_allowance_mm": 0.9425
+    }
+   ],
+   "seed": [
+    2,
+    19,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0020",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 9917.7756,
+   "cut_length_mm": 788.9135,
+   "hole_count": 6,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    98.291,
+    161.719
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 52.3379,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 46.398,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    20,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0021",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 73099.819,
+   "cut_length_mm": 1415.0298,
+   "hole_count": 5,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    366.396,
+    239.407
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 230.0724,
+     "bend_allowance_mm": 7.0686
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "up",
+     "length_mm": 221.0724,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "up",
+     "length_mm": 135.1817,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 139.6817,
+     "bend_allowance_mm": 10.6029
+    }
+   ],
+   "seed": [
+    2,
+    21,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0022",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 69186.5622,
+   "cut_length_mm": 1641.3769,
+   "hole_count": 9,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    282.156,
+    277.422
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 169.6419,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 189.0531,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 249.3929,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0023",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19320.3942,
+   "cut_length_mm": 780.8079,
+   "hole_count": 1,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    185.233,
+    154.949
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.8,
+     "direction": "up",
+     "length_mm": 39.7533,
+     "bend_allowance_mm": 10.0531
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 136.823,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 41.571,
+     "bend_allowance_mm": 5.0265
+    }
+   ],
+   "seed": [
+    2,
+    23,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0024",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 68053.9544,
+   "cut_length_mm": 1228.2769,
+   "hole_count": 1,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    281.366,
+    294.084
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 179.3616,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 4.8,
+     "direction": "up",
+     "length_mm": 151.5768,
+     "bend_allowance_mm": 15.0796
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 182.5616,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 157.9768,
+     "bend_allowance_mm": 5.0265
+    }
+   ],
+   "seed": [
+    2,
+    24,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0025",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 28375.6177,
+   "cut_length_mm": 1257.686,
+   "hole_count": 8,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    243.781,
+    165.126
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 87.6211,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 52.3911,
+     "bend_allowance_mm": 8.3776
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.8,
+     "direction": "up",
+     "length_mm": 130.7531,
+     "bend_allowance_mm": 10.0531
+    }
+   ],
+   "seed": [
+    2,
+    25,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0026",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 26007.0002,
+   "cut_length_mm": 870.5235,
+   "hole_count": 1,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    178.296,
+    216.524
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 32.9391,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 121.4379,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 90.5706,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 54.3817,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    26,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0027",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 45697.2655,
+   "cut_length_mm": 1181.4854,
+   "hole_count": 4,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    311.169,
+    186.832
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 249.9815,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 140.5011,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 77.7547,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    27,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0028",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 32383.0384,
+   "cut_length_mm": 1517.4175,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    208.357,
+    295.028
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 47.5976,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 17.228,
+     "bend_allowance_mm": 7.0686
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 6.75,
+     "direction": "up",
+     "length_mm": 154.8941,
+     "bend_allowance_mm": 18.8496
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 88.8099,
+     "bend_allowance_mm": 7.0686
+    }
+   ],
+   "seed": [
+    2,
+    28,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0029",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 66463.0323,
+   "cut_length_mm": 1841.4596,
+   "hole_count": 11,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    340.301,
+    239.644
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 110.3482,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 244.363,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 112.7482,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 244.363,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    29,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0030",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 48391.4949,
+   "cut_length_mm": 1232.6258,
+   "hole_count": 3,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    346.606,
+    171.089
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "up",
+     "length_mm": 262.3344,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 76.1149,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 221.3993,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "up",
+     "length_mm": 53.2193,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    30,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0031",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19619.057,
+   "cut_length_mm": 960.0845,
+   "hole_count": 5,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    283.882,
+    76.021
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 61.1502,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 69.2211,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    31,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0032",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 74605.637,
+   "cut_length_mm": 1699.8625,
+   "hole_count": 15,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    325.28,
+    251.517
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 175.9085,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 272.8886,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 273.8886,
+     "bend_allowance_mm": 0.7854
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 123.255,
+     "bend_allowance_mm": 1.5708
+    }
+   ],
+   "seed": [
+    2,
+    32,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0033",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 69149.6487,
+   "cut_length_mm": 1666.3475,
+   "hole_count": 9,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    333.722,
+    247.407
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 131.6176,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 93.2217,
+     "bend_allowance_mm": 9.4248
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 251.6559,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 250.0559,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    33,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0034",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 8906.5657,
+   "cut_length_mm": 672.5031,
+   "hole_count": 6,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    86.817,
+    128.677
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 80.8652,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 55.6913,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    34,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0035",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 69160.2698,
+   "cut_length_mm": 1250.8434,
+   "hole_count": 2,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    335.227,
+    236.584
+   ],
+   "bends": [
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 262.7832,
+     "bend_allowance_mm": 8.1289
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.6,
+     "direction": "up",
+     "length_mm": 39.105,
+     "bend_allowance_mm": 9.0321
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.45,
+     "direction": "up",
+     "length_mm": 165.1205,
+     "bend_allowance_mm": 7.2257
+    }
+   ],
+   "seed": [
+    2,
+    35,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0036",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 19308.1292,
+   "cut_length_mm": 1112.9116,
+   "hole_count": 6,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    297.076,
+    112.525
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 44.4874,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 113.5871,
+     "bend_allowance_mm": 0.8378
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 43.6874,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 85.5847,
+     "bend_allowance_mm": 1.2566
+    }
+   ],
+   "seed": [
+    2,
+    36,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0037",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 27169.0329,
+   "cut_length_mm": 1092.8455,
+   "hole_count": 9,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    249.798,
+    134.649
+   ],
+   "bends": [
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 45.4963,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "down",
+     "length_mm": 194.3487,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 148.9357,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    37,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0038",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 63739.7667,
+   "cut_length_mm": 1464.1793,
+   "hole_count": 6,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    377.894,
+    185.996
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 266.3681,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 137.5406,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 137.5406,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    38,
+    0
+   ]
+  },
+  {
+   "name": "Lv2_0039",
+   "level": "Lv2",
+   "note": "底面＋1段フランジ",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 24128.9074,
+   "cut_length_mm": 792.5039,
+   "hole_count": 2,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    185.285,
+    162.021
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 127.1332,
+     "bend_allowance_mm": 3.6128
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 127.1332,
+     "bend_allowance_mm": 3.6128
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.45,
+     "direction": "up",
+     "length_mm": 65.6138,
+     "bend_allowance_mm": 7.2257
+    }
+   ],
+   "seed": [
+    2,
+    39,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0000",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 76387.0578,
+   "cut_length_mm": 1948.8178,
+   "hole_count": 12,
+   "bend_count": 8,
+   "flat_bbox_mm": [
+    271.971,
+    403.918
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 193.1538,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 104.9895,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 147.9267,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 151.1267,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "down",
+     "length_mm": 193.1538,
+     "bend_allowance_mm": 12.5664
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 56.8849,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 193.1538,
+     "bend_allowance_mm": 16.7552
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 56.8849,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0001",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 37135.4931,
+   "cut_length_mm": 1790.2233,
+   "hole_count": 14,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    163.348,
+    384.482
+   ],
+   "bends": [
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 86.4095,
+     "bend_allowance_mm": 1.1781
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 86.8602,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 84.8602,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 2.0,
+     "direction": "down",
+     "length_mm": 47.6355,
+     "bend_allowance_mm": 5.236
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 86.8602,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 2.0,
+     "direction": "down",
+     "length_mm": 84.8602,
+     "bend_allowance_mm": 5.236
+    }
+   ],
+   "seed": [
+    2,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0002",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 60463.0639,
+   "cut_length_mm": 1535.3135,
+   "hole_count": 8,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    393.383,
+    185.327
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 109.2616,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 243.444,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 110.4616,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 109.2616,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 243.444,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 110.4616,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    2,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0003",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 29996.6037,
+   "cut_length_mm": 1208.5295,
+   "hole_count": 8,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    376.961,
+    116.167
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "up",
+     "length_mm": 25.4344,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 253.2595,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 45.7593,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 102.9599,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "down",
+     "length_mm": 25.4344,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 253.2595,
+     "bend_allowance_mm": 3.927
+    }
+   ],
+   "seed": [
+    2,
+    3,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0004",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 42831.0629,
+   "cut_length_mm": 1197.1746,
+   "hole_count": 7,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    185.269,
+    276.267
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 154.4769,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 137.7116,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 105.7407,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 111.0673,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 105.7407,
+     "bend_allowance_mm": 5.0265
+    }
+   ],
+   "seed": [
+    2,
+    4,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0005",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 14367.6137,
+   "cut_length_mm": 904.3159,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    111.621,
+    209.854
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "up",
+     "length_mm": 23.6561,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 93.9527,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 50.4571,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.5,
+     "direction": "down",
+     "length_mm": 63.0144,
+     "bend_allowance_mm": 0.7854
+    }
+   ],
+   "seed": [
+    2,
+    5,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0006",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 31427.6102,
+   "cut_length_mm": 1172.9702,
+   "hole_count": 8,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    213.95,
+    185.682
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 122.183,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 179.6818,
+     "bend_allowance_mm": 3.5343
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 122.183,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 122.183,
+     "bend_allowance_mm": 2.3562
+    }
+   ],
+   "seed": [
+    2,
+    6,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0007",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 47157.1699,
+   "cut_length_mm": 1466.7881,
+   "hole_count": 12,
+   "bend_count": 7,
+   "flat_bbox_mm": [
+    239.025,
+    289.787
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 202.9611,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 92.2336,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 132.2008,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 144.4867,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.6,
+     "direction": "down",
+     "length_mm": 92.2336,
+     "bend_allowance_mm": 0.9425
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 132.2008,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 92.2336,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    7,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0008",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 51506.4851,
+   "cut_length_mm": 1086.136,
+   "hole_count": 5,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    308.362,
+    177.725
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 143.2161,
+     "bend_allowance_mm": 5.4192
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 3.45,
+     "direction": "up",
+     "length_mm": 214.374,
+     "bend_allowance_mm": 2.4086
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.6,
+     "direction": "up",
+     "length_mm": 143.2161,
+     "bend_allowance_mm": 9.0321
+    }
+   ],
+   "seed": [
+    2,
+    8,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0009",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 45985.0858,
+   "cut_length_mm": 1445.6114,
+   "hole_count": 8,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    382.248,
+    148.985
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 69.9493,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 138.9854,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.0,
+     "direction": "down",
+     "length_mm": 69.9493,
+     "bend_allowance_mm": 7.854
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "down",
+     "length_mm": 138.9854,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.0,
+     "direction": "up",
+     "length_mm": 69.9493,
+     "bend_allowance_mm": 7.854
+    }
+   ],
+   "seed": [
+    2,
+    9,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0010",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 50107.4176,
+   "cut_length_mm": 1460.4737,
+   "hole_count": 12,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    208.195,
+    266.848
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 210.5027,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 145.5722,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.4,
+     "direction": "down",
+     "length_mm": 145.5722,
+     "bend_allowance_mm": 0.6283
+    }
+   ],
+   "seed": [
+    2,
+    10,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0011",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 49833.677,
+   "cut_length_mm": 1073.6057,
+   "hole_count": 3,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    331.171,
+    163.663
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 107.0237,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 155.2631,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 107.0237,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 155.2631,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    11,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0012",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 42198.3096,
+   "cut_length_mm": 1302.3262,
+   "hole_count": 7,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    255.977,
+    233.978
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 138.7714,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 104.4863,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 82.1012,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 138.7714,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 82.1012,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0013",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 11680.8058,
+   "cut_length_mm": 708.4816,
+   "hole_count": 4,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    227.05,
+    64.1
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 29.7339,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 58.1,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "down",
+     "length_mm": 29.7339,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 29.7339,
+     "bend_allowance_mm": 1.1781
+    }
+   ],
+   "seed": [
+    2,
+    13,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0014",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 52053.7507,
+   "cut_length_mm": 1376.3198,
+   "hole_count": 8,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    227.491,
+    295.033
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 114.031,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 177.9645,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 177.1645,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 113.231,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 114.031,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 79.0405,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    14,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0015",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 22288.7081,
+   "cut_length_mm": 731.0798,
+   "hole_count": 2,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    185.713,
+    164.839
+   ],
+   "bends": [
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 74.1076,
+     "bend_allowance_mm": 0.7854
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "up",
+     "length_mm": 58.4711,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "down",
+     "length_mm": 74.1076,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 33.7785,
+     "bend_allowance_mm": 2.3562
+    }
+   ],
+   "seed": [
+    2,
+    15,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0016",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 59942.962,
+   "cut_length_mm": 1502.7089,
+   "hole_count": 4,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    326.86,
+    263.089
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 84.2673,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 229.6288,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 123.8018,
+     "bend_allowance_mm": 7.5398
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "up",
+     "length_mm": 84.2673,
+     "bend_allowance_mm": 12.5664
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 177.1425,
+     "bend_allowance_mm": 5.0265
+    }
+   ],
+   "seed": [
+    2,
+    16,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0017",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 15749.9036,
+   "cut_length_mm": 1067.7794,
+   "hole_count": 9,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    219.021,
+    148.492
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 40.645,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 68.7894,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 42.645,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 69.7894,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 40.645,
+     "bend_allowance_mm": 1.1781
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.5,
+     "direction": "down",
+     "length_mm": 42.645,
+     "bend_allowance_mm": 2.0944
+    }
+   ],
+   "seed": [
+    2,
+    17,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0018",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 48554.1442,
+   "cut_length_mm": 1607.9381,
+   "hole_count": 12,
+   "bend_count": 8,
+   "flat_bbox_mm": [
+    363.909,
+    236.226
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 136.4521,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 49.6098,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 80.6158,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 0.4,
+     "direction": "down",
+     "length_mm": 84.7746,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 30.4203,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 49.8191,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 84.7746,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "down",
+     "length_mm": 49.8191,
+     "bend_allowance_mm": 1.2566
+    }
+   ],
+   "seed": [
+    2,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0019",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 23841.4961,
+   "cut_length_mm": 1048.4945,
+   "hole_count": 10,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    208.794,
+    162.283
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 83.3443,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 82.3005,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 2.4,
+     "direction": "down",
+     "length_mm": 83.3443,
+     "bend_allowance_mm": 1.6755
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 83.3443,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    19,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0020",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 73654.3575,
+   "cut_length_mm": 2013.7378,
+   "hole_count": 18,
+   "bend_count": 7,
+   "flat_bbox_mm": [
+    347.86,
+    289.28
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 199.0105,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.0,
+     "direction": "up",
+     "length_mm": 195.0105,
+     "bend_allowance_mm": 7.854
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 158.6079,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 3.0,
+     "direction": "up",
+     "length_mm": 156.6079,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.0,
+     "direction": "up",
+     "length_mm": 118.1417,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 156.6079,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "down",
+     "length_mm": 81.9743,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    20,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0021",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 40081.6225,
+   "cut_length_mm": 1302.0673,
+   "hole_count": 13,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    242.572,
+    192.95
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 137.1071,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 136.4349,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "down",
+     "length_mm": 136.4349,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    21,
+    2
+   ]
+  },
+  {
+   "name": "Lv3_0022",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 30375.6909,
+   "cut_length_mm": 1336.7174,
+   "hole_count": 12,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    167.912,
+    270.577
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 74.5499,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 92.3797,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 169.7206,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 50.5883,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 92.3797,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0023",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 58347.2987,
+   "cut_length_mm": 1574.8447,
+   "hole_count": 7,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    352.653,
+    241.284
+   ],
+   "bends": [
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 4.8,
+     "direction": "down",
+     "length_mm": 223.3671,
+     "bend_allowance_mm": 15.0796
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "down",
+     "length_mm": 88.0514,
+     "bend_allowance_mm": 12.5664
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.4,
+     "direction": "down",
+     "length_mm": 158.0428,
+     "bend_allowance_mm": 12.5664
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "down",
+     "length_mm": 97.6514,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 124.8481,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    23,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0024",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 34425.4549,
+   "cut_length_mm": 1081.4355,
+   "hole_count": 6,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    270.144,
+    155.298
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 3.0,
+     "direction": "up",
+     "length_mm": 144.3758,
+     "bend_allowance_mm": 4.1888
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 126.9447,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 4.0,
+     "direction": "up",
+     "length_mm": 55.8983,
+     "bend_allowance_mm": 5.236
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 3.0,
+     "direction": "up",
+     "length_mm": 126.9447,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.0,
+     "direction": "up",
+     "length_mm": 55.8983,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    24,
+    1
+   ]
+  },
+  {
+   "name": "Lv3_0025",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 85704.7026,
+   "cut_length_mm": 1521.5558,
+   "hole_count": 7,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    405.208,
+    216.027
+   ],
+   "bends": [
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 208.027,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 209.227,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.8,
+     "direction": "down",
+     "length_mm": 208.027,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "down",
+     "length_mm": 209.227,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    25,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0026",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 72444.8347,
+   "cut_length_mm": 1278.827,
+   "hole_count": 2,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    263.374,
+    322.338
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 209.7285,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 190.5006,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 97.643,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 209.7285,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 190.5006,
+     "bend_allowance_mm": 1.2566
+    }
+   ],
+   "seed": [
+    2,
+    26,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0027",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 74736.1653,
+   "cut_length_mm": 2395.9265,
+   "hole_count": 17,
+   "bend_count": 8,
+   "flat_bbox_mm": [
+    345.48,
+    328.916
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 162.3063,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 155.9661,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 85.5278,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 162.3063,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 155.9661,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 162.3063,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "down",
+     "length_mm": 155.9661,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 162.3063,
+     "bend_allowance_mm": 0.8378
+    }
+   ],
+   "seed": [
+    2,
+    27,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0028",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 88852.4936,
+   "cut_length_mm": 1585.5206,
+   "hole_count": 6,
+   "bend_count": 3,
+   "flat_bbox_mm": [
+    274.628,
+    333.35
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 267.8278,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 266.6278,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 267.8278,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    28,
+    1
+   ]
+  },
+  {
+   "name": "Lv3_0029",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 47362.4218,
+   "cut_length_mm": 1329.3168,
+   "hole_count": 14,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    265.241,
+    209.188
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "down",
+     "length_mm": 226.5976,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 102.4256,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 130.8193,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "down",
+     "length_mm": 226.5976,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 112.1695,
+     "bend_allowance_mm": 0.7854
+    }
+   ],
+   "seed": [
+    2,
+    29,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0030",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 68073.3616,
+   "cut_length_mm": 2045.4941,
+   "hole_count": 13,
+   "bend_count": 7,
+   "flat_bbox_mm": [
+    306.572,
+    385.011
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 110.0456,
+     "bend_allowance_mm": 7.0686
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 199.6234,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 105.5456,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 6.75,
+     "direction": "up",
+     "length_mm": 102.532,
+     "bend_allowance_mm": 18.8496
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "down",
+     "length_mm": 110.0456,
+     "bend_allowance_mm": 7.0686
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 105.5456,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 102.532,
+     "bend_allowance_mm": 7.0686
+    }
+   ],
+   "seed": [
+    2,
+    30,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0031",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 48269.944,
+   "cut_length_mm": 1277.8974,
+   "hole_count": 5,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    346.429,
+    202.717
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 98.8497,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 98.4318,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 97.6497,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 240.4303,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 78.8933,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 55.3884,
+     "bend_allowance_mm": 1.4137
+    }
+   ],
+   "seed": [
+    2,
+    31,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0032",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 61890.4734,
+   "cut_length_mm": 1904.2866,
+   "hole_count": 10,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    430.675,
+    213.2
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 46.5817,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 55.5817,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 264.3051,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 255.3051,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "down",
+     "length_mm": 46.5817,
+     "bend_allowance_mm": 10.6029
+    }
+   ],
+   "seed": [
+    2,
+    32,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0033",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 55076.1307,
+   "cut_length_mm": 1040.0335,
+   "hole_count": 2,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    262.893,
+    241.043
+   ],
+   "bends": [
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 186.8955,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 186.8955,
+     "bend_allowance_mm": 0.9425
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 115.6308,
+     "bend_allowance_mm": 1.2566
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 154.0679,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 30.0,
+     "inner_radius_mm": 0.4,
+     "direction": "down",
+     "length_mm": 142.4667,
+     "bend_allowance_mm": 0.4189
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 84.4971,
+     "bend_allowance_mm": 1.2566
+    }
+   ],
+   "seed": [
+    2,
+    33,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0034",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 36147.0857,
+   "cut_length_mm": 1230.9275,
+   "hole_count": 4,
+   "bend_count": 5,
+   "flat_bbox_mm": [
+    194.894,
+    297.959
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "down",
+     "length_mm": 115.243,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "down",
+     "length_mm": 45.6519,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "down",
+     "length_mm": 110.743,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 115.243,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "up",
+     "length_mm": 66.4972,
+     "bend_allowance_mm": 14.1372
+    }
+   ],
+   "seed": [
+    2,
+    34,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0035",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 43889.427,
+   "cut_length_mm": 1454.6248,
+   "hole_count": 3,
+   "bend_count": 7,
+   "flat_bbox_mm": [
+    420.6,
+    206.107
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "down",
+     "length_mm": 29.7454,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "down",
+     "length_mm": 180.4045,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "down",
+     "length_mm": 19.7601,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "down",
+     "length_mm": 184.9045,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 4.5,
+     "direction": "down",
+     "length_mm": 29.7454,
+     "bend_allowance_mm": 5.3014
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 180.4045,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "down",
+     "length_mm": 29.7454,
+     "bend_allowance_mm": 14.1372
+    }
+   ],
+   "seed": [
+    2,
+    35,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0036",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 21259.438,
+   "cut_length_mm": 1008.3596,
+   "hole_count": 6,
+   "bend_count": 4,
+   "flat_bbox_mm": [
+    266.003,
+    123.385
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.6,
+     "direction": "down",
+     "length_mm": 135.2075,
+     "bend_allowance_mm": 9.0321
+    },
+    {
+     "angle_deg": 135.0,
+     "inner_radius_mm": 4.6,
+     "direction": "down",
+     "length_mm": 29.6213,
+     "bend_allowance_mm": 13.5481
+    },
+    {
+     "angle_deg": 60.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 135.2075,
+     "bend_allowance_mm": 2.4086
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 135.2075,
+     "bend_allowance_mm": 3.6128
+    }
+   ],
+   "seed": [
+    2,
+    36,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0037",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 26596.1158,
+   "cut_length_mm": 1099.0747,
+   "hole_count": 3,
+   "bend_count": 6,
+   "flat_bbox_mm": [
+    443.469,
+    64.97
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 55.7698,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.4,
+     "direction": "up",
+     "length_mm": 55.7698,
+     "bend_allowance_mm": 4.7124
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.6,
+     "direction": "down",
+     "length_mm": 55.7698,
+     "bend_allowance_mm": 1.885
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 55.7698,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 55.7698,
+     "bend_allowance_mm": 2.8274
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "down",
+     "length_mm": 28.6975,
+     "bend_allowance_mm": 2.8274
+    }
+   ],
+   "seed": [
+    2,
+    37,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0038",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 70752.3136,
+   "cut_length_mm": 1972.815,
+   "hole_count": 9,
+   "bend_count": 7,
+   "flat_bbox_mm": [
+    460.169,
+    269.981
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "down",
+     "length_mm": 121.393,
+     "bend_allowance_mm": 10.6029
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "down",
+     "length_mm": 90.8398,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.25,
+     "direction": "down",
+     "length_mm": 125.893,
+     "bend_allowance_mm": 7.0686
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 90.8398,
+     "bend_allowance_mm": 8.8357
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 9.0,
+     "direction": "up",
+     "length_mm": 125.893,
+     "bend_allowance_mm": 17.6715
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 6.75,
+     "direction": "up",
+     "length_mm": 90.8398,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 6.75,
+     "direction": "up",
+     "length_mm": 88.0753,
+     "bend_allowance_mm": 7.0686
+    }
+   ],
+   "seed": [
+    2,
+    38,
+    0
+   ]
+  },
+  {
+   "name": "Lv3_0039",
+   "level": "Lv3",
+   "note": "多段フランジ",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 47657.9683,
+   "cut_length_mm": 1471.8041,
+   "hole_count": 12,
+   "bend_count": 7,
+   "flat_bbox_mm": [
+    335.357,
+    181.424
+   ],
+   "bends": [
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 70.2411,
+     "bend_allowance_mm": 2.3562
+    },
+    {
+     "angle_deg": 120.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 207.5521,
+     "bend_allowance_mm": 2.0944
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 125.9774,
+     "bend_allowance_mm": 1.5708
+    },
+    {
+     "angle_deg": 45.0,
+     "inner_radius_mm": 0.5,
+     "direction": "down",
+     "length_mm": 54.2075,
+     "bend_allowance_mm": 0.7854
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "down",
+     "length_mm": 207.5521,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 125.9774,
+     "bend_allowance_mm": 3.927
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "down",
+     "length_mm": 54.2075,
+     "bend_allowance_mm": 2.3562
+    }
+   ],
+   "seed": [
+    2,
+    39,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0000",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 9317.1587,
+   "cut_length_mm": 469.7779,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    104.103,
+    91.233
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 91.2333,
+     "bend_allowance_mm": 7.2257
+    }
+   ],
+   "seed": [
+    2,
+    0,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0001",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5756.9509,
+   "cut_length_mm": 462.3524,
+   "hole_count": 2,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    169.804,
+    34.59
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 34.5904,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 34.5904,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    1,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0002",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 10287.7914,
+   "cut_length_mm": 662.4508,
+   "hole_count": 3,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    237.798,
+    44.255
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 44.2547,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 44.2547,
+     "bend_allowance_mm": 10.6029
+    }
+   ],
+   "seed": [
+    2,
+    2,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0003",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 7135.155,
+   "cut_length_mm": 472.3915,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    115.21,
+    64.266
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 2.0,
+     "direction": "up",
+     "length_mm": 64.2663,
+     "bend_allowance_mm": 9.4248
+    }
+   ],
+   "seed": [
+    2,
+    3,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0004",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 33897.1182,
+   "cut_length_mm": 737.3529,
+   "hole_count": 0,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    175.202,
+    193.474
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 193.474,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    4,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0005",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 18876.5208,
+   "cut_length_mm": 696.6709,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    111.647,
+    174.48
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 174.4805,
+     "bend_allowance_mm": 5.6549
+    }
+   ],
+   "seed": [
+    2,
+    5,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0006",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 3370.8703,
+   "cut_length_mm": 335.6073,
+   "hole_count": 4,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    71.255,
+    50.776
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 50.776,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    6,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0007",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 3264.4686,
+   "cut_length_mm": 350.5785,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    57.833,
+    61.478
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 61.4781,
+     "bend_allowance_mm": 4.7124
+    }
+   ],
+   "seed": [
+    2,
+    7,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0008",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 17381.6849,
+   "cut_length_mm": 652.4759,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    136.765,
+    130.236
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 130.2361,
+     "bend_allowance_mm": 5.0265
+    }
+   ],
+   "seed": [
+    2,
+    8,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0009",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 4383.1224,
+   "cut_length_mm": 350.0025,
+   "hole_count": 0,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    144.713,
+    30.288
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 30.2884,
+     "bend_allowance_mm": 21.2058
+    }
+   ],
+   "seed": [
+    2,
+    9,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0010",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 2766.7088,
+   "cut_length_mm": 306.8179,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    58.966,
+    51.48
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 51.4804,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    10,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0011",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 11860.7432,
+   "cut_length_mm": 590.9561,
+   "hole_count": 4,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    100.302,
+    122.9
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 122.9003,
+     "bend_allowance_mm": 5.0265
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 122.9003,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    11,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0012",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 14421.2066,
+   "cut_length_mm": 496.1073,
+   "hole_count": 1,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    116.126,
+    124.328
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.5,
+     "direction": "up",
+     "length_mm": 124.3279,
+     "bend_allowance_mm": 3.1416
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.5,
+     "direction": "up",
+     "length_mm": 124.3279,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    12,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0013",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 13683.2573,
+   "cut_length_mm": 566.6109,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    69.474,
+    197.494
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 197.4945,
+     "bend_allowance_mm": 5.6549
+    }
+   ],
+   "seed": [
+    2,
+    13,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0014",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 4065.7343,
+   "cut_length_mm": 329.5736,
+   "hole_count": 1,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    94.102,
+    44.915
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 44.9155,
+     "bend_allowance_mm": 7.2257
+    }
+   ],
+   "seed": [
+    2,
+    14,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0015",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 14486.816,
+   "cut_length_mm": 758.8775,
+   "hole_count": 5,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    140.985,
+    107.826
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 107.8256,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 107.8256,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    15,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0016",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5243.8028,
+   "cut_length_mm": 573.8427,
+   "hole_count": 5,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    188.189,
+    30.088
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 30.0882,
+     "bend_allowance_mm": 3.7699
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 30.0882,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    16,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0017",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 27439.3551,
+   "cut_length_mm": 790.2914,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    172.916,
+    159.983
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 159.9826,
+     "bend_allowance_mm": 5.0265
+    }
+   ],
+   "seed": [
+    2,
+    17,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0018",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 15417.9791,
+   "cut_length_mm": 589.4818,
+   "hole_count": 2,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    110.965,
+    141.036
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 141.0361,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.0,
+     "direction": "up",
+     "length_mm": 141.0361,
+     "bend_allowance_mm": 7.854
+    }
+   ],
+   "seed": [
+    2,
+    18,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0019",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 21586.7265,
+   "cut_length_mm": 780.0306,
+   "hole_count": 5,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    114.664,
+    191.755
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 191.7548,
+     "bend_allowance_mm": 10.0531
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.8,
+     "direction": "up",
+     "length_mm": 191.7548,
+     "bend_allowance_mm": 10.0531
+    }
+   ],
+   "seed": [
+    2,
+    19,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0020",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 6050.8624,
+   "cut_length_mm": 519.4464,
+   "hole_count": 5,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    127.226,
+    51.174
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 51.1737,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    20,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0021",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.6,
+   "k_factor": 0.5,
+   "blank_area_mm2": 3385.8304,
+   "cut_length_mm": 249.8867,
+   "hole_count": 0,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    85.207,
+    39.737
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.6,
+     "direction": "up",
+     "length_mm": 39.7367,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    21,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0022",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 3.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 27393.1996,
+   "cut_length_mm": 896.465,
+   "hole_count": 4,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    200.991,
+    139.686
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 139.6863,
+     "bend_allowance_mm": 15.0796
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 3.2,
+     "direction": "up",
+     "length_mm": 139.6863,
+     "bend_allowance_mm": 7.5398
+    }
+   ],
+   "seed": [
+    2,
+    22,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0023",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 22769.3683,
+   "cut_length_mm": 709.2871,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    145.613,
+    159.928
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 159.9279,
+     "bend_allowance_mm": 5.6549
+    }
+   ],
+   "seed": [
+    2,
+    23,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0024",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 31478.2322,
+   "cut_length_mm": 743.6542,
+   "hole_count": 1,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    176.835,
+    178.498
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 178.4984,
+     "bend_allowance_mm": 10.8385
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 178.4984,
+     "bend_allowance_mm": 5.4192
+    }
+   ],
+   "seed": [
+    2,
+    24,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0025",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 14053.5666,
+   "cut_length_mm": 508.3635,
+   "hole_count": 0,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    172.901,
+    81.281
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 81.2812,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    25,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0026",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 7843.6067,
+   "cut_length_mm": 521.9995,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    183.091,
+    43.854
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 43.8544,
+     "bend_allowance_mm": 14.1372
+    }
+   ],
+   "seed": [
+    2,
+    26,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0027",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 32249.94,
+   "cut_length_mm": 968.1555,
+   "hole_count": 5,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    176.927,
+    187.758
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 187.758,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    27,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0028",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 6980.6958,
+   "cut_length_mm": 362.0443,
+   "hole_count": 0,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    125.319,
+    55.704
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 55.7036,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    28,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0029",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 10759.8732,
+   "cut_length_mm": 652.0311,
+   "hole_count": 6,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    132.556,
+    84.927
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 84.9266,
+     "bend_allowance_mm": 6.2832
+    }
+   ],
+   "seed": [
+    2,
+    29,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0030",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 7761.8474,
+   "cut_length_mm": 436.0319,
+   "hole_count": 2,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    73.639,
+    107.959
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 107.9592,
+     "bend_allowance_mm": 2.5133
+    }
+   ],
+   "seed": [
+    2,
+    30,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0031",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 30149.2915,
+   "cut_length_mm": 933.3981,
+   "hole_count": 6,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    156.85,
+    197.319
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.15,
+     "direction": "up",
+     "length_mm": 197.3185,
+     "bend_allowance_mm": 7.2257
+    }
+   ],
+   "seed": [
+    2,
+    31,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0032",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 10195.1489,
+   "cut_length_mm": 614.2924,
+   "hole_count": 5,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    58.612,
+    179.049
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 179.0487,
+     "bend_allowance_mm": 5.6549
+    }
+   ],
+   "seed": [
+    2,
+    32,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0033",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 0.8,
+   "k_factor": 0.5,
+   "blank_area_mm2": 33386.403,
+   "cut_length_mm": 927.9052,
+   "hole_count": 4,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    214.755,
+    158.039
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.4,
+     "direction": "up",
+     "length_mm": 158.0392,
+     "bend_allowance_mm": 2.5133
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 0.8,
+     "direction": "up",
+     "length_mm": 158.0392,
+     "bend_allowance_mm": 1.885
+    }
+   ],
+   "seed": [
+    2,
+    33,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0034",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 4973.268,
+   "cut_length_mm": 435.0366,
+   "hole_count": 3,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    128.387,
+    40.766
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 0.6,
+     "direction": "up",
+     "length_mm": 40.7662,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    34,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0035",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.0,
+   "k_factor": 0.5,
+   "blank_area_mm2": 2651.1136,
+   "cut_length_mm": 245.8775,
+   "hole_count": 1,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    84.139,
+    31.699
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 31.6993,
+     "bend_allowance_mm": 6.2832
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.0,
+     "direction": "up",
+     "length_mm": 31.6993,
+     "bend_allowance_mm": 3.1416
+    }
+   ],
+   "seed": [
+    2,
+    35,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0036",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 30107.3253,
+   "cut_length_mm": 903.1035,
+   "hole_count": 5,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    155.17,
+    198.192
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 198.1916,
+     "bend_allowance_mm": 14.1372
+    }
+   ],
+   "seed": [
+    2,
+    36,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0037",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 2.3,
+   "k_factor": 0.5,
+   "blank_area_mm2": 7916.5749,
+   "cut_length_mm": 457.9891,
+   "hole_count": 4,
+   "bend_count": 1,
+   "flat_bbox_mm": [
+    81.653,
+    99.228
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 2.3,
+     "direction": "up",
+     "length_mm": 99.2283,
+     "bend_allowance_mm": 10.8385
+    }
+   ],
+   "seed": [
+    2,
+    37,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0038",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 1.2,
+   "k_factor": 0.5,
+   "blank_area_mm2": 5305.9698,
+   "cut_length_mm": 317.0575,
+   "hole_count": 1,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    78.768,
+    67.828
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 1.2,
+     "direction": "up",
+     "length_mm": 67.8279,
+     "bend_allowance_mm": 5.6549
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 1.8,
+     "direction": "up",
+     "length_mm": 67.8279,
+     "bend_allowance_mm": 3.7699
+    }
+   ],
+   "seed": [
+    2,
+    38,
+    0
+   ]
+  },
+  {
+   "name": "Lv4_0039",
+   "level": "Lv4",
+   "note": "ヘム（180°曲げ）",
+   "thickness_mm": 4.5,
+   "k_factor": 0.5,
+   "blank_area_mm2": 16986.612,
+   "cut_length_mm": 522.0353,
+   "hole_count": 0,
+   "bend_count": 2,
+   "flat_bbox_mm": [
+    137.287,
+    123.731
+   ],
+   "bends": [
+    {
+     "angle_deg": 180.0,
+     "inner_radius_mm": 2.25,
+     "direction": "up",
+     "length_mm": 123.7308,
+     "bend_allowance_mm": 14.1372
+    },
+    {
+     "angle_deg": 90.0,
+     "inner_radius_mm": 4.5,
+     "direction": "up",
+     "length_mm": 123.7308,
+     "bend_allowance_mm": 10.6029
+    }
+   ],
+   "seed": [
+    2,
+    39,
+    0
+   ]
+  }
+ ]
+}
