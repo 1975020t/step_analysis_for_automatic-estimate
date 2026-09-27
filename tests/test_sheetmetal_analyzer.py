@@ -239,7 +239,7 @@ def test_arbitrary_linear_bend_angle_uses_k_factor(tmp_path: Path, angle_deg: fl
     assert result.assumptions
 
 
-def test_open_tray_with_corner_reliefs_uses_branched_unfold(tmp_path: Path):
+def test_open_tray_with_corner_reliefs_uses_graph_unfold(tmp_path: Path):
     thickness = 2.0
     radius = 5.0
     flange_height = 20.0
@@ -283,7 +283,7 @@ def test_open_tray_with_corner_reliefs_uses_branched_unfold(tmp_path: Path):
     expected_perimeter = 2 * (80 + 60) + 8 * (flange_height + bend_allowance)
     assert result.status == "success", result.model_dump()
     assert result.bend_count == 4
-    assert result.flat_pattern.method == "geometric_branched_tray_unfold"
+    assert result.flat_pattern.method == "geometric_graph_unfold"
     assert result.blank_area_mm2 == pytest.approx(expected_area, rel=0.01)
     assert result.cut_length_mm == pytest.approx(expected_perimeter, rel=0.01)
     assert len(result.flat_pattern.bend_lines) == 4
@@ -309,7 +309,8 @@ def test_hole_crossing_bend_is_not_reported_as_high_confidence_exact(tmp_path: P
     )
 
     assert result.status == "partial"
-    assert result.hole_count == 1
+    # The cut sits on the part edge, so in the flat pattern it is a notch of the outline, not a hole.
+    assert result.hole_count == 0
     assert result.reason_code == "INTERNAL_BOUNDARY_ESTIMATED"
     assert "INTERNAL_BOUNDARY_ESTIMATED" in result.reason_codes
     assert result.metric_quality["cut_length_mm"].confidence == "medium"

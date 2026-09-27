@@ -36,10 +36,10 @@ class SheetMetalRecognition:
                 normal_second = self.vector(faces[second].normalAt())
                 if self.dot(normal_first, normal_second) > -1 + self.PARALLEL_TOLERANCE:
                     continue
-                distance = float(faces[first].distance(faces[second]))
+                distance = self.plane_gap(faces[first], faces[second], normal_first)
                 if distance <= self.linear_tolerance or not self.locally_offset_planes(
                     faces[first], faces[second], normal_first, distance
-                ):
+                ) or not self.material_between(faces[first], faces[second], normal_first):
                     continue
                 candidates.append(SurfacePair(
                     first, second, "PLANE", distance,
@@ -94,9 +94,11 @@ class SheetMetalRecognition:
                     normal = self.vector(faces[first].normalAt())
                     if self.dot(normal, self.vector(faces[second].normalAt())) > -1 + self.PARALLEL_TOLERANCE:
                         continue
-                    distance = float(faces[first].distance(faces[second]))
+                    distance = self.plane_gap(faces[first], faces[second], normal)
                     if not self.locally_offset_planes(faces[first], faces[second], normal, distance):
                         continue
+                    if not self.material_between(faces[first], faces[second], normal):
+                        continue  # e.g. the open gap of a hem, which can be exactly one thickness wide
                 else:
                     try:
                         first_cylinder = self.cylinder(faces[first])
@@ -201,33 +203,6 @@ class SheetMetalRecognition:
             ))
         return result
 
-    def hole_components(self, faces, components, thickness, bends) -> list[set[int]]:
-        if bends:
-            direction = bends[0].axis_direction
-            bend_indices = {index - 1 for bend in bends for index in bend.face_indices}
-            feature_cylinders = {
-                index for component in components for index in component
-                if index not in bend_indices and faces[index].geomType() == "CYLINDER"
-                and self.cylinder(faces[index])[2] > thickness
-            }
-            all_values = [self.dot((float(v.X), float(v.Y), float(v.Z)), direction) for face in faces for v in face.Vertices()]
-            model_min, model_max = min(all_values), max(all_values)
-            result = [{index} for index in sorted(feature_cylinders)]
-            for component in components:
-                values = [self.dot((float(v.X), float(v.Y), float(v.Z)), direction) for index in component for v in faces[index].Vertices()]
-                spans = values and min(values) <= model_min + self.linear_tolerance * 10 and max(values) >= model_max - self.linear_tolerance * 10
-                residual = component - feature_cylinders
-                if not spans and residual:
-                    result.append(residual)
-            return result
-        result = []
-        for component in components:
-            if {faces[index].geomType() for index in component} == {"CYLINDER"}:
-                radii = [self.cylinder(faces[index])[2] for index in component]
-                if radii and max(radii) > thickness:
-                    result.append(component)
-        return result
-
     def candidate_models(self, candidates, faces, thickness) -> list[ThicknessCandidate]:
         methods = {"PLANE": "opposing_planes", "CYLINDER": "coaxial_cylinders"}
         result = [ThicknessCandidate(
@@ -277,6 +252,18 @@ class SheetMetalRecognition:
         normal_distance = abs(self.dot(delta, normal))
         tangential = math.sqrt(max(0.0, self.dot(delta, delta) - normal_distance**2))
         return abs(normal_distance - distance) <= max(self.linear_tolerance * 10, distance * 0.02) and tangential <= max(self.linear_tolerance * 10, math.sqrt(min(first.Area(), second.Area())) * 0.25)
+
+    @staticmethod
+    def plane_gap(first, second, normal) -> float:
+        """Distance between two parallel planes (exact, unlike the slow face-to-face distance)."""
+        a, b = first.Center(), second.Center()
+        return abs((float(b.x - a.x)) * normal[0] + float(b.y - a.y) * normal[1] + float(b.z - a.z) * normal[2])
+
+    @staticmethod
+    def material_between(first, second, normal) -> bool:
+        """Opposite skins of a sheet face away from each other: the partner lies behind the outward normal."""
+        a, b = first.Center(), second.Center()
+        return float(b.x - a.x) * normal[0] + float(b.y - a.y) * normal[1] + float(b.z - a.z) * normal[2] < 0
 
     def cylinders_overlap_along_axis(self, first_face, second_face, cylinder) -> bool:
         point, direction, _ = cylinder
