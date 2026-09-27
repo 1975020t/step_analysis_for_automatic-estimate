@@ -8,6 +8,7 @@ STEP形式の板金部品を解析し、ルールベースで見積を出すシ�
 
 - Python 3.11 で動作確認済み（CadQuery の都合で 3.10〜3.12）。依存は `requirements.txt`
 - ユーザーは Windows / PowerShell。README のコマンドは `.venv\Scripts\python.exe` 形式
+- Claude APIキーは環境変数 `ANALYSIS_ANTHROPIC_API_KEY`（クラウド環境の変数、または `.env`）
 - 秘密情報は `.env`（Git管理外、雛形は `.env.example`）。プッシュ前に `python scripts/check_secrets.py --history`
 
 ## よく使うコマンド

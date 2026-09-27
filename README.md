@@ -81,7 +81,7 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 
 ## Claude API（解析へのLLM活用の検証）
 
-`.env` に `ANTHROPIC_API_KEY` を書くだけで使えます（雛形は `.env.example`）。疎通確認とLLM版解析器の評価：
+`.env`（またはクラウド環境の環境変数）に `ANALYSIS_ANTHROPIC_API_KEY` を書くだけで使えます（雛形は `.env.example`）。疎通確認とLLM版解析器の評価：
 
 ```powershell
 .venv\Scripts\python.exe scripts\check_claude_api.py

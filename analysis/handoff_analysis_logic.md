@@ -128,7 +128,7 @@ Lv0は現行の平板処理で100%。確認した失敗例でも面積の誤差�
 ルールベースとの併用・比較を含めて試してよい。形状データ（面・寸法・座標などの解析情報、画像）をClaude APIへ送ることはユーザー承認済み。
 
 - 準備済みのもの：
-  - `src/claude_api.py`：クライアント。キーは `.env` の `ANTHROPIC_API_KEY`、モデルは `ANTHROPIC_MODEL`
+  - `src/claude_api.py`：クライアント。キーは環境変数 `ANALYSIS_ANTHROPIC_API_KEY`（`.env` でも可。`ANTHROPIC_API_KEY` も読む）、モデルは `ANTHROPIC_MODEL`
   - `src/llm_assisted_analyzer.py`：サンプルの解析器。ルールベースの結果をClaudeがレビューし、慎重な方向にのみ変更する。作り替えてよい
   - `scripts/check_claude_api.py`：APIキーの疎通確認
 - ハーネスで評価する：`--analyzer module:Class` で解析器を差し替える。`--repeat 3` で結果のばらつき、`--limit` で件数を絞った試行ができる。トークン数はレポートに自動で集計される

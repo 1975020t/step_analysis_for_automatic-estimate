@@ -1,9 +1,12 @@
 """Thin Claude API client for analysis experiments.
 
-Only an API key is needed: put ANTHROPIC_API_KEY in .env (git-ignored).
+Only an API key is needed: put ANALYSIS_ANTHROPIC_API_KEY (or ANTHROPIC_API_KEY) in .env (git-ignored)
+or in the cloud environment's variables. ANALYSIS_ANTHROPIC_API_KEY is preferred in Claude Code cloud
+sessions so that the key is only used by this project's code, not picked up by Claude Code itself.
 
 Environment variables (all optional except the key for live calls):
-  ANTHROPIC_API_KEY   API key
+  ANALYSIS_ANTHROPIC_API_KEY   API key (preferred)
+  ANTHROPIC_API_KEY            API key (fallback)
   ANTHROPIC_MODEL     model id (default: claude-sonnet-5)
   CLAUDE_CACHE_MODE   record (default) | replay | live
                         record: reuse a cached response if present, otherwise call the API and cache it
@@ -68,7 +71,8 @@ class ClaudeClient:
         if self.mode not in {"record", "replay", "live"}:
             raise ClaudeConfigError("CLAUDE_CACHE_MODE は record / replay / live のいずれかです")
         self.cache_dir = Path(cache_dir or os.getenv("CLAUDE_CACHE_DIR", ROOT / ".claude_cache"))
-        self._api_key = api_key if api_key is not None else os.getenv("ANTHROPIC_API_KEY", "").strip()
+        self._api_key = api_key if api_key is not None else (
+            os.getenv("ANALYSIS_ANTHROPIC_API_KEY", "").strip() or os.getenv("ANTHROPIC_API_KEY", "").strip())
         self.max_retries = max_retries
         self.usage = Usage()
         self._client = None
@@ -112,7 +116,7 @@ class ClaudeClient:
 
     def _live(self, request: dict) -> dict:
         if not self._api_key:
-            raise ClaudeConfigError("ANTHROPIC_API_KEY が未設定です。.env に記入してください")
+            raise ClaudeConfigError("APIキーが未設定です。ANALYSIS_ANTHROPIC_API_KEY（または ANTHROPIC_API_KEY）を .env か環境変数に設定してください")
         if self._client is None:
             import anthropic
             self._client = anthropic.Anthropic(api_key=self._api_key, max_retries=self.max_retries)

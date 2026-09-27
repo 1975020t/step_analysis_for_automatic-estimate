@@ -109,3 +109,11 @@ def test_real_sdk_request_and_response_path_with_mocked_http(tmp_path):
     assert seen["body"]["tool_choice"] == {"type": "tool", "name": "report"}
     assert client.usage.input_tokens == 123 and client.usage.output_tokens == 45
     assert not list(tmp_path.glob("*.json"))  # live mode does not cache
+
+
+def test_project_specific_key_name_is_preferred(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "generic")
+    monkeypatch.setenv("ANALYSIS_ANTHROPIC_API_KEY", "project")
+    assert ClaudeClient(mode="live", cache_dir=tmp_path)._api_key == "project"
+    monkeypatch.delenv("ANALYSIS_ANTHROPIC_API_KEY")
+    assert ClaudeClient(mode="live", cache_dir=tmp_path)._api_key == "generic"
