@@ -22,3 +22,4 @@ samples/nist-source/
 
 # generated golden data (regenerate with scripts/generate_golden.py)
 golden_data/
+golden_holdout/

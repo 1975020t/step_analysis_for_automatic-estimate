@@ -45,5 +45,25 @@ def test_evaluation_harness_scores_flat_plate_as_correct(tmp_path):
 
     part, built = generate("Lv0", 0, seed=3)
     truth = part.export(tmp_path, built)
-    row = evaluate_part((str(tmp_path / f"{part.name}.step"), truth, 60))
+    row = evaluate_part((str(tmp_path / f"{part.name}.step"), truth, {"timeout": 60}))
     assert row["outcome"] == "CORRECT", row
+
+
+def test_generator_still_reproduces_frozen_golden_v1():
+    """The frozen truth (golden/datasets/golden_v1.json) must stay reproducible.
+
+    If this fails, the generator changed: do not edit the frozen file to make it pass -
+    create a new dataset version instead (see CLAUDE.md).
+    """
+    import json
+    from pathlib import Path
+
+    frozen = json.loads((Path(__file__).resolve().parents[1] / "golden" / "datasets" / "golden_v1.json")
+                        .read_text(encoding="utf-8"))
+    by_name = {p["name"]: p for p in frozen["parts"]}
+    for level in LEVELS:
+        for index in (0, 57):
+            _, (_, _, truth) = generate(level, index, seed=frozen["seed"])
+            expected = by_name[truth["name"]]
+            for key in ("blank_area_mm2", "cut_length_mm", "hole_count", "bend_count", "thickness_mm"):
+                assert truth[key] == pytest.approx(expected[key], rel=1e-9), (truth["name"], key)

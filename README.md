@@ -91,10 +91,10 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 
 ```powershell
 .venv\Scripts\python.exe scripts\generate_golden.py --per-level 100 --seed 1 --out golden_data
-.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --report analysis\golden_eval_baseline.md
+.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --verify-frozen --tolerance 0.10 --gate --report analysis\golden_eval_latest.md
 ```
 
-設計・レベル定義・限界は [analysis/golden_data_design.md](analysis/golden_data_design.md)、最新の結果は [analysis/golden_eval_baseline.md](analysis/golden_eval_baseline.md) を参照してください。
+解析ロジック改善の作業指示と受入条件は [analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md) にあります。設計・レベル定義・限界は [analysis/golden_data_design.md](analysis/golden_data_design.md)、最新の結果は [analysis/golden_eval_baseline.md](analysis/golden_eval_baseline.md) を参照してください。
 
 ## 現時点の評価制約
 
