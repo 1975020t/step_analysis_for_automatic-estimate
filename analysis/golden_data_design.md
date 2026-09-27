@@ -71,3 +71,22 @@ python scripts/render_golden.py --data golden_data --per-level 2 --out analysis/
 - **発生頻度**：追加の検証用シードで seed=3 の1000件中2件（Lv2_0018：正解9→7、Lv3_0186：12→11）、seed=4 の1000件中0件、開発データ seed=1 の508件中0件
 - **対応**：`golden/truth_v2.py` で、穴数を展開ソリッドの上面の内側ワイヤー数から求める（面積・切断長と同じ根拠。解析器は使わない）。`python scripts/generate_golden.py --truth-version v2` で生成する。`golden_v1.json`・`sheetgen.py`・`sampler.py` は変更していない。`golden/datasets/golden_v2.json`（seed=1）は golden_v1 と値が同一
 - **ホールドアウトへの影響**：holdout_v1 は v1 の正解値のまま判定しており、全200件で解析結果と一致した（この不具合に該当する部品はなかった）
+
+## 追加検証データ（seed=3・4、2026-09-27）
+
+開発にもホールドアウトにも使っていない追加の検証データ。解析ロジック改善（PR #4・#5）後の main（d474caf）で評価し、どちらも全1,000件が「確定で正解」、危険誤答0件で合格した。
+
+| データ | 件数 | 正解値 | 凍結ファイル | レポート |
+|---|---:|---|---|---|
+| seed=3 | 1,000（各レベル200） | golden_v2 基準（v1 とは穴数が2件異なる） | `golden/datasets/extra_seed3_v2.json` | [golden_eval_seed3.md](golden_eval_seed3.md) |
+| seed=4 | 1,000（各レベル200） | golden_v2 基準（v1 と同一） | `golden/datasets/extra_seed4_v2.json` | [golden_eval_seed4.md](golden_eval_seed4.md) |
+
+再現手順:
+
+```
+python scripts/generate_golden.py --per-level 200 --seed 3 --no-curated --truth-version v2 --out golden_seed3
+python scripts/evaluate_golden.py --data golden_seed3 --verify-frozen golden/datasets/extra_seed3_v2.json --tolerance 0.10 --gate --report analysis/golden_eval_seed3.md
+```
+
+seed=4 も同様（数値を 4 に置き換える）。生成は1,000件で約2.5分、評価は約3分。
+
