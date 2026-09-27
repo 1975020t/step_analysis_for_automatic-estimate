@@ -85,6 +85,17 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 
 テストには、不正入力、B-Rep、適応公差、面隣接、板厚、平板と複数穴、L/U/Z相当の複数曲げ、45/60/120度曲げ、異なるR、2D包含、Kファクター、対象外形状、課金単位、LLM送信項目、API失敗時の状態保持、Streamlit表示が含まれます。
 
+## ゴールデンデータによる評価
+
+実部品のGolden Dataが入手できるまでの代替として、正解値付きの板金部品を生成して解析ロジックを定量評価します。複雑度をLv0（平板）〜Lv3（多段フランジ）、Lv4（弾くべき形状）に分けて、レベル別の正解率と危険誤答率を出します。
+
+```powershell
+.venv\Scripts\python.exe scripts\generate_golden.py --per-level 100 --seed 1 --out golden_data
+.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --report analysis\golden_eval_baseline.md
+```
+
+設計・レベル定義・限界は [analysis/golden_data_design.md](analysis/golden_data_design.md)、最新の結果は [analysis/golden_eval_baseline.md](analysis/golden_eval_baseline.md) を参照してください。
+
 ## 現時点の評価制約
 
 テスト形状はCadQueryでパラメトリック生成し、理論値と比較しています。実部品のGolden Dataはまだありません。そのため、カバレッジ90%、10%以内正解率95%、危険誤答率1%未満は開発目標であり、現時点の達成値としては主張しません。実データ入手後に形状分類ごとの母数、正解値、誤差分布を記録して評価します。
