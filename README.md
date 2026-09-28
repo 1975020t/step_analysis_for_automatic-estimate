@@ -7,10 +7,24 @@ STEP/STP形式の一定板厚板金をローカル解析し、形状根拠、3D�
 ```powershell
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m streamlit run app.py
+.venv\Scripts\python.exe -m streamlit run app.py                         # デモ画面 http://localhost:8501
+.venv\Scripts\python.exe -m uvicorn api.main:app --port 8000             # API http://localhost:8000/docs
 ```
 
 ブラウザでSTEPを選び、必要ならKファクターを変更して「解析を実行」を押します。既定値0.33のまま曲げ形状を解析した場合、加工条件未確認の概算として表示されます。
+
+### Docker で起動する（API とデモ画面）
+
+Docker（Windows なら Docker Desktop）があれば、社内サーバーでもクラウドの仮想マシンでも同じ手順で起動できます。
+
+```powershell
+docker compose up --build        # API http://localhost:8000/docs 、デモ画面 http://localhost:8501
+docker compose down              # 停止
+```
+
+- `output/`（アップロード・受付・見積書）と `data/past_quotes/`（見積履歴）はホストのフォルダをそのまま使うので、止めても消えません。見積履歴は今までどおりコミットします
+- APIに合言葉をかけるときは `API_TOKEN=... docker compose up`（PowerShell なら `$env:API_TOKEN="..."` のあと `docker compose up`）。図面PDFの読み取りを使うときは `ANALYSIS_ANTHROPIC_API_KEY` も同じように渡します
+- Docker Hub に届かない社内ネットワークでは、`BASE_IMAGE` に社内レジストリの Python 3.11 イメージを指定します（例 `$env:BASE_IMAGE="registry.example.local/python:3.11-slim"`）
 
 ## 解析方式
 
@@ -210,6 +224,35 @@ D0〜D2 は全件が「確定で正解」でした。面積・切断長の最大
 種データ（`data/past_quotes/past_quotes_seed.csv`、架空）は取り込み済みです。`出典` 列は試験用のため、取り込み時に捨てています（検索・表示には使いません）。
 
 **履歴への追加と結果の記録**：見積書PDFを出力すると、その見積（顧客、図番・改訂、品名、条件、解析値、単価、見積日）が自動で履歴に入り、次の検索から出ます。見積番号は出力記録（`output/quote_log.csv`）と履歴の両方を見て重複しないように決めます。受注・失注は画面の「受注・失注の記録」で後から記録できます。テストは履歴の一時的な複製を使い、コミットされた履歴を書き換えません。
+
+## API（サーバー）
+
+画面から独立した API（FastAPI）で、今の機能をすべて使えます。Streamlit のデモも同じ処理の層（`src/services/`）を呼ぶので、画面・API・見積書で金額は同じです。設計と呼び出しの流れ、段階2・3で差し替える部分は [analysis/api_design.md](analysis/api_design.md)、仕様書は起動後の `/docs` にあります。
+
+| 機能 | 呼び出し |
+|---|---|
+| マスター | `GET /api/masters` |
+| 形状の解析（受付番号方式） | `POST /api/files` → `POST /api/analyses` → `GET /api/jobs/{job_id}` |
+| 図面PDFの読み取り（受付番号方式。APIキーがなければ 503） | `POST /api/files` → `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` |
+| 見積の計算 | `POST /api/quotes` |
+| 見積書 | `POST /api/documents` → `GET /api/documents/{quote_no}/quote.pdf`（社内用は `internal.pdf`） |
+| 類似見積 | `POST /api/similar-quotes` |
+| 過去見積の履歴 | `POST /api/history/import`、`GET /api/history`、`GET /api/history/{quote_no}`、`PUT /api/history/{quote_no}/outcome` |
+| 3D表示用の形状（glTF） | `GET /api/files/{file_id}/model.glb` |
+
+解析と図面の読み取りは、受け付けるとすぐ受付番号を返し、裏で処理します。受付の状態と結果はファイルに残るので、APIを再起動しても取れます（処理中だったものは再起動後に続きを処理します）。
+
+データの置き場所と制限は環境変数で変えられます（既定はリポジトリ内の今の場所）。
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `ESTIMATE_DATA_DIR` | `data` | マスター |
+| `ESTIMATE_STORAGE_DIR` | `output` | アップロード・受付・見積書・3D表示のファイル |
+| `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 見積履歴 |
+| `QUOTE_LOG_PATH` | `output/quote_log.csv` | 見積書の出力記録 |
+| `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要 |
+| `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類は .step .stp .dxf .pdf、中身の先頭も確認） |
+| `JOB_WORKERS` | 2 | 裏で処理する数 |
 
 ## チャットと情報保護
 
