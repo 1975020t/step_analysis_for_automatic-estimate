@@ -59,6 +59,7 @@
 | pdf_v1 | 開発 | 300（各レベル60） | 31 | `golden/datasets/pdf_v1.json` | `python scripts/generate_pdf_golden.py --per-level 60 --seed 31 --out pdf_data` |
 | pdf_holdout_v1 | 最終判定（開発中は開かない） | 200（各レベル40） | 32 | `golden/datasets/pdf_holdout_v1.json` | `python scripts/generate_pdf_golden.py --per-level 40 --seed 32 --unseen-ratio 0.2 --out pdf_holdout` |
 
+- **開発用は実データとしてリポジトリに入れている**：`pdf_data/pdf/`（図面PDF 300枚）、`pdf_data/step/`（同じ部品のSTEP 300個）、`pdf_data/index.json`（正解）。生成コマンドで作り直しても同じファイルになる（STEPの見出しの日時も固定）。ホールドアウトは実物を置かず、最終判定のときに生成する
 - ホールドアウトは、約2割を **開発用にない様式と欄の名前**（`golden/pdf_unseen.py`）で描く。項目の意味と正解の規則は同じ。汎化の確認用なので、開発中はこのファイルも開かない
 - 生成は300枚で約100秒（2並列）。出力は決定的で、同じコマンドなら正解値もPDFも同じになる（`--verify-frozen` で確認できる）
 - 日本語は同梱の IPAゴシック（`golden/fonts/`、IPAフォントライセンス）で描くので、Windows でも同じ図面になる

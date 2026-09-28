@@ -20,6 +20,8 @@
 | 性能・費用 | 1枚あたり平均30秒以内（LLMの待ち時間込み）。評価レポートにトークン数を残す |
 | 回帰 | `python -m pytest -q` がすべてパスし、STEP の評価（`scripts/evaluate_golden.py --gate`）と DXF の評価（`scripts/evaluate_dxf.py --gate`）も合格のまま |
 
+開発用の図面PDFとSTEPは `pdf_data/` にコミット済み（生成コマンドで作り直しても同じファイルになる）。
+
 判定コマンド（受入条件のうち数値のものは `--gate` で判定される）:
 
 ```

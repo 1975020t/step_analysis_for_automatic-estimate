@@ -983,7 +983,9 @@ def build_pdf(level: str, index: int, seed: int, out_dir: Path, unseen_ratio: fl
     if with_step:
         import cadquery as cq
         (out_dir / "step").mkdir(parents=True, exist_ok=True)
-        cq.exporters.export(folded, str(out_dir / "step" / f"{name}.step"))
+        step = out_dir / "step" / f"{name}.step"
+        cq.exporters.export(folded, str(step))
+        _normalize_step_header(step, name)
 
     meta = dict(plan.meta)
     meta.update(unseen=unseen, page_size=page_key, lang=lang)
@@ -991,6 +993,16 @@ def build_pdf(level: str, index: int, seed: int, out_dir: Path, unseen_ratio: fl
             "kind": kind, "style": style, "unseen": unseen,
             "part_truth": {k: base_truth[k] for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")},
             "truth": plan.truth, "meta": meta}
+
+
+def _normalize_step_header(path: Path, name: str) -> None:
+    """OpenCascade writes the export time and a per-process counter into the header; fix both so that
+    regenerating the data gives byte-identical STEP files (the geometry is already deterministic)."""
+    import re
+    text = path.read_text(encoding="utf-8", errors="replace")
+    text = re.sub(r"(FILE_NAME\('[^']*',)'[^']*'", r"\1'2026-01-01T00:00:00'", text, count=1)
+    text = re.sub(r"Open CASCADE STEP translator ([\d.]+) \d+", rf"{name}", text)
+    path.write_text(text, encoding="utf-8")
 
 
 def rasterize(pdf: bytes, plan: Plan, sh: R.Sheet, page_pt, layout_size, kind: str, rng: random.Random) -> bytes:

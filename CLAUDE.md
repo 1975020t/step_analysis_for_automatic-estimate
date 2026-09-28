@@ -26,7 +26,7 @@ python scripts/check_claude_api.py                                        # Clau
 python scripts/generate_dxf_golden.py --per-level 40 --seed 21 --out dxf_data        # DXF開発用データ800件（約2分）
 python scripts/evaluate_dxf.py --data dxf_data --analyzer src.dxf_analyzer:DxfAnalyzer --verify-frozen --gate \
     --report analysis/dxf_eval_latest.md                                 # DXF評価。結果は dxf_data/results.csv
-python scripts/generate_pdf_golden.py --per-level 60 --seed 31 --out pdf_data        # 図面PDF開発用データ300枚（約2分）
+python scripts/generate_pdf_golden.py --per-level 60 --seed 31 --out pdf_data        # 図面PDF開発用300枚。pdf_data/ にPDFとSTEPをコミット済み（作り直しても同一）
 python scripts/evaluate_pdf.py --data pdf_data --reader src.pdf_reader:PdfConditionReader --verify-frozen --gate \
     --report analysis/pdf_eval_latest.md                                 # 図面PDF評価。結果は pdf_data/results.csv
 ```
