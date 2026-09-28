@@ -21,6 +21,7 @@ python scripts/evaluate_golden.py --data golden_data --verify-frozen --tolerance
     --report analysis/golden_eval_latest.md                              # 評価（約2分）。--gate で合否
 python scripts/evaluate_golden.py --data golden_data --tolerance 0.10 --levels Lv2 --limit 20   # 部分的な素早い確認
 python scripts/render_golden.py --data golden_data --per-level 3          # 形状と判定の一覧画像
+python scripts/generate_stress.py --per-level 40 --seed 21 --out stress_data   # 作り方を変えたストレステスト用データ（analysis/stress_data_design.md）
 python scripts/check_claude_api.py                                        # Claude APIキーの疎通確認
 python scripts/generate_dxf_golden.py --per-level 40 --seed 21 --out dxf_data        # DXF開発用データ800件（約2分）
 python scripts/evaluate_dxf.py --data dxf_data --analyzer src.dxf_analyzer:DxfAnalyzer --verify-frozen --gate \
