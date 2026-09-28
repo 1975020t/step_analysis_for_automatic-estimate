@@ -30,6 +30,7 @@ from __future__ import annotations
 import io
 import random
 import zlib
+from contextlib import contextmanager
 from pathlib import Path
 
 from reportlab.lib.pagesizes import A3, A4, landscape, portrait
@@ -185,7 +186,53 @@ REV_FORMS = {
            "other": ["HOLE LOCATION REVISED", "NOTE {k} ADDED", "DIM {b} WAS {a}", "BEND RELIEF ADDED"]},
 }
 HAND_RUSH = ["急ぎ {m}/{d}納品希望", "至急！", "特急でお願いします", "大至急"]
+FREE_RUSH = ["特急でお願いします", "至急", "急ぎ：{m}/{d} 納品希望"]
 HAND_NOISE = ["寸法確認済 {m}/{d}", "OK 田中", "図面受領 {m}/{d}", "要確認→済"]
+
+
+# ------------------------------------------------------------------ vocabulary sets
+# The tables above are vocabulary "v1" (pdf_v1 / pdf_holdout_v1). A vocabulary-shift set replaces them with
+# other wordings of the same meanings (golden/vocab/*.json) to test how a reader behaves on words it has
+# never seen. Truth rules and master codes do not change.
+VOCAB_KEYS = ("MAT", "MAT_UNREG", "FIN", "FIN_UNREG", "FIN_UNREG_AL", "PROC", "PROC_UNREG", "HOLE_DISTRACTORS",
+              "FLAGS", "STANDARD_NOTES", "GENERAL_TOL", "RUSH", "RUSH_NEG", "DISTRACT_NOTES", "HAND_RUSH",
+              "HAND_NOISE", "FREE_RUSH")
+
+
+def _replace_leaves(base, override):
+    """Nested dicts are merged key by key; lists (the wordings) are replaced."""
+    if isinstance(base, dict) and isinstance(override, dict):
+        out = dict(base)
+        for k, v in override.items():
+            if k not in base:
+                raise ValueError(f"unknown vocabulary key: {k}")
+            out[k] = _replace_leaves(base[k], v)
+        return out
+    return list(override)
+
+
+@contextmanager
+def vocabulary(vocab: dict | None):
+    """Temporarily use another vocabulary (dict as in golden/vocab/*.json) for the tables above."""
+    if not vocab:
+        yield
+        return
+    unknown = set(vocab) - set(VOCAB_KEYS) - {"name", "description"}
+    if unknown:
+        raise ValueError(f"unknown vocabulary tables: {sorted(unknown)}")
+    g = globals()
+    saved = {k: g[k] for k in VOCAB_KEYS if k in vocab}
+    try:
+        for k in saved:
+            g[k] = _replace_leaves(saved[k], vocab[k])
+        yield
+    finally:
+        g.update(saved)
+
+
+def load_vocabulary(path) -> dict:
+    import json
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 # ------------------------------------------------------------------ helpers
@@ -300,7 +347,7 @@ class Plan:
             shown = self._revisions(present, loc, values, shown)
 
         # ---- truth for the price fields
-        for f in present:
+        for f in sorted(present):
             code, text = final[f]
             self.meta["sources"][f] = loc[f]
             if f == "material":
@@ -610,7 +657,7 @@ class Plan:
             if where == "notes":
                 self.notes.append((text, None))
             elif where == "free":
-                self.free.append((rng.choice(["特急でお願いします", "至急", "急ぎ：{m}/{d} 納品希望"]).format(m=m, d=d), None))
+                self.free.append((rng.choice(FREE_RUSH).format(m=m, d=d), None))
             elif where == "title":
                 self.title.append(("due", text if self.lang == "en" else rng.choice(["特急", "至急", f"{m}/{d}（特急）"]), None))
             else:
@@ -930,8 +977,18 @@ def choose_style(rng, unseen):
     return _pick(rng, list(STYLES.items()))
 
 
-def build_pdf(level: str, index: int, seed: int, out_dir: Path, unseen_ratio: float = 0.0, with_step: bool = True) -> dict:
-    """Write <out_dir>/pdf/<name>.pdf (and step/<name>.step) and return the truth record."""
+def build_pdf(level: str, index: int, seed: int, out_dir: Path, unseen_ratio: float = 0.0, with_step: bool = True,
+              vocab: dict | None = None) -> dict:
+    """Write <out_dir>/pdf/<name>.pdf (and step/<name>.step) and return the truth record.
+    vocab: another vocabulary (see vocabulary()); None = v1."""
+    with vocabulary(vocab):
+        record = _build_pdf(level, index, seed, out_dir, unseen_ratio, with_step)
+    if vocab:
+        record["meta"]["vocab"] = vocab.get("name", "custom")
+    return record
+
+
+def _build_pdf(level: str, index: int, seed: int, out_dir: Path, unseen_ratio: float, with_step: bool) -> dict:
     part, built = generate(level, index, seed)
     part.level = level
     apply_v2(built)

@@ -1,3 +1,7 @@
 key,value,description
 margin_rate,0.25,粗利率（小計に対する割合）
 rush_surcharge_rate,0.30,特急の割増率（小計に対する割合）
+tax_rate,0.10,消費税率（見積書の消費税）
+quote_validity_days,30,見積の有効期限（発行日からの日数）
+lead_time_days_normal,10,通常の納期（受注後の営業日）
+lead_time_days_rush,5,特急の納期（受注後の営業日）

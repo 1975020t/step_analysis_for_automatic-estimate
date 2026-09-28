@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import io
+import os
+from datetime import datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -15,6 +17,10 @@ from src.models import QuoteCondition
 from src.quote_engine import QuoteEngine, QuoteUnavailableError
 from src.dxf_analyzer import DxfAnalyzer
 from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, condition_items, quote_condition
+from src.quote_document import (PartInfo, Recipient, build_document, default_subject, load_company, log_row,
+                                price_summary, unregistered_process_texts)
+from src.quote_log import QuoteLog
+from src.quote_pdf import render_internal, render_quote
 from src.sheetmetal_analyzer import SheetMetalAnalyzer
 
 
@@ -52,7 +58,8 @@ if is_dxf and not thickness > 0:
     st.info("展開図DXFの解析には板厚（mm）の入力が必要です（図面PDFを指定した場合は図面の板厚を使います）。")
 if analyze_clicked and uploaded is not None:
     data = uploaded.getvalue()
-    st.session_state.pop("pdf_reading", None)
+    for key in ("pdf_reading", "pdf_items", "pdf_unregistered", "doc_files"):
+        st.session_state.pop(key, None)
     if pdf_file is not None:
         with st.spinner("図面PDFから加工条件を読み取っています…（Claude API）"):
             try:
@@ -61,7 +68,7 @@ if analyze_clicked and uploaded is not None:
                 with NamedTemporaryFile(suffix=".pdf", delete=False) as handle:
                     handle.write(pdf_file.getvalue())
                 reading = PdfConditionReader().read(handle.name)
-                reading.pop("evidence", None)
+                st.session_state.pdf_unregistered = unregistered_process_texts(reading.pop("evidence", None), masters)
                 st.session_state.pdf_reading = reading
                 st.session_state.pdf_name = pdf_file.name
             except Exception as exc:
@@ -143,6 +150,7 @@ def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> Quote
             confirmed = cols[4].checkbox("この値で確定", value=changed, key=f"{key}_ok")
         final.append(ConditionItem(item.field, item.label, value, item.display,
                                    CONFIRMED if confirmed else item.status, item.reasons))
+    st.session_state.pdf_items = final
     material_input = next(i.value for i in final if i.field == "material")
     condition = quote_condition(final, masters, material_input, analysis_thickness=analysis.thickness_mm)
     chat_extra = [p for p in base.additional_processes if p.source == "chat"]
@@ -158,6 +166,59 @@ def _edited(item: ConditionItem, value) -> bool:
     if item.field == "thickness_mm":
         return abs(float(item.value) - float(value)) > 1e-9
     return item.value != value
+
+
+def quote_document_section(analysis, condition: QuoteCondition, quote) -> None:
+    """見積書を出力: recipient and terms, then a PDF (and the internal basis) to download. No LLM."""
+    st.divider()
+    st.subheader("見積書を出力")
+    company = load_company("data")
+    reading = st.session_state.get("pdf_reading") or {}
+    items = st.session_state.get("pdf_items") if reading else None
+    col1, col2 = st.columns(2)
+    customer = col1.text_input("宛先の会社名（必須）", key="doc_customer", placeholder="サンプル電機株式会社")
+    person = col2.text_input("部署・担当者名（任意）", key="doc_person", placeholder="購買部　山田 太郎")
+    col3, col4, col5 = st.columns([2, 1.4, 0.6])
+    part = PartInfo(
+        name=col3.text_input("品名", value=Path(analysis.file_name).stem, key=f"doc_part_{analysis.file_name}"),
+        drawing_no=col4.text_input("図番", value=reading.get("drawing_no") or "", key=f"doc_dwg_{analysis.file_name}"),
+        revision=col5.text_input("改訂", value=reading.get("revision") or "", key=f"doc_rev_{analysis.file_name}"),
+        shape_file=analysis.file_name, drawing_file=st.session_state.get("pdf_name", "") if reading else "")
+    col6, col7 = st.columns([2, 1])
+    subject = col6.text_input("件名", value=default_subject(part))
+    delivery_place = col7.text_input("受渡場所", value=company.delivery_place)
+    free_remarks = st.text_area("備考（任意、1行に1項目）", key="doc_remarks", height=80)
+    with_internal = st.checkbox("社内用の内訳も出力する（別PDF、社外秘）", key="doc_internal")
+
+    def document(issued_at, number=""):
+        return build_document(
+            analysis=analysis, condition=condition, quote=quote, masters=masters, company=company,
+            recipient=Recipient(customer or "（宛先未入力）", person), part=part, issued_at=issued_at, number=number,
+            subject=subject, delivery_place=delivery_place, free_remarks=free_remarks, items=items,
+            flags=reading.get("flags"), unregistered_texts=st.session_state.get("pdf_unregistered"))
+
+    preview = document(datetime.now())
+    if preview.is_estimate:
+        st.warning("未確定の条件があるため概算見積書として出力されます。\n\n"
+                   + "\n".join(f"- {note}" for note in preview.pending))
+    if not customer.strip():
+        st.info("宛先の会社名を入力すると、見積書PDFを作成できます。")
+    inputs = repr((condition.model_dump(), quote.final_price, customer, person, part, subject, delivery_place,
+                   free_remarks, with_internal))
+    if st.button("見積書PDFを作成", type="primary", disabled=not customer.strip()):
+        issued_at = datetime.now().replace(microsecond=0)
+        doc = document(issued_at)
+        doc.number = QuoteLog(os.environ.get("QUOTE_LOG_PATH", "output/quote_log.csv")).issue(issued_at, log_row(doc))
+        files = {f"{doc.number}_{doc.title}.pdf": render_quote(doc)}
+        if with_internal:
+            files[f"{doc.number}_見積根拠（社内用）.pdf"] = render_internal(doc)
+        st.session_state.doc_files = (inputs, files)
+    made_for, files = st.session_state.get("doc_files") or (None, {})
+    if files and made_for != inputs:
+        st.caption("条件か入力が変わったため、作成済みの見積書は表示していません。もう一度作成してください。")
+        files = {}
+    for name, data in files.items():
+        st.download_button(f"ダウンロード: {name}", data=data, file_name=name, mime="application/pdf", key=f"dl_{name}")
 
 
 result = st.session_state.get("analysis_result")
@@ -234,7 +295,7 @@ if result.status in {"success", "partial"}:
     if st.session_state.get("pdf_reading") is not None:
         condition = pdf_condition_editor(st.session_state.pdf_reading, condition, result)
     else:
-        quote_col1, quote_col2 = st.columns(2)
+        quote_col1, quote_col2, quote_col3, quote_col4 = st.columns([2, 1, 2, 1])
         selected_material = quote_col1.selectbox(
             "材料", masters.material_names,
             index=masters.material_names.index(condition.material),
@@ -242,9 +303,18 @@ if result.status in {"success", "partial"}:
         selected_quantity = quote_col2.number_input(
             "数量", min_value=1, value=condition.quantity, step=1
         )
-        if selected_material != condition.material or selected_quantity != condition.quantity:
+        finish_codes = list(masters.surface_treatments) or ["NONE"]
+        selected_finish = quote_col3.selectbox(
+            "表面処理", finish_codes, index=finish_codes.index(condition.surface_treatment or "NONE"),
+            format_func=lambda c: masters.surface_treatments.get(c, {}).get("display_name", c),
+        )
+        selected_rush = quote_col4.checkbox("特急", value=condition.rush)
+        selected_finish = None if selected_finish == "NONE" else selected_finish
+        if (selected_material, selected_quantity, selected_finish, selected_rush) != (
+                condition.material, condition.quantity, condition.surface_treatment, condition.rush):
             condition = condition.model_copy(update={
-                "material": selected_material, "quantity": int(selected_quantity)
+                "material": selected_material, "quantity": int(selected_quantity),
+                "surface_treatment": selected_finish, "rush": bool(selected_rush),
             })
             st.session_state.quote_condition = condition
 
@@ -253,12 +323,19 @@ if result.status in {"success", "partial"}:
         st.session_state.quote_result = quote
         if quote.is_estimate:
             st.warning("概算見積: 加工条件または解析値に概算を含みます。")
-        st.metric("見積金額（税込・税別設定なし）", f"¥{quote.rounded_final_price:,}")
+        summary = price_summary(quote, condition.quantity, masters.policy("tax_rate", 0.10))
+        amount_cols = st.columns(4)
+        amount_cols[0].metric("単価（1個）", f"¥{summary.unit_price:,}")
+        amount_cols[1].metric(f"小計（税抜、{summary.quantity:,}個）", f"¥{summary.subtotal:,}")
+        amount_cols[2].metric(f"消費税（{summary.tax_rate:.0%}）", f"¥{summary.tax:,}")
+        amount_cols[3].metric("見積金額（税込）", f"¥{summary.total:,}")
+        st.caption("原価の内訳（社内用。見積書には出ません）")
         st.dataframe(pd.DataFrame([
             {"コード": line.code, "項目": line.name, "数量": line.quantity,
              "単位": line.unit, "単価": line.unit_price, "金額": round(line.amount)}
             for line in quote.lines
         ]), hide_index=True, width="stretch")
+        quote_document_section(result, condition, quote)
     except QuoteUnavailableError as exc:
         st.error(str(exc))
 

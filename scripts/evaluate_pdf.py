@@ -70,6 +70,9 @@ GATE = {
     "auto_confirmed_rate": 0.75,         # drawings whose price fields are all correct without a review flag
 }
 GATE_UNSEEN = {"price_field_accuracy": 0.90}  # holdout drawings in layouts the development set does not have
+# vocabulary-shift sets (golden/vocab/*.json): words the reader has not seen. Being unsure is fine there;
+# being silently wrong is not. Only the safety criteria are gated; accuracy is reported for reference.
+GATE_SAFETY = {"dangerous_field_rate": 0.01, "dangerous_drawing_rate": 0.02}
 
 
 def load(spec):
@@ -183,7 +186,20 @@ def summarize(rows):
     return s
 
 
-def gate(rows):
+def gate_safety(rows):
+    fails = []
+    overall = summarize(rows)
+    for f in PRICE_FIELDS:
+        if overall[f]["dangerous"] > GATE_SAFETY["dangerous_field_rate"]:
+            fails.append(f"{f} dangerous {overall[f]['dangerous']:.1%} > {GATE_SAFETY['dangerous_field_rate']:.0%}")
+    if overall["dangerous_drawings"] > GATE_SAFETY["dangerous_drawing_rate"]:
+        fails.append(f"dangerous drawings {overall['dangerous_drawings']:.1%} > {GATE_SAFETY['dangerous_drawing_rate']:.0%}")
+    return fails
+
+
+def gate(rows, profile="standard"):
+    if profile == "safety":
+        return gate_safety(rows)
     fails = []
     overall = summarize(rows)
     for f in PRICE_FIELDS:
@@ -218,7 +234,7 @@ def _pct(x):
     return f"{100 * x:.1f}%"
 
 
-def report(rows, meta):
+def report(rows, meta, profile="standard", hide_examples=False):
     overall = summarize(rows)
     lines = [f"# 図面PDF 読み取り評価（{meta['data']}）", "",
              f"- 読み取り器: `{meta['reader']}`", f"- 図面数: {len(rows)}（{meta['when']}）",
@@ -268,14 +284,19 @@ def report(rows, meta):
     for (f, w), (n, ok) in sorted(by_source.items()):
         lines.append(f"| {FIELD_LABEL[f]} | {w} | {n} | {_pct(ok / n)} |")
     wrong = [r for r in rows if any(r[f] in ("DANGEROUS", "REJECTED") for f in PRICE_FIELDS)]
-    lines += ["", f"## 危険誤答・失敗の例（{len(wrong)}件中、先頭20件）", "", "| 図面 | 種類 | 項目 | 読み取り | 正解 |", "|---|---|---|---|---|"]
+    if hide_examples:  # holdout / blind sets: never write truth values into a report
+        lines += ["", f"## 危険誤答・失敗の例（{len(wrong)}件。個別の例は表示しない設定）"]
+        wrong = []
+    else:
+        lines += ["", f"## 危険誤答・失敗の例（{len(wrong)}件中、先頭20件）", "", "| 図面 | 種類 | 項目 | 読み取り | 正解 |", "|---|---|---|---|---|"]
     for r in wrong[:20]:
         for f in PRICE_FIELDS:
             if r[f] in ("DANGEROUS", "REJECTED"):
                 got = r[f"{f}_got"] if r[f] == "DANGEROUS" else r["error"]
                 lines.append(f"| {r['name']} | {r['kind']} | {FIELD_LABEL[f]} | `{got[:60]}` | `{r[f'{f}_truth'][:60]}` |")
-    fails = gate(rows)
-    lines += ["", "## 受入条件", "", "合格" if not fails else "不合格:\n\n" + "\n".join(f"- {x}" for x in fails), ""]
+    fails = gate(rows, profile)
+    title = "## 受入条件" if profile == "standard" else "## 受入条件（安全性のみ：語彙をずらしたデータ）"
+    lines += ["", title, "", "合格" if not fails else "不合格:\n\n" + "\n".join(f"- {x}" for x in fails), ""]
     return "\n".join(lines)
 
 
@@ -301,6 +322,9 @@ def main(argv=None):
     p.add_argument("--workers", type=int, default=4)
     p.add_argument("--verify-frozen", nargs="?", const=str(DEFAULT_FROZEN))
     p.add_argument("--gate", action="store_true", help="exit 1 unless the acceptance criteria hold")
+    p.add_argument("--gate-profile", choices=["standard", "safety"], default="standard",
+                   help="standard: all criteria (pdf_v1 / holdout); safety: dangerous-answer criteria only (vocabulary-shift sets)")
+    p.add_argument("--hide-examples", action="store_true", help="do not write per-drawing truth values into the report (holdout / blind)")
     p.add_argument("--report")
     args = p.parse_args(argv)
 
@@ -341,7 +365,7 @@ def main(argv=None):
             "llm_calls": sum(int(r["llm_calls"] or 0) for r in rows),
             "llm_input_tokens": sum(int(r["llm_input_tokens"] or 0) for r in rows),
             "llm_output_tokens": sum(int(r["llm_output_tokens"] or 0) for r in rows)}
-    text = report(rows, meta)
+    text = report(rows, meta, args.gate_profile, args.hide_examples)
     if args.report:
         Path(args.report).write_text(text, encoding="utf-8")
     overall = summarize(rows)
@@ -350,7 +374,7 @@ def main(argv=None):
     for f in ALL_FIELDS:
         print(f"  {f:18s} accuracy {_pct(overall[f]['accuracy']):>7s}  dangerous {_pct(overall[f]['dangerous']):>6s}")
     if args.gate:
-        fails = gate(rows)
+        fails = gate(rows, args.gate_profile)
         print("GATE PASS" if not fails else "GATE FAIL\n  " + "\n  ".join(fails))
         return 0 if not fails else 1
     return 0

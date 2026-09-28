@@ -1,0 +1,354 @@
+{
+ "name": "shift_dev",
+ "description": "Vocabulary shift for development: other wordings of the same meanings as vocabulary v1 (golden/pdf_golden.py). Readers may be developed against this set. A second, blind shift vocabulary is kept outside the repository.",
+ "MAT": {
+  "ja": {
+   "SPCC": [
+    "SPCC-1B",
+    "冷延鋼板 SPCC-SB",
+    "JIS G3141 SPCC-SB",
+    "SPCC（冷間圧延鋼板）"
+   ],
+   "SPHC": [
+    "SPHC-PO（酸洗）",
+    "熱延鋼板 SPHC",
+    "SPHC 酸洗材"
+   ],
+   "SECC": [
+    "SECC-20/20",
+    "電気亜鉛めっき鋼板（SECC）",
+    "SECC-P"
+   ],
+   "SUS304": [
+    "ステンレス鋼板 SUS304-2B",
+    "SUS-304",
+    "SUS304（2B仕上）"
+   ],
+   "AL5052": [
+    "A5052-H34",
+    "アルミ合金 A5052P-H32",
+    "AL5052-H32"
+   ],
+   "SS400": [
+    "SS400（酸洗）",
+    "SS-400",
+    "一般構造用鋼 SS400"
+   ]
+  },
+  "en": {
+   "SPCC": [
+    "CRS SPCC-SB",
+    "COLD-ROLLED SHEET, SPCC-1B"
+   ],
+   "SPHC": [
+    "HRPO SPHC"
+   ],
+   "SECC": [
+    "EG STEEL SECC"
+   ],
+   "SUS304": [
+    "304 STAINLESS, 2B"
+   ],
+   "AL5052": [
+    "5052-H32 ALUMINUM"
+   ],
+   "SS400": [
+    "SS400 (JIS G3101)"
+   ]
+  }
+ },
+ "MAT_UNREG": {
+  "ja": [
+   "SUS301-CSP",
+   "SPCE",
+   "SAPH440",
+   "A6061-T6",
+   "SPFC590"
+  ],
+  "en": [
+   "SUS301-CSP",
+   "SPCE",
+   "A6061-T6",
+   "SAPH440"
+  ]
+ },
+ "FIN": {
+  "ja": {
+   "NONE": [
+    "無",
+    "処理不要",
+    "仕上げなし（素材のまま）"
+   ],
+   "ZINC_CLEAR": [
+    "三価クロメート処理（クリア）",
+    "亜鉛めっき 8μm 光沢クロメート（三価）"
+   ],
+   "ZINC_YELLOW": [
+    "亜鉛めっき 有色クロメート（3価）",
+    "三価イエロークロメート"
+   ],
+   "ZINC_BLACK": [
+    "黒色三価クロメート",
+    "亜鉛めっき 黒（三価）"
+   ],
+   "POWDER_COAT": [
+    "粉体焼付塗装 黒",
+    "パウダーコート（白）"
+   ],
+   "BAKING_PAINT": [
+    "アクリル焼付塗装 N7",
+    "焼付塗装仕上げ（グレー）"
+   ],
+   "ELECTROLESS_NI": [
+    "無電解Ni-Pめっき 10μm"
+   ],
+   "ANODIZE_CLEAR": [
+    "アルマイト処理（シルバー）",
+    "白アルマイト 8μm以上"
+   ],
+   "ANODIZE_BLACK": [
+    "黒色アルマイト処理"
+   ]
+  },
+  "en": {
+   "NONE": [
+    "NO COATING",
+    "BARE METAL"
+   ],
+   "ZINC_CLEAR": [
+    "ZINC PLATE, CLEAR TRIVALENT PASSIVATE"
+   ],
+   "ZINC_YELLOW": [
+    "ZINC PLATE, YELLOW TRIVALENT PASSIVATE"
+   ],
+   "ZINC_BLACK": [
+    "ZINC PLATE, BLACK TRIVALENT PASSIVATE"
+   ],
+   "POWDER_COAT": [
+    "POWDERCOAT, TEXTURED BLACK"
+   ],
+   "BAKING_PAINT": [
+    "BAKED ENAMEL, GRAY"
+   ],
+   "ELECTROLESS_NI": [
+    "EN PLATE 10um"
+   ],
+   "ANODIZE_CLEAR": [
+    "ANODIZE TYPE II, CLEAR"
+   ],
+   "ANODIZE_BLACK": [
+    "ANODIZE TYPE II, BLACK"
+   ]
+  }
+ },
+ "FIN_UNREG": {
+  "ja": [
+   "ニッケルクロムめっき",
+   "ダクロタイズド処理",
+   "黒染め（四三酸化鉄皮膜）",
+   "リン酸マンガン処理"
+  ],
+  "en": [
+   "NICKEL-CHROME PLATE",
+   "BLACK OXIDE",
+   "MANGANESE PHOSPHATE"
+  ]
+ },
+ "FIN_UNREG_AL": {
+  "ja": [
+   "硬質アルマイト 30μm"
+  ],
+  "en": [
+   "HARD ANODIZE TYPE III"
+  ]
+ },
+ "PROC": {
+  "TAP": {
+   "ja": [
+    "M{d} めねじ {n}ヶ所",
+    "タップ M{d}×{p}（{n}）",
+    "{n}-M{d} 通し"
+   ],
+   "en": [
+    "{n}-M{d}x{p} TAPPED",
+    "TAP M{d}x{p} ({n})"
+   ]
+  },
+  "COUNTERSINK": {
+   "ja": [
+    "皿ザグリ φ{c}×90° {n}ヶ所",
+    "{n}-皿穴（M{d}皿ビス）"
+   ],
+   "en": [
+    "{n}X CSINK Ø{c} 90°"
+   ]
+  },
+  "PRESS_NUT": {
+   "ja": [
+    "セルフクリンチングナット M{d} {n}個",
+    "{n}-クリンチングナット M{d}（かしめ）"
+   ],
+   "en": [
+    "{n}X CLINCH NUT M{d}"
+   ]
+  },
+  "PRESS_STUD": {
+   "ja": [
+    "クリンチングスタッド M{d}×12 {n}本"
+   ],
+   "en": [
+    "{n}X CLINCH STUD M{d}x12"
+   ]
+  },
+  "SPOT_WELD": {
+   "ja": [
+    "抵抗溶接（スポット）{n}点",
+    "スポット {n}打点"
+   ],
+   "en": [
+    "SPOT WELD ({n})"
+   ]
+  },
+  "TIG_WELD": {
+   "ja": [
+    "TIG {n}ヶ所 溶接",
+    "角部TIG溶接×{n}"
+   ],
+   "en": [
+    "TIG WELD ALL {n} CORNERS"
+   ]
+  }
+ },
+ "PROC_UNREG": {
+  "ja": [
+   "ハーフパンチ {n}ヶ所",
+   "エンボス加工 {n}ヶ所",
+   "ルーバー {n}ヶ所",
+   "プラグ溶接 {n}ヶ所"
+  ],
+  "en": [
+   "{n}X HALF SHEAR",
+   "{n}X EMBOSS",
+   "{n}X LOUVER"
+  ]
+ },
+ "HOLE_DISTRACTORS": {
+  "ja": [
+   "{n}-φ{a} 通し穴",
+   "φ{a} 穴（ボルト逃げ）",
+   "{n}-φ5.5（M5 ボルト用）",
+   "長穴 {b}×{c}"
+  ],
+  "en": [
+   "{n}X Ø{a} HOLE",
+   "Ø5.5 CLEARANCE HOLE FOR M5",
+   "SLOT {b} x {c}"
+  ]
+ },
+ "FLAGS": {
+  "tolerance": {
+   "ja": [
+    "位置度 φ0.1（基準A）",
+    "◎印寸法 ±0.05 以内"
+   ],
+   "en": [
+    "TRUE POSITION Ø0.1",
+    "CRITICAL DIM ±0.05"
+   ]
+  },
+  "appearance": {
+   "ja": [
+    "意匠面につき傷不可",
+    "見栄え面（A面）打痕厳禁"
+   ],
+   "en": [
+    "VISIBLE SURFACE: NO MARKS ALLOWED"
+   ]
+  },
+  "inspection": {
+   "ja": [
+    "出荷検査記録を添付のこと",
+    "材料証明書を提出のこと"
+   ],
+   "en": [
+    "CERTIFICATE OF CONFORMANCE REQUIRED",
+    "FIRST ARTICLE INSPECTION REPORT"
+   ]
+  }
+ },
+ "STANDARD_NOTES": {
+  "ja": [
+   "エッジは糸面取りのこと",
+   "指示なき曲げRは内R＝t",
+   "図示寸法は加工後の寸法とする"
+  ],
+  "en": [
+   "BREAK ALL SHARP EDGES.",
+   "ALL BEND RADII = T.",
+   "DIMENSIONS ARE AFTER PROCESSING."
+  ]
+ },
+ "GENERAL_TOL": {
+  "ja": [
+   "一般公差 JIS B 0405 f級",
+   "普通許容差 ±0.3"
+  ],
+  "en": [
+   "TOLERANCES UNLESS NOTED ±0.25",
+   "ISO 2768-f"
+  ]
+ },
+ "RUSH": {
+  "ja": [
+   "超特急",
+   "急ぎ案件です",
+   "最短納期でお願いします",
+   "短納期対応願います（{m}/{d}必着）"
+  ],
+  "en": [
+   "HOT JOB",
+   "PRIORITY ORDER",
+   "EXPEDITED - NEED BY {m}/{d}"
+  ]
+ },
+ "RUSH_NEG": {
+  "ja": [
+   "特急不要",
+   "納期は通常で可",
+   "急ぎではありません"
+  ],
+  "en": [
+   "NO RUSH REQUIRED",
+   "STANDARD DELIVERY OK"
+  ]
+ },
+ "DISTRACT_NOTES": {
+  "ja": [
+   "年間 {f} 個見込み（参考）",
+   "前回ロット {f} 個",
+   "相手材：SUS304（支給品）",
+   "旧品番 {o} から変更"
+  ],
+  "en": [
+   "ANNUAL VOLUME {f} PCS (EST.)",
+   "MATES WITH SUS304 BRACKET (NOT SUPPLIED)",
+   "REPLACES P/N {o}"
+  ]
+ },
+ "HAND_RUSH": [
+  "急ぎ願います {m}/{d}",
+  "超特急!!",
+  "最優先で"
+ ],
+ "HAND_NOISE": [
+  "OK 済",
+  "CHK {m}/{d}",
+  "寸法OK",
+  "受領済 {m}/{d}"
+ ],
+ "FREE_RUSH": [
+  "最短でお願いします",
+  "急ぎでお願いします",
+  "{m}/{d}までに必要（至急）"
+ ]
+}

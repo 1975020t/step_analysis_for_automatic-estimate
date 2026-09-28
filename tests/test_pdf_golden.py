@@ -114,3 +114,29 @@ def test_harness_counts_a_crash_as_rejected():
     row = ev.evaluate_file(("x.pdf", RECORD, {"_reader": Boom()}))
     assert all(row[f] == "REJECTED" for f in ev.ALL_FIELDS) and not row["auto_confirmed"]
     assert ev.gate([row])  # a crash never passes
+
+
+def test_vocabulary_shift_changes_wording_but_not_the_rules(tmp_path):
+    from golden.pdf_golden import MAT, load_vocabulary, vocabulary
+
+    vocab = load_vocabulary(ROOT / "golden" / "vocab" / "shift_dev.json")
+    before = json.dumps(MAT, ensure_ascii=False)
+    with vocabulary(vocab):
+        import golden.pdf_golden as G
+        assert G.MAT["ja"]["SPCC"] == vocab["MAT"]["ja"]["SPCC"]
+    assert json.dumps(__import__("golden.pdf_golden", fromlist=["MAT"]).MAT, ensure_ascii=False) == before  # restored
+    i = next(i for i in range(10) if kind_for(41, "Lv0", i) == "vector")
+    rec = build_pdf("Lv0", i, 41, tmp_path, with_step=False, vocab=vocab)
+    assert rec["meta"]["vocab"] == "shift_dev"
+    _codes_ok(rec["truth"], MasterLoader(ROOT / "data"))
+    frozen = json.loads((ROOT / "golden" / "datasets" / "pdf_shift_dev_v1.json").read_text(encoding="utf-8"))
+    assert {d["name"]: d["truth"] for d in frozen["drawings"]}[rec["name"]] == rec["truth"]
+
+
+def test_safety_gate_only_counts_silent_errors():
+    wrong_flagged = dict(TRUTH, material="SECC", needs_review=["material"])
+    rows = [_evaluate(wrong_flagged)] * 50
+    assert ev.gate_safety(rows) == []          # unsure but honest: passes the safety profile
+    assert ev.gate(rows)                         # ... but not the standard one
+    rows.append(_evaluate(dict(TRUTH, material="SECC", needs_review=[])))
+    assert any("dangerous" in f for f in ev.gate_safety(rows))

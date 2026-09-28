@@ -43,9 +43,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
      "quantity": "notes",
-     "finish": "notes",
      "processes": [
       "callouts"
      ],
@@ -113,10 +113,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -175,10 +175,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -244,10 +244,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "notes",
-     "quantity": "notes",
      "finish": "title",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "notes",
      "processes": [
       "callouts",
       "callouts"
@@ -298,10 +298,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "rush": "title"
     },
     "revision_changes": [
@@ -449,10 +449,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "bom",
-     "thickness": "free",
      "quantity": "free",
-     "finish": "free"
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -504,10 +504,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "notes",
      "quantity": "notes",
-     "finish": "notes"
+     "thickness": "notes"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -568,9 +568,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "bom",
      "thickness": "free",
-     "finish": "free",
      "processes": [
       "bom",
       "callouts"
@@ -638,10 +638,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -695,10 +695,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -745,10 +745,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -800,10 +800,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -872,9 +872,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "quantity": "title",
-     "finish": "title"
+     "quantity": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -946,10 +946,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "callouts",
       "callouts",
@@ -1020,10 +1020,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "bom",
      "finish": "free",
+     "material": "free",
+     "quantity": "bom",
+     "thickness": "free",
      "processes": [
       "callouts",
       "callouts",
@@ -1092,9 +1092,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "notes",
       "callouts"
@@ -1169,10 +1169,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -1249,10 +1249,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -1404,10 +1404,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "notes"
      ]
@@ -1479,9 +1479,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
      "quantity": "free",
-     "finish": "free",
      "processes": [
       "callouts",
       "callouts"
@@ -1540,9 +1540,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
+     "finish": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -1606,8 +1606,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "title",
      "quantity": "bom",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -1722,10 +1722,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes",
      "processes": [
       "callouts",
       "callouts"
@@ -1800,8 +1800,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
-     "quantity": "notes"
+     "quantity": "notes",
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -1848,10 +1848,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -2116,9 +2116,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "notes",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "notes",
       "notes"
@@ -2195,9 +2195,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "quantity": "title",
-     "finish": "notes",
      "processes": [
       "callouts",
       "notes"
@@ -2279,10 +2279,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes",
@@ -2424,10 +2424,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "free",
      "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free",
      "processes": [
       "free"
      ]
@@ -2564,8 +2564,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts",
       "bom"
@@ -2694,9 +2694,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "thickness": "notes",
-     "finish": "title",
      "processes": [
       "notes"
      ],
@@ -2777,8 +2777,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "notes",
      "quantity": "title",
+     "thickness": "notes",
      "rush": "notes"
     },
     "revision_changes": [],
@@ -2836,10 +2836,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "free",
      "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free",
      "processes": [
       "free"
      ]
@@ -2897,10 +2897,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "bom",
      "finish": "free",
+     "material": "free",
+     "quantity": "bom",
+     "thickness": "free",
      "processes": [
       "free"
      ]
@@ -2956,8 +2956,8 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "rush": "notes"
     },
     "revision_changes": [],
@@ -3016,9 +3016,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "thickness": "notes",
-     "finish": "notes",
      "processes": [
       "callouts",
       "callouts"
@@ -3133,10 +3133,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -3266,10 +3266,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "notes",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -3329,10 +3329,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes",
       "callouts"
@@ -3402,8 +3402,8 @@
    "meta": {
     "sources": {
      "material": "free",
-     "thickness": "free",
-     "quantity": "free"
+     "quantity": "free",
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -3453,8 +3453,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "notes",
-     "quantity": "notes"
+     "quantity": "notes",
+     "thickness": "notes"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -3575,10 +3575,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -3658,8 +3658,8 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -3717,10 +3717,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "notes",
      "quantity": "notes",
-     "finish": "title"
+     "thickness": "notes"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -3773,9 +3773,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
      "thickness": "free",
-     "finish": "free",
      "processes": [
       "free"
      ]
@@ -3902,10 +3902,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -3966,9 +3966,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "callouts"
      ]
@@ -4047,9 +4047,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "bom",
      "finish": "title",
+     "quantity": "bom",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts",
@@ -4120,10 +4120,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts"
      ],
@@ -4192,10 +4192,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes",
@@ -4257,10 +4257,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -4323,10 +4323,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "callouts"
      ],
@@ -4396,9 +4396,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "callouts",
       "callouts",
@@ -4472,8 +4472,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes",
       "notes",
@@ -4607,10 +4607,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -4670,10 +4670,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -4759,9 +4759,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "free",
-     "quantity": "free",
      "finish": "free",
+     "quantity": "free",
+     "thickness": "free",
      "processes": [
       "free"
      ]
@@ -4871,9 +4871,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "free",
+     "finish": "free",
      "quantity": "bom",
-     "finish": "free"
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -4925,10 +4925,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -4977,10 +4977,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "thickness": "title",
      "quantity": "notes",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -5033,10 +5033,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "bom",
-     "thickness": "free",
      "quantity": "free",
-     "finish": "free"
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -5099,9 +5099,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
      "quantity": "bom",
-     "finish": "free",
      "processes": [
       "callouts",
       "bom"
@@ -5165,8 +5165,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "notes",
      "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "callouts"
      ]
@@ -5357,10 +5357,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -5420,9 +5420,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "quantity": "title",
-     "finish": "title"
+     "quantity": "title"
     },
     "revision_changes": [
      {
@@ -5510,9 +5510,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "thickness": "notes",
-     "finish": "title",
      "processes": [
       "notes",
       "notes",
@@ -5696,9 +5696,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -5761,10 +5761,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -5850,9 +5850,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
      "thickness": "title",
-     "finish": "notes",
      "processes": [
       "notes",
       "callouts"
@@ -5934,9 +5934,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
      "quantity": "title",
-     "finish": "notes",
      "processes": [
       "callouts",
       "callouts"
@@ -6061,9 +6061,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "quantity": "title",
-     "finish": "notes",
      "processes": [
       "callouts",
       "callouts"
@@ -6123,9 +6123,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "notes",
-     "quantity": "notes",
      "finish": "title",
+     "quantity": "notes",
+     "thickness": "notes",
      "processes": [
       "notes"
      ],
@@ -6241,10 +6241,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "notes",
      "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes",
      "processes": [
       "callouts"
      ]
@@ -6428,10 +6428,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "notes",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "notes"
     },
     "revision_changes": [
      {
@@ -6492,10 +6492,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "notes",
      "quantity": "notes",
-     "finish": "title"
+     "thickness": "notes"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -6556,9 +6556,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "quantity": "title",
-     "finish": "notes",
      "processes": [
       "callouts",
       "callouts"
@@ -6610,10 +6610,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -6678,9 +6678,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "free",
-     "quantity": "free",
      "finish": "free",
+     "quantity": "free",
+     "thickness": "free",
      "processes": [
       "callouts",
       "callouts"
@@ -6749,8 +6749,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts",
@@ -6950,10 +6950,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "notes",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "notes"
     },
     "revision_changes": [
      {
@@ -7072,9 +7072,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "bom",
      "quantity": "free",
-     "finish": "free",
      "processes": [
       "free",
       "bom"
@@ -7140,8 +7140,8 @@
    "meta": {
     "sources": {
      "material": "bom",
-     "thickness": "free",
      "quantity": "bom",
+     "thickness": "free",
      "processes": [
       "bom",
       "free"
@@ -7256,9 +7256,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
      "quantity": "bom",
-     "finish": "free",
      "processes": [
       "free"
      ],
@@ -7312,10 +7312,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "notes",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -7366,10 +7366,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "notes",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -7435,10 +7435,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "notes",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -7490,9 +7490,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "quantity": "title",
-     "finish": "title"
+     "quantity": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -7541,10 +7541,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "free",
      "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free",
      "rush": "stamp"
     },
     "revision_changes": [],
@@ -7673,9 +7673,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
      "quantity": "bom",
-     "finish": "free",
      "processes": [
       "callouts",
       "callouts"
@@ -7812,9 +7812,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -7865,10 +7865,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "notes",
      "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes",
      "rush": "notes"
     },
     "revision_changes": [
@@ -7945,9 +7945,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "notes",
-     "finish": "notes"
+     "thickness": "notes"
     },
     "revision_changes": [
      {
@@ -8016,9 +8016,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "thickness": "title",
-     "finish": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -8069,9 +8069,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "quantity": "notes",
-     "finish": "title",
      "rush": "notes"
     },
     "revision_changes": [
@@ -8257,10 +8257,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -8483,10 +8483,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "callouts"
      ]
@@ -8561,8 +8561,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -8691,10 +8691,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "notes",
      "quantity": "bom",
-     "finish": "title"
+     "thickness": "notes"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -8744,9 +8744,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "quantity": "title",
-     "finish": "notes"
+     "quantity": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -8902,10 +8902,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -8955,9 +8955,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -9022,9 +9022,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "bom",
      "thickness": "title",
-     "finish": "title",
      "rush": "handwriting"
     },
     "revision_changes": [
@@ -9231,8 +9231,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -9371,8 +9371,8 @@
    "meta": {
     "sources": {
      "material": "bom",
-     "thickness": "free",
-     "quantity": "bom"
+     "quantity": "bom",
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -9422,10 +9422,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -9493,9 +9493,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "notes",
      "thickness": "title",
-     "finish": "title",
      "processes": [
       "callouts",
       "callouts",
@@ -9573,8 +9573,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes",
       "notes",
@@ -9684,10 +9684,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "thickness": "title",
      "quantity": "notes",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -9734,9 +9734,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -9797,9 +9797,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
-     "quantity": "bom",
-     "finish": "free"
+     "quantity": "bom"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -9863,10 +9863,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts",
@@ -9931,9 +9931,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
-     "thickness": "free",
-     "finish": "free"
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -9982,10 +9982,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -10045,10 +10045,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes",
       "callouts"
@@ -10108,9 +10108,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "thickness": "notes",
-     "finish": "notes",
      "processes": [
       "callouts"
      ],
@@ -10281,9 +10281,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "quantity": "title",
-     "finish": "notes"
+     "quantity": "title"
     },
     "revision_changes": [
      {
@@ -10432,9 +10432,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -10490,10 +10490,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -10548,10 +10548,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -10620,10 +10620,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -10687,8 +10687,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "title",
      "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -10746,8 +10746,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "notes",
      "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "notes"
      ]
@@ -10806,10 +10806,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -11069,8 +11069,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
-     "quantity": "title"
+     "quantity": "title",
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -11236,10 +11236,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -11352,9 +11352,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
-     "quantity": "free",
-     "finish": "free"
+     "quantity": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -11538,10 +11538,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -11591,9 +11591,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -11649,10 +11649,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ],
@@ -11738,8 +11738,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "bom",
       "callouts"
@@ -11807,9 +11807,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "thickness": "notes",
-     "finish": "notes",
      "processes": [
       "callouts",
       "callouts",
@@ -11884,9 +11884,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes",
@@ -12054,9 +12054,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "bom",
-     "thickness": "free",
-     "finish": "free"
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -12173,10 +12173,10 @@
    },
    "meta": {
     "sources": {
-     "material": "bom",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "bom",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -12248,10 +12248,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -12309,9 +12309,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "thickness": "notes",
-     "finish": "title",
      "processes": [
       "callouts"
      ]
@@ -12379,8 +12379,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -12452,8 +12452,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "notes",
      "quantity": "notes",
+     "thickness": "notes",
      "processes": [
       "callouts"
      ]
@@ -12583,8 +12583,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "notes",
      "quantity": "notes",
+     "thickness": "notes",
      "rush": "stamp"
     },
     "revision_changes": [],
@@ -12648,10 +12648,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -12741,9 +12741,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -12796,10 +12796,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -12846,9 +12846,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
-     "thickness": "free",
-     "finish": "free"
+     "thickness": "free"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -12904,9 +12904,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "notes",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -13125,10 +13125,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "notes",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -13208,10 +13208,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -13267,10 +13267,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -13329,9 +13329,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "notes",
-     "finish": "title"
+     "thickness": "notes"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -13391,10 +13391,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "notes",
       "callouts"
@@ -13449,8 +13449,8 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "bom"
+     "quantity": "bom",
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -13526,10 +13526,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "notes",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "notes",
       "callouts"
@@ -13731,9 +13731,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "bom",
      "thickness": "free",
-     "finish": "free",
      "processes": [
       "callouts"
      ]
@@ -13866,8 +13866,8 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ],
@@ -14009,9 +14009,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
      "quantity": "free",
-     "finish": "free",
      "processes": [
       "callouts",
       "callouts"
@@ -14197,10 +14197,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -14264,9 +14264,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "thickness": "title",
-     "finish": "title",
      "processes": [
       "notes",
       "notes"
@@ -14344,8 +14344,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "notes",
      "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "callouts"
      ]
@@ -14448,9 +14448,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
+     "finish": "notes",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -14500,9 +14500,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "quantity": "title",
-     "finish": "title"
+     "quantity": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -14567,9 +14567,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "thickness": "title",
-     "finish": "notes",
      "processes": [
       "callouts",
       "callouts"
@@ -14639,9 +14639,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -14713,9 +14713,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
      "quantity": "notes",
-     "finish": "notes",
      "processes": [
       "callouts"
      ]
@@ -14777,8 +14777,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -14853,10 +14853,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes",
      "processes": [
       "callouts"
      ]
@@ -14916,9 +14916,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "quantity": "notes",
-     "finish": "notes",
      "processes": [
       "notes"
      ]
@@ -15048,8 +15048,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes",
       "notes"
@@ -15131,10 +15131,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "free",
      "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free",
      "processes": [
       "bom",
       "free"
@@ -15195,9 +15195,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "bom",
      "finish": "title",
+     "quantity": "bom",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -15319,9 +15319,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "quantity": "title",
-     "finish": "title"
+     "quantity": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -15430,9 +15430,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "bom",
      "quantity": "bom",
-     "finish": "title",
      "processes": [
       "bom",
       "callouts"
@@ -15494,9 +15494,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "thickness": "title",
-     "finish": "title",
      "processes": [
       "callouts"
      ]
@@ -15583,10 +15583,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes",
       "callouts",
@@ -15646,10 +15646,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
-     "thickness": "title",
      "quantity": "notes",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -15875,9 +15875,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -15943,10 +15943,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts"
      ]
@@ -16017,10 +16017,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [
      {
@@ -16136,8 +16136,8 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "title"
+     "quantity": "title",
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -16254,9 +16254,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "free",
      "quantity": "free",
-     "finish": "free",
      "processes": [
       "callouts"
      ],
@@ -16329,8 +16329,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts",
       "bom",
@@ -16470,8 +16470,8 @@
    "meta": {
     "sources": {
      "material": "notes",
-     "thickness": "title",
-     "quantity": "title"
+     "quantity": "title",
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -16528,9 +16528,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "notes",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "callouts"
      ]
@@ -16601,9 +16601,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "notes",
      "thickness": "title",
-     "finish": "notes",
      "processes": [
       "notes",
       "notes",
@@ -16664,9 +16664,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "thickness": "title",
-     "finish": "title",
      "processes": [
       "notes"
      ]
@@ -16734,10 +16734,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts",
@@ -16879,10 +16879,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "notes",
       "callouts",
@@ -16943,9 +16943,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "title",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "notes"
      ]
@@ -17098,10 +17098,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts"
      ],
@@ -17361,10 +17361,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes",
       "callouts"
@@ -17431,9 +17431,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "thickness": "title",
-     "finish": "notes",
      "processes": [
       "notes",
       "callouts"
@@ -17496,9 +17496,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "notes",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "notes",
       "callouts"
@@ -17636,10 +17636,10 @@
    },
    "meta": {
     "sources": {
-     "material": "bom",
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "title",
+     "material": "bom",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "notes"
      ]
@@ -17788,10 +17788,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "free",
      "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free",
      "processes": [
       "callouts"
      ]
@@ -17980,8 +17980,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "bom",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts",
@@ -18108,10 +18108,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -18254,8 +18254,8 @@
    "meta": {
     "sources": {
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -18325,9 +18325,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -18384,10 +18384,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -18520,10 +18520,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ]
@@ -18728,9 +18728,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "quantity": "title",
-     "finish": "notes",
      "processes": [
       "notes"
      ]
@@ -18794,10 +18794,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -18855,10 +18855,10 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
-     "thickness": "title",
      "quantity": "title",
-     "finish": "title"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -18925,10 +18925,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "callouts",
       "notes"
@@ -18997,9 +18997,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "free",
      "material": "bom",
      "thickness": "free",
-     "finish": "free",
      "processes": [
       "callouts"
      ]
@@ -19052,9 +19052,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "notes",
-     "thickness": "notes",
-     "finish": "title"
+     "thickness": "notes"
     },
     "revision_changes": [
      {
@@ -19116,10 +19116,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "rush": "notes"
     },
     "revision_changes": [],
@@ -19182,9 +19182,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "notes",
      "material": "title",
      "quantity": "title",
-     "finish": "notes",
      "processes": [
       "notes",
       "notes"
@@ -19320,9 +19320,9 @@
    },
    "meta": {
     "sources": {
-     "thickness": "title",
+     "finish": "notes",
      "quantity": "notes",
-     "finish": "notes"
+     "thickness": "title"
     },
     "revision_changes": [],
     "handwriting": [],
@@ -19369,10 +19369,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "rush": "stamp"
     },
     "revision_changes": [],
@@ -19433,9 +19433,9 @@
    },
    "meta": {
     "sources": {
+     "finish": "title",
      "material": "title",
      "quantity": "title",
-     "finish": "title",
      "processes": [
       "callouts"
      ]
@@ -19515,10 +19515,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -19598,10 +19598,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "notes",
      "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
      "processes": [
       "callouts",
       "callouts"
@@ -19669,10 +19669,10 @@
    },
    "meta": {
     "sources": {
-     "material": "notes",
-     "thickness": "notes",
-     "quantity": "title",
      "finish": "notes",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "notes",
      "processes": [
       "notes",
       "callouts"
@@ -19733,10 +19733,10 @@
    },
    "meta": {
     "sources": {
-     "material": "title",
-     "thickness": "title",
-     "quantity": "title",
      "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
      "processes": [
       "notes"
      ],
@@ -19804,10 +19804,10 @@
    },
    "meta": {
     "sources": {
-     "material": "free",
-     "thickness": "free",
-     "quantity": "bom",
      "finish": "free",
+     "material": "free",
+     "quantity": "bom",
+     "thickness": "free",
      "processes": [
       "free"
      ],
