@@ -1,0 +1,12 @@
+key,value,description
+name,株式会社サンプル板金（仮）,自社名（仮の値。実際の自社情報は data/company.local.csv に置く）
+postal_code,000-0000,郵便番号
+address,東京都○○区○○ 1-2-3,住所
+tel,03-0000-0000,電話番号
+fax,03-0000-0001,FAX番号
+registration_no,T0000000000000,適格請求書発行事業者の登録番号
+contact,佐藤 一郎,担当者
+payment_terms,月末締め 翌月末 銀行振込,取引条件（支払条件）
+delivery_place,貴社指定場所,受渡場所の既定値
+remark_1,数量・仕様の変更、図面の改訂があった場合は再見積とさせていただきます。,備考の定型文（remark_ で始まるキーを番号順に表示）
+remark_2,運賃は含みません。,備考の定型文

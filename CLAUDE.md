@@ -55,6 +55,7 @@ python scripts/evaluate_pdf.py --data pdf_shift_dev --reader src.pdf_reader:PdfC
 - `golden/vocab/shift_dev.json` 語彙をずらした図面の語彙（開発用）。`golden/datasets/pdf_shift_dev_v1.json` が正解。判定用の語彙ずらしはリポジトリにない
 - `src/pdf_reader.py`・`src/pdf_terms.py`・`src/pdf_quote.py` 図面PDFの読み取り、語の解釈ルール、見積への反映
 - `data/` マスター：材料・工程（追加加工を含む）・表面処理・価格方針（粗利率、特急割増）。各行の `aliases` が表記ゆれ。照合は `MasterLoader.resolve_alias`
+- `src/quote_document.py`・`src/quote_pdf.py`・`src/quote_log.py` 見積書PDF（中身と金額の端数処理、reportlab での描画、見積番号と `output/quote_log.csv`）。自社情報は `data/company.csv`（`data/company.local.csv` を優先）、フォントは `fonts/ipag.ttf`。例は `python scripts/make_quote_examples.py`
 - `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること
