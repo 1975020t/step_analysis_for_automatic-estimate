@@ -266,7 +266,6 @@ class DxfAnalyzer:
 
     # ------------------------------------------------------------ core
     def _analyze(self, path: Path, name: str) -> SheetMetalAnalysis:
-        from shapely.geometry import LineString, Point
         from shapely.ops import unary_union
 
         drawing = read_drawing(path)
