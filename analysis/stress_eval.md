@@ -38,7 +38,7 @@
 | A_Lv4 | 0.0% / 0.0% | 0.0% / 0.0% | 100% | 100% | 100% |
 | C1_slanted | 0.0% / 0.0% | 0.0% / 0.0% | 100% | 100% | 100% |
 | C2_angles | 0.0% / 0.0% | 0.0% / 0.0% | 100% | 100% | 100% |
-| C3_closed | 99.9% / 100.7% | 25.8% / 38.4% | 0% | 100% | 100% |
+| C3_closed | 0.0% / 0.0% | 25.8% / 38.4% | 0% | 100% | 100% |
 | C4_short | 0.0% / 0.0% | 0.0% / 0.0% | 100% | 100% | 100% |
 | C5_side | 0.0% / 0.0% | 0.0% / 0.0% | 100% | 100% | 100% |
 | C6_bigflange | 0.0% / 0.0% | 0.0% / 0.0% | 100% | 100% | 100% |
@@ -55,7 +55,7 @@
 | A_Lv4 | - |
 | C1_slanted | - |
 | C2_angles | BEND_UNDETERMINED (2) |
-| C3_closed | INTERNAL_BOUNDARY_ESTIMATED (40), FLAT_PATTERN_UNVERIFIED (40) |
+| C3_closed | FLAT_PATTERN_ESTIMATED (40) |
 | C4_short | - |
 | C5_side | - |
 | C6_bigflange | - |

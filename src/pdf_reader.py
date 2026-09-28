@@ -405,13 +405,17 @@ class PdfConditionReader:
         rush = raw.get("rush") or {}
         rule = terms.rush(rush.get("text"))
         out["rush"] = bool(rush.get("value"))
-        marked = [a.get("text") for a in raw.get("annotations") or [] if terms.rush(a.get("text"))]
-        if marked and not out["rush"]:  # a handwritten / stamped rush overrides the printed text
-            out["rush"], rule = True, True
         if rush.get("text") and rule is not None and rule != out["rush"]:
             review.add("rush", "特急の記載と判定が矛盾")
+            out["rush"] = rule  # the words decide (「特急不要」 is no rush); the contradiction is shown for review
         if out["rush"] and rule is None:
             review.add("rush", "特急の根拠となる語がない")
+        notes = [terms.rush(a.get("text")) for a in raw.get("annotations") or []]
+        if (True in notes and not out["rush"]) or (False in notes and out["rush"]) or (True in notes and False in notes):
+            # handwriting / a stamp says otherwise than the print (「至急」 over 「急ぎません」, 「特急不要」 over 「特急」):
+            # the handwritten / stamped rush is shown, but a person confirms it
+            out["rush"] = True in notes
+            review.add("rush", "手書き・押印と印刷の特急の指示が異なる")
 
         # ---- support fields and special requirements
         out["drawing_no"] = raw.get("drawing_no") or None

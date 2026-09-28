@@ -152,7 +152,24 @@ def test_handwritten_rush_overrides_printed_text():
     raw = evidence(rush={"value": False, "text": "NOT URGENT"}, annotations=[{"text": "至急！", "kind": "handwriting"},
                                                                           {"text": "OK 田中", "kind": "handwriting"}])
     out = reader().interpret(raw)
-    assert out["rush"] is True and "rush" not in out["needs_review"]
+    assert out["rush"] is True and "rush" in out["needs_review"]  # shown, but a person confirms a handwritten rush
+
+
+def test_rush_negations_are_not_a_rush():
+    for text in ("特急不要", "特急：なし", "特急 なし", "NO URGENT", "NOT URGENT", "NON-URGENT", "URGENT: NO",
+                 "特急 ×", "特急扱い不要", "急ぎません（通常納期で可）"):
+        assert T.rush(text) is False, text
+    for text in ("特急", "至急！", "URGENT", "RUSH ORDER", "特急対応", "短納期希望", "特急（12/5納期）"):
+        assert T.rush(text) is True, text
+    # the model says rush, the words say no rush: no rush, and a person looks at it
+    out = reader().interpret(evidence(rush={"value": True, "text": "特急不要"}))
+    assert out["rush"] is False and "rush" in out["needs_review"]
+    stamped = reader().interpret(evidence(rush={"value": False, "text": None},
+                                          annotations=[{"text": "特急不要", "kind": "stamp"}]))
+    assert stamped["rush"] is False and "rush" not in stamped["needs_review"]
+    against = reader().interpret(evidence(rush={"value": True, "text": "特急"},
+                                          annotations=[{"text": "NO URGENT", "kind": "handwriting"}]))
+    assert "rush" in against["needs_review"]
 
 
 def test_second_read_confirms_or_flags():

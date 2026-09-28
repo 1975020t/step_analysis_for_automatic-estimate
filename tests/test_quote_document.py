@@ -12,7 +12,7 @@ import pytest
 
 from src.master_loader import MasterLoader
 from src.models import AdditionalProcess, QuoteCondition, QuoteLine, QuoteResult, SheetMetalAnalysis
-from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem
+from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, quote_condition
 from src.quote_document import (DocumentLine, PartInfo, Recipient, build_document, load_company, log_row,
                                 price_summary, tax_amount, unit_price, unregistered_process_texts)
 from src.quote_engine import QuoteEngine
@@ -166,15 +166,24 @@ def test_unregistered_process_is_never_dropped_from_the_estimate_notes():
     assert "追加加工：マスター未登録の加工あり（別途見積）" in doc.pending
 
 
-def test_confirmed_processes_with_an_unregistered_one_say_it_is_quoted_separately():
-    items = [ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4},
-                                                  {"code": "UNREGISTERED", "count_per_part": None}],
-                           "M4タップ ×4", CONFIRMED)]
-    doc = document(items=items, unregistered_texts=["M10タップ 6ヶ所"])
-    assert "追加加工「M10タップ 6ヶ所」はマスター未登録のため、本見積に含めず別途見積とします。" in doc.remarks
-    assert "M10タップ6ヶ所" in flat(text_of(render_quote(doc)))
-    without_text = document(items=items)
-    assert "マスター未登録の追加加工 1件は、本見積に含めず別途見積とします。" in without_text.remarks
+def test_confirmed_processes_with_an_unregistered_one_keep_the_quote_an_estimate():
+    items = [ConditionItem("material", "材質", "SPCC", "SPCC", CONFIRMED),
+             ConditionItem("thickness_mm", "板厚", 1.2, "1.2 mm", CONFIRMED),
+             ConditionItem("quantity", "数量", 100, "100 個", CONFIRMED),
+             ConditionItem("surface_treatment", "表面処理", "ZINC_CLEAR", "三価クロメート", CONFIRMED),
+             ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4},
+                                                  {"code": "UNREGISTERED", "count_per_part": None, "text": "M10タップ 6ヶ所"}],
+                           "M4タップ ×4", CONFIRMED),
+             ConditionItem("rush", "特急", False, "なし", CONFIRMED)]
+    c = quote_condition(items, MASTERS, "SPCC", analysis_thickness=1.2)
+    assert c.pending and [p.process_code for p in c.additional_processes] == ["TAP_M4"]
+    doc = document(c=c, items=items)
+    assert doc.is_estimate and doc.title == "概算御見積書"
+    assert "追加加工：M10タップ 6ヶ所（マスター未登録のため別途見積）" in doc.pending
+    # the user deleted the unregistered row: a confirmed quotation
+    items[4] = ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4}], "M4タップ ×4", CONFIRMED)
+    c = quote_condition(items, MASTERS, "SPCC", analysis_thickness=1.2)
+    assert not c.pending and not document(c=c, items=items).is_estimate
 
 
 def test_estimate_from_the_shape_analysis_is_listed():

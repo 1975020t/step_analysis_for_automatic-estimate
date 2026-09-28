@@ -160,7 +160,7 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
         analysis = analysis_of(body)
         condition = service.build_condition(analysis, body.condition, body.drawing)
         issued = service.issue_document(
-            analysis, condition, body.drawing, Recipient(body.recipient.company, body.recipient.person),
+            analysis, condition, service.with_manual_input(body.drawing, body.condition), Recipient(body.recipient.company, body.recipient.person),
             PartInfo(name=body.part.name, drawing_no=body.part.drawing_no, revision=body.part.revision,
                      revision_date=body.part.revision_date),
             subject=body.subject, delivery_place=body.delivery_place, remarks=body.remarks,

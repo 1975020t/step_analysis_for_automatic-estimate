@@ -21,6 +21,8 @@ class SheetMetalAnalyzer:
     AREA_CONSISTENCY_TOLERANCE = 0.08
     AREA_CHECK_TOLERANCE = 0.01   # developed area vs volume / thickness
     CUT_CHECK_TOLERANCE = 0.01    # developed cut length vs cut-surface area / thickness
+    ESTIMATE_BOUND = 0.20         # an unverified development further than this from volume / thickness (area) or
+                                  # cut-surface area / thickness (cut length) is not used: those physical estimates are
     MAX_SHEET_SLENDERNESS = 0.20
 
     def __init__(self, k_factor: float = 0.33, k_factor_is_default: bool = True) -> None:
@@ -223,23 +225,28 @@ class SheetMetalAnalyzer:
             if check_problems:
                 reason_codes.append("FLAT_PATTERN_UNVERIFIED")
                 warnings.append("展開図の自己検算が一致しません（" + "、".join(check_problems) + "）。値は概算です。")
-        else:
-            k_area = sum(
-                math.radians(bend.angle_deg or 0.0) * thickness * (self.k_factor - 0.5)
-                * self._bend_axis_length(faces, bend) for bend in bends
-            )
-            flat = FlatPatternSummary(
-                method="analytical_neutral_surface_estimate",
-                area_mm2=round(solid.Volume() / thickness + k_area, 6),
-                cut_length_mm=round(cut_area / thickness, 6), boundary_count=len(cut_components),
-                outer_boundary_count=1 if cut_components else 0,
-                inner_boundary_count=max(0, len(cut_components) - 1), surface_region_count=len(pairs),
-            )
+        estimate = self._physical_estimate(faces, bends, pairs, cut_components, thickness, solid.Volume(), cut_area)
+        if unfold is not None and check_problems and not self._within_bounds(flat, estimate):
+            # an unverified development that is far from the physical estimates (a closed tube: an area of about 0 or
+            # below) is not used: the estimates replace it, and the result stays an estimate
+            unfold = None
+            unfold_error = (f"展開値が物理的な概算から{self.ESTIMATE_BOUND:.0%}以上外れた"
+                            f"（面積 {flat.area_mm2:,.1f} mm²、概算 {estimate.area_mm2:,.1f} mm²）")
+            reason_codes = [r for r in reason_codes if r not in ("FLAT_PATTERN_UNVERIFIED", "INTERNAL_BOUNDARY_ESTIMATED")]
+            warnings = [w for w in warnings if not w.startswith(("展開図の自己検算が一致しません", "曲げ部にかかる穴"))]
+            check_problems = []
+        if unfold is None:
+            flat = estimate
             hole_count = max(0, len(cut_components) - 1)
             hole_faces = sorted(cut_components, key=lambda c: -sum(faces[i].Area() for i in c))[1:]
             reason_codes.append("FLAT_PATTERN_ESTIMATED")
             warnings.append("2D展開図を構築できず、面積・切断長は体積・切断面積からの概算です。")
             check_problems.append(unfold_error or "展開失敗")
+        if not (flat.area_mm2 > 0 and flat.cut_length_mm > 0):  # never a zero / negative material or cutting cost
+            return self._failure(
+                file_name, "unsupported", "FLAT_PATTERN_FAILED",
+                "展開面積・切断長を正の値として求められません。", "展開形状作成", stages,
+            )
 
         verified = unfold is not None and not check_problems
         exact = verified and "INTERNAL_BOUNDARY_ESTIMATED" not in reason_codes
@@ -314,6 +321,26 @@ class SheetMetalAnalyzer:
             },
             thickness_candidates=recognition.candidate_models(candidates, faces, thickness),
         )
+
+    def _physical_estimate(self, faces, bends, pairs, cut_components, thickness, volume, cut_area) -> FlatPatternSummary:
+        """Blank area = volume / thickness (+ the K-factor correction of the bends), cut length = cut-surface area /
+        thickness: not exact, but bounded by the solid itself."""
+        k_area = sum(
+            math.radians(bend.angle_deg or 0.0) * thickness * (self.k_factor - 0.5)
+            * self._bend_axis_length(faces, bend) for bend in bends
+        )
+        return FlatPatternSummary(
+            method="analytical_neutral_surface_estimate",
+            area_mm2=round(volume / thickness + k_area, 6),
+            cut_length_mm=round(cut_area / thickness, 6), boundary_count=len(cut_components),
+            outer_boundary_count=1 if cut_components else 0,
+            inner_boundary_count=max(0, len(cut_components) - 1), surface_region_count=len(pairs),
+        )
+
+    def _within_bounds(self, flat: FlatPatternSummary, estimate: FlatPatternSummary) -> bool:
+        def close(value, reference):
+            return value > 0 and reference > 0 and abs(value / reference - 1) <= self.ESTIMATE_BOUND
+        return close(flat.area_mm2, estimate.area_mm2) and close(flat.cut_length_mm, estimate.cut_length_mm)
 
     def _apply_bend_development(self, bends, unfold: UnfoldResult, thickness: float) -> None:
         """Use the developed sweep angle (exact, from the cylinder parameter range) in bend evidence."""
