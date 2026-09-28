@@ -1,7 +1,9 @@
 """Photograph the real demo screens for the documents (docs/images/screens/). No LLM API.
 
-    python docs/scripts/capture_screens.py
+    python docs/scripts/capture_screens.py [--app-ref origin/main] [--api-only]
 
+The app is photographed from a checkout of --app-ref (default origin/main; a temporary git worktree), because this
+documents branch carries no code. The input data and the outputs are those of this branch.
 Starts the Streamlit demo (docs/scripts/demo_app.py: app.py with a recorded drawing reading) and the API on
 temporary storage and a temporary copy of the quote history (the committed history is not changed), drives
 them with Playwright (Chromium) using the development data (pdf_data, dxf_data) and a fictional recipient,
@@ -195,12 +197,31 @@ def serve_swagger_locally(route) -> None:
         route.fulfill(status=204, body=b"")
 
 
-def run_api_docs(browser, port: int) -> None:
+def serve_bytes(body: bytes, kind: str):
+    return lambda route: route.fulfill(status=200, body=body, headers={"Content-Type": kind})
+
+
+UI_FONT_CSS = """@font-face { font-family: "Noto Sans JP"; src: url("/_docs_font/regular.woff2"); font-weight: 400; }
+@font-face { font-family: "Noto Sans JP"; src: url("/_docs_font/bold.woff2"); font-weight: 700; }
+body, .swagger-ui, .swagger-ui * { font-family: "Noto Sans JP", sans-serif !important; }"""
+
+
+def run_api_docs(browser, port: int, app_root: Path) -> None:
+    """Swagger UI has no Japanese font of its own: give it the demo's (static/fonts), as a Japanese PC would show
+    Japanese glyphs rather than the Chinese fallback of this Linux machine."""
     page = browser.new_page(viewport={"width": 1300, "height": 2400})
+    fonts = app_root / "static" / "fonts"
+    for name, file in (("regular", "NotoSansJP-Regular.woff2"), ("bold", "NotoSansJP-Bold.woff2")):
+        if (fonts / file).exists():
+            body = (fonts / file).read_bytes()
+            page.route(f"**/_docs_font/{name}.woff2", serve_bytes(body, "font/woff2"))
     page.route("https://cdn.jsdelivr.net/**", serve_swagger_locally)
     page.route("https://fastapi.tiangolo.com/**", lambda route: route.fulfill(status=204, body=b""))
     page.goto(f"http://127.0.0.1:{port}/docs")
     page.get_by_text("/api/analyses").first.wait_for(timeout=60_000)
+    if (fonts / "NotoSansJP-Regular.woff2").exists():
+        page.add_style_tag(content=UI_FONT_CSS)
+        page.evaluate("document.fonts.ready")
     page.wait_for_timeout(2000)
     page.screenshot(path=str(OUT / "20_api_docs.png"), clip={"x": 0, "y": 0, "width": 1300, "height": 1900})
     print("saved 20_api_docs.png")
@@ -227,18 +248,30 @@ def trim(path: Path) -> None:
     image.save(path, optimize=True)
 
 
+def app_checkout(ref: str, work: Path) -> Path:
+    """A temporary worktree of the app at `ref`, with the demo wrapper and the recorded reading in its root."""
+    app = work / "app"
+    subprocess.run(["git", "worktree", "add", "--quiet", "--detach", str(app), ref], cwd=ROOT, check=True,
+                   stdout=subprocess.DEVNULL)
+    shutil.copyfile(Path(__file__).with_name("demo_app.py"), app / "_docs_demo_app.py")
+    return app
+
+
 def main() -> int:
+    ref = sys.argv[sys.argv.index("--app-ref") + 1] if "--app-ref" in sys.argv else "origin/main"
     OUT.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="docshots_"))
+    app_root = app_checkout(ref, work)
     shutil.copyfile(ROOT / "data" / "past_quotes" / "history.csv", work / "history.csv")
     env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANALYSIS_ANTHROPIC_API_KEY", "OPENAI_API_KEY")}
     env.update(PAST_QUOTES_PATH=str(work / "history.csv"), ESTIMATE_STORAGE_DIR=str(work / "storage"),
-               QUOTE_LOG_PATH=str(work / "quote_log.csv"), PYTHONPATH=str(ROOT))
+               QUOTE_LOG_PATH=str(work / "quote_log.csv"), PYTHONPATH=str(app_root), DOCS_APP_ROOT=str(app_root),
+               DOCS_RECORDED_READING=str(Path(__file__).with_name("recorded_reading.json")))
     demo_port, api_port = free_port(), free_port()
-    demo = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "docs/scripts/demo_app.py", "--server.headless", "true",
+    demo = subprocess.Popen([sys.executable, "-m", "streamlit", "run", "_docs_demo_app.py", "--server.headless", "true",
                              "--server.port", str(demo_port), "--browser.gatherUsageStats", "false"],
-                            cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    api = subprocess.Popen([sys.executable, "-m", "uvicorn", "api.main:app", "--port", str(api_port)], cwd=ROOT, env=env,
+                            cwd=app_root, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    api = subprocess.Popen([sys.executable, "-m", "uvicorn", "api.main:app", "--port", str(api_port)], cwd=app_root, env=env,
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     try:
         wait_http(demo_port)
@@ -247,12 +280,15 @@ def main() -> int:
             browser = pw.chromium.launch(executable_path=str(CHROMIUM)) if CHROMIUM.exists() else pw.chromium.launch()
             if "--api-only" not in sys.argv:
                 run_demo(browser, demo_port)
-            run_api_docs(browser, api_port)
+            run_api_docs(browser, api_port, app_root)
             browser.close()
         render_documents()
     finally:
         demo.terminate()
         api.terminate()
+        demo.wait(timeout=30)
+        api.wait(timeout=30)
+        subprocess.run(["git", "worktree", "remove", "--force", str(app_root)], cwd=ROOT, check=False)
         shutil.rmtree(work, ignore_errors=True)
     return 0
 

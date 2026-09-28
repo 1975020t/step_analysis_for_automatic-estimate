@@ -23,11 +23,12 @@ STEP・展開図DXF・図面PDFから板金部品の見積を作り、見積書�
 
 ```
 pip install -r docs/requirements.txt                 # markdown
-python docs/scripts/capture_screens.py               # 画面の写真（デモを起動して撮影。LLM は呼ばない）
+python docs/scripts/capture_screens.py --app-ref origin/main   # 画面の写真（デモを起動して撮影。LLM は呼ばない）
 python docs/scripts/make_charts.py                   # 評価のグラフ（数字は analysis/ のレポートの表から読む）
 python docs/scripts/build_pdf.py                     # PDF（docs/pdf/）
 ```
 
 - 図（構成図・流れ図・シーケンス図・状態遷移図）は原稿の中に Mermaid で書き、`build_pdf.py` が SVG にして PDF に描き込む。描いた図は `docs/images/diagrams/` に保存され、図を変えないかぎり Node.js なしで作り直せる。図を変えたときは一度 `cd docs/scripts && npm install` を行う（mermaid と、API 仕様書の撮影用の swagger-ui-dist）
+- このブランチにはコードがないので、画面の写真は `--app-ref` で指定したブランチのアプリ（既定は origin/main）を一時的な git worktree に取り出して撮る。今の写真は fix/ui-unregistered-process-and-font（画面の日本語フォント Noto Sans JP と、未登録の加工の修正を含む）で撮った。API 仕様書（Swagger UI）の写真にも同じフォントを当てる
 - 画面の写真は、`docs/scripts/demo_app.py`（本物の画面に、記録済みの図面の読み取り結果 `recorded_reading.json` を渡すもの）と API を一時的な保存先で起動して撮る。コミットされた見積履歴は変わらない
 - Playwright と Chromium、pypdfium2 が必要（開発環境に入っているもの）。日本語フォントはリポジトリの IPAゴシック（`fonts/ipag.ttf`）を埋め込む
