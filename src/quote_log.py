@@ -25,17 +25,18 @@ class QuoteLog:
         with self.path.open(encoding="utf-8-sig", newline="") as handle:
             return list(csv.DictReader(handle))
 
-    def next_number(self, issued_at: datetime) -> str:
+    def next_number(self, issued_at: datetime, taken: list[str] | tuple[str, ...] = ()) -> str:
+        """The next serial of the day; numbers in `taken` (e.g. the committed quote history) count as used."""
         prefix = f"Q{issued_at:%Y%m%d}-"
-        serials = [int(row["quote_no"][len(prefix):]) for row in self.rows()
-                   if (row.get("quote_no") or "").startswith(prefix) and row["quote_no"][len(prefix):].isdigit()]
+        numbers = [row.get("quote_no") or "" for row in self.rows()] + list(taken)
+        serials = [int(n[len(prefix):]) for n in numbers if n.startswith(prefix) and n[len(prefix):].isdigit()]
         return f"{prefix}{max(serials, default=0) + 1:03d}"
 
-    def issue(self, issued_at: datetime, row: dict[str, object]) -> str:
+    def issue(self, issued_at: datetime, row: dict[str, object], taken: list[str] | tuple[str, ...] = ()) -> str:
         """Take the next number for the issue date and write its log row; returns the number."""
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with _Lock(self.path.with_suffix(".lock")):
-            number = self.next_number(issued_at)
+            number = self.next_number(issued_at, taken)
             new_file = not self.path.exists()
             with self.path.open("a", encoding="utf-8-sig" if new_file else "utf-8", newline="") as handle:
                 writer = csv.DictWriter(handle, fieldnames=FIELDS)
