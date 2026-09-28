@@ -223,6 +223,18 @@ class Terms:
     COLOUR_ONLY = re.compile(r"マンセル|MUNSELL|RAL\s*\d|艶|GLOSS|色|COLOU?R|アイボリー|IVORY|N\d(?![\d.])")
     APPEARANCE = re.compile(r"外観|化粧|キズ|傷|打痕|COSMETIC|SCRATCH|DENT|CLASS\s*A")
 
+    FLAG_WORDS = {
+        "tolerance": re.compile(r"公差|平面度|真直度|平行度|直角度|位置度|FLATNESS|STRAIGHTNESS|PARALLELISM|PERPENDICULARITY|"
+                                r"TOLERANCE|TRUE\s+POSITION|厳守|(?:ピッチ|PITCH|寸法|DIM\S*)[^±]{0,12}±\s*0?\.\d+"),
+        "appearance": re.compile(r"外観|化粧面|COSMETIC|キズ.{0,4}(?:不可|なき)|打痕|SCRATCH|DENT"),
+        "inspection": re.compile(r"検査成績|成績書|全数.{0,4}検査|初品検査|ミルシート|INSPECTION|CERTIFICATE|MILL\s*SHEET|検査.{0,6}(?:要|提出|のこと)"),
+    }
+
+    def flag_categories(self, text: str | None) -> set[str]:
+        """Special-requirement categories a note text states (general tolerances and colours excluded)."""
+        up = upper(text)
+        return {cat for cat, pattern in self.FLAG_WORDS.items() if pattern.search(up) and self.flag_ok(cat, text)}
+
     def flag_ok(self, category: str, text: str | None) -> bool:
         """False for texts that look like a special requirement but are not (general tolerances,
         paint colour / gloss)."""

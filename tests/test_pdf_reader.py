@@ -91,10 +91,12 @@ class FakeClient(ClaudeClient):
         return copy.deepcopy(self.raws.pop(0))
 
 
-def reader(*raws):
+def reader(*raws, second=()):
     from src.pdf_reader import PdfConditionReader
 
-    return PdfConditionReader(client=FakeClient(raws), masters=MASTERS)
+    r = PdfConditionReader(client=FakeClient(raws), masters=MASTERS)
+    r._second_client = FakeClient(second)  # never a real client in tests
+    return r
 
 
 def test_rules_decide_codes_and_confirm_consistent_reads():
@@ -164,6 +166,8 @@ def test_second_read_confirms_or_flags():
     found = r.interpret(evidence(rush={"value": True, "text": "至急！"}))
     merged = PdfConditionReader.reconcile(missing, found)
     assert merged["rush"] is True and "rush" in merged["needs_review"]
+    toleranced = r.interpret(evidence(flags=[{"category": "tolerance", "text": "穴位置 ±0.05"}]))
+    assert PdfConditionReader.reconcile(a, toleranced)["flags"] == ["tolerance"]
 
 
 def dev_pdf(kind):
@@ -171,11 +175,27 @@ def dev_pdf(kind):
     return next(ROOT / "pdf_data" / r["file"] for r in index["drawings"] if r["kind"] == kind)
 
 
+def vector_truth_evidence(record, **over):
+    """Evidence that matches a dev vector drawing's truth (so the text layer shows no omission)."""
+    t = record["truth"]
+    procs = [{"text": p["text"].split(" + ")[0], "where": "callout", "bom_count": None, "handwritten_addition": False,
+              "code": p["code"], "count": p["count_per_part"]} for p in t["processes"]]
+    raw = evidence(material={"text": t["material_text"], "where": "title_block", "code": t["material"]},
+                   quantity={"text": None if t["quantity"] is None else str(t["quantity"]), "where": "title_block",
+                             "value": t["quantity"]}, processes=procs)
+    raw.update(over)
+    return raw
+
+
 def test_vector_pdf_is_read_once_and_checked_against_the_text_layer():
-    path = dev_pdf("vector")
-    r = reader(evidence(drawing_no="NOT-ON-THE-DRAWING", material={"text": "SUS304", "where": "title_block", "code": "SUS304"}))
+    index = json.loads((ROOT / "pdf_data" / "index.json").read_text(encoding="utf-8"))
+    record = next(r for r in index["drawings"] if r["kind"] == "vector" and not r["truth"]["processes"]
+                  and r["truth"]["quantity"] is not None and r["truth"]["material"] not in (None, UNREGISTERED))
+    path = ROOT / "pdf_data" / record["file"]
+    r = reader(vector_truth_evidence(record, drawing_no="NOT-ON-THE-DRAWING",
+                                     material={"text": "SUS304", "where": "title_block", "code": "SUS304"}))
     out = r.read(path)
-    assert len(r.client.requests) == 1
+    assert len(r.client.requests) == 1 and not r._second_client.requests
     assert any(block.get("type") == "image" for block in r.client.requests[0])
     assert "テキスト層" in r.client.requests[0][-2]["text"]
     layer_text = r.client.requests[0][-2]["text"]
@@ -201,8 +221,26 @@ def test_raster_pdf_is_read_twice_from_different_renderings():
 
 def test_malformed_output_is_retried():
     path = dev_pdf("vector")
-    r = reader({"material": "oops"}, evidence())
+    r = reader({"material": "oops"}, evidence(), second=[evidence()])
     assert r.read(path)["material"] == "SPCC"
+
+
+def test_vector_omission_triggers_a_second_read_and_a_review():
+    index = json.loads((ROOT / "pdf_data" / "index.json").read_text(encoding="utf-8"))
+    record = next(r for r in index["drawings"] if r["kind"] == "vector" and len(r["truth"]["processes"]) >= 2
+                  and all(p["code"] != UNREGISTERED for p in r["truth"]["processes"]))
+    full = vector_truth_evidence(record)
+    missing = copy.deepcopy(full)
+    missing["processes"] = missing["processes"][:1]  # the first read overlooks a callout
+    r = reader(missing, second=[missing])
+    out = r.read(ROOT / "pdf_data" / record["file"])
+    assert len(r._second_client.requests) == 1
+    assert "テキスト層に次の記載があります" in r._second_client.requests[0][-2]["text"]
+    assert "processes" in out["needs_review"]
+    r = reader(missing, second=[full])
+    out = r.read(ROOT / "pdf_data" / record["file"])
+    assert {p["code"] for p in out["processes"]} == {p["code"] for p in record["truth"]["processes"]}
+    assert "processes" in out["needs_review"]  # the two reads disagree
 
 
 # ------------------------------------------------------------------ quote integration

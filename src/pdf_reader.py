@@ -212,16 +212,14 @@ class PdfConditionReader:
     def read(self, path: str | Path) -> dict:
         pages = load_pages(path)
         raster = not all(p.vector for p in pages)
-        clients = [self.client]
-        if raster and self.second_read:
-            if self._second_client is None:
-                self._second_client = ClaudeClient(model=self.client.model, mode=self.client.mode,
-                                                   cache_dir=self.client.cache_dir, api_key=self.client._api_key)
-            clients.append(self._second_client)
+        if self._second_client is None:
+            self._second_client = ClaudeClient(model=self.client.model, mode=self.client.mode,
+                                               cache_dir=self.client.cache_dir, api_key=self.client._api_key)
+        clients = [self.client, self._second_client]
         before = [c.usage.as_dict() for c in clients]
         jobs = [(self.client, self._content(pages, tiles=False))]
-        if len(clients) == 2:
-            jobs.append((clients[1], self._content(pages, tiles=True)))
+        if raster and self.second_read:  # raster: always two independent reads, in parallel
+            jobs.append((self._second_client, self._content(pages, tiles=True)))
         if len(jobs) == 1:
             raws = [self._ask(*jobs[0])]
         else:
@@ -230,8 +228,16 @@ class PdfConditionReader:
             with ThreadPoolExecutor(len(jobs)) as pool:
                 raws = list(pool.map(lambda job: self._ask(*job), jobs))
         result = self.interpret(raws[0], pages)
+        suspects = self.omissions(result, pages) if not raster else {}
+        if suspects and self.second_read:  # vector: read again when the text layer shows something missing
+            raws.append(self._ask(self._second_client, self._content(pages, tiles=False, hints=suspects)))
         if len(raws) == 2:
             result = self.reconcile(result, self.interpret(raws[1], pages))
+        for field_name, lines in (self.omissions(result, pages) if not raster else {}).items():
+            if field_name == "processes":
+                result.setdefault("review_reasons", {}).setdefault("processes", []).append(
+                    "テキスト層にある加工指示が読み取り結果にない: " + " / ".join(lines[:3]))
+                result["needs_review"] = sorted(set(result.get("needs_review", [])) | {"processes"})
         usage: dict = {}
         for client, b in zip(clients, before):
             a = client.usage.as_dict()
@@ -246,7 +252,23 @@ class PdfConditionReader:
         return result
 
     # ------------------------------------------------------------ LLM
-    def _content(self, pages: list[Page], tiles: bool) -> list[dict]:
+    def omissions(self, result: dict, pages: list[Page]) -> dict[str, list[str]]:
+        """Vector drawings: text-layer lines that the reading does not account for.
+        processes - a line the rules parse as an additional process whose code is missing from the result;
+        quantity  - no quantity was read although the text layer has a quantity label / parts-list total."""
+        found: dict[str, list[str]] = {}
+        codes = {p.get("code") for p in result.get("processes") or []}
+        for page in pages:
+            for *_, text in page.texts:
+                for code, _ in self.terms.process(text) or []:
+                    if code not in codes:
+                        found.setdefault("processes", []).append(text)
+                if result.get("quantity") is None and re.search(
+                        r"数量|個数|製作数|手配数|台分|QTY|QUANTITY|Q'TY", text.upper()) and re.search(r"\d", text):
+                    found.setdefault("quantity", []).append(text)
+        return found
+
+    def _content(self, pages: list[Page], tiles: bool, hints: dict[str, list[str]] | None = None) -> list[dict]:
         content: list[dict] = []
         for page in pages:
             images = page.images[:1] + page.tiles if tiles and page.tiles else page.images
@@ -256,6 +278,10 @@ class PdfConditionReader:
             if page.vector:
                 lines = "\n".join(f"({x:.0f},{y:.0f}) {t}" for x, y, t in sorted(page.texts, key=lambda r: (r[1], r[0])))
                 content.append({"type": "text", "text": f"[ページ{page.number} テキスト層（x,y は左上からのmm）]\n{lines}"})
+        if hints:
+            lines = "\n".join(f"- {t}" for values in hints.values() for t in dict.fromkeys(values))
+            content.append({"type": "text", "text": "テキスト層に次の記載があります。部品表の行・引出線・注記を読み落としていないか、"
+                                                    "改めて図面全体を確認してください（関係のない記載なら無視してよい）。\n" + lines})
         content.append({"type": "text", "text": "この図面の加工条件の根拠を、規則に従って report で返してください。"})
         return content
 
@@ -294,6 +320,9 @@ class PdfConditionReader:
             item = raw.get(key) or {}
             text, llm_code = item.get("text"), item.get("code")
             value = resolve(text) if text else None
+            if key == "surface_treatment" and value is None and terms.material(text) not in (None, UNREGISTERED, AMBIGUOUS):
+                out[key] = None  # a material name ("電気亜鉛めっき鋼板 SECC") written where a finish was expected
+                continue
             if value in (None, AMBIGUOUS):
                 if text or llm_code:
                     review.add(key, "規則で解釈できない表記")
@@ -389,7 +418,12 @@ class PdfConditionReader:
         if out["drawing_no"] and not on_layer(out["drawing_no"]):
             review.add("drawing_no", "テキスト層に見つからない")
         out["revision"] = (raw.get("revision") or "").replace("△", "").strip() or None
-        out["flags"] = sorted({f["category"] for f in raw.get("flags") or [] if terms.flag_ok(f["category"], f.get("text"))})
+        flags = {f["category"] for f in raw.get("flags") or [] if terms.flag_ok(f["category"], f.get("text"))}
+        if vector:  # the text layer is complete: the rules add any requirement the reading skipped
+            for page in pages or []:
+                for *_, text in page.texts:
+                    flags |= terms.flag_categories(text)
+        out["flags"] = sorted(flags)
         out["needs_review"] = sorted(f for f in review.reasons if f in PRICE_FIELDS + ("drawing_no", "revision"))
         out["review_reasons"] = {f: sorted(set(r)) for f, r in review.reasons.items() if f in out["needs_review"]}
         return out
@@ -414,6 +448,9 @@ class PdfConditionReader:
                 reasons.setdefault(f, []).append("2回の読み取りが一致しない")
                 if f == "rush":
                     out[f] = bool(a) or bool(b)  # a rush mark seen by either read is shown (and must be confirmed)
+                elif f == "processes":
+                    if len({p["code"] for p in b or []}) > len({p["code"] for p in a or []}):
+                        out[f] = b  # the read that found more distinct processes (an overlooked callout is likelier)
                 elif a in (None, []) and b not in (None, []):
                     out[f] = b  # one read found a value the other missed: show it, but ask for a review
             elif f in second.get("needs_review", []) and f not in reasons:
@@ -421,6 +458,7 @@ class PdfConditionReader:
         for f in ("drawing_no", "revision"):
             if not out.get(f) and second.get(f):
                 out[f] = second[f]
+        out["flags"] = sorted(set(first.get("flags") or []) | set(second.get("flags") or []))  # a skipped requirement costs more than an extra one
         out["review_reasons"] = {f: sorted(set(r)) for f, r in reasons.items()}
         out["needs_review"] = sorted(out["review_reasons"])
         return out
