@@ -1,0 +1,23 @@
+{
+  "_comment": "図面 pdf_data/pdf/Lv3_0043.pdf（FAX、和英併記）の読み取り結果を記録したもの。資料の画面写真用（LLMを呼ばない）",
+  "drawing_no": "DB-25-0367",
+  "revision": "A",
+  "material": "SPHC",
+  "thickness_mm": null,
+  "quantity": 50,
+  "surface_treatment": "POWDER_COAT",
+  "processes": [
+    {"code": "TIG_WELD", "count_per_part": 2},
+    {"code": "UNREGISTERED", "count_per_part": null}
+  ],
+  "rush": false,
+  "flags": [],
+  "needs_review": ["surface_treatment"],
+  "review_reasons": {"surface_treatment": ["最新の改訂の値と異なる"]},
+  "evidence": [
+    {"processes": [
+      {"text": "コーナー2ヶ所 TIG溶接", "code": "TIG_WELD"},
+      {"text": "M10タップ 6ヶ所", "code": "UNREGISTERED"}
+    ]}
+  ]
+}
