@@ -182,6 +182,23 @@ def test_estimate_is_announced_before_output():
     assert notice and "形状解析：Kファクター未指定" in notice[0]
 
 
+def test_unregistered_process_from_the_drawing_is_announced_as_separately_quoted():
+    reading = {"material": "SPCC", "thickness_mm": 2.0, "quantity": 50, "surface_treatment": "ZINC_CLEAR",
+               "processes": [{"code": "TAP_M4", "count_per_part": 4}, {"code": "UNREGISTERED", "count_per_part": None}],
+               "rush": False, "flags": [], "needs_review": [], "review_reasons": {}}
+    app = AppTest.from_file(APP_PATH)
+    app.session_state["analysis_result"] = SheetMetalAnalysis(
+        status="success", file_name="p.step", thickness_mm=2.0, blank_area_mm2=4800.0, cut_length_mm=320.0,
+        hole_count=2, bend_count=1)
+    app.session_state["pdf_reading"] = reading
+    app.session_state["pdf_name"] = "drawing.pdf"
+    app.session_state["pdf_unregistered"] = ["M10タップ 6ヶ所"]
+    app.run(timeout=30)
+    assert not app.exception
+    notice = [w.value for w in app.warning if "概算見積書として出力されます" in w.value]
+    assert notice and "M10タップ 6ヶ所（マスター未登録のため別途見積）" in notice[0]
+
+
 def test_similar_quotes_on_screen_then_history_and_outcome(_history_copy):
     from src.past_quotes import HistoryStore
 

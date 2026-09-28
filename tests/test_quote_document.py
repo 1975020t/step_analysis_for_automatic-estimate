@@ -157,6 +157,26 @@ def test_estimate_title_and_every_unsettled_condition_in_the_remarks():
     assert text.index("本見積は概算です") < text.index("本見積は図面")  # the estimate block comes first
 
 
+def test_unregistered_process_is_never_dropped_from_the_estimate_notes():
+    # the screen's process table keeps master codes only: even without the UNREGISTERED entries in the value,
+    # an item still marked unregistered must be listed
+    items = [ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4}], "M4タップ ×4", UNREG)]
+    doc = document(c=condition(pending=["追加加工：未登録"]), items=items)
+    assert doc.is_estimate
+    assert "追加加工：マスター未登録の加工あり（別途見積）" in doc.pending
+
+
+def test_confirmed_processes_with_an_unregistered_one_say_it_is_quoted_separately():
+    items = [ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4},
+                                                  {"code": "UNREGISTERED", "count_per_part": None}],
+                           "M4タップ ×4", CONFIRMED)]
+    doc = document(items=items, unregistered_texts=["M10タップ 6ヶ所"])
+    assert "追加加工「M10タップ 6ヶ所」はマスター未登録のため、本見積に含めず別途見積とします。" in doc.remarks
+    assert "M10タップ6ヶ所" in flat(text_of(render_quote(doc)))
+    without_text = document(items=items)
+    assert "マスター未登録の追加加工 1件は、本見積に含めず別途見積とします。" in without_text.remarks
+
+
 def test_estimate_from_the_shape_analysis_is_listed():
     doc = document(a=analysis(status="partial", assumptions=["Kファクター未指定のため既定値0.33で展開"]))
     assert doc.is_estimate

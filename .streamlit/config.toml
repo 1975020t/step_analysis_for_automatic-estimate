@@ -1,0 +1,21 @@
+# Streamlit settings of the demo (read when started from the repository root).
+
+[server]
+# serves ./static (the Japanese web font below) at app/static/
+enableStaticServing = true
+
+[theme]
+# Noto Sans JP is bundled (static/fonts, SIL Open Font License 1.1) so that kanji are drawn with Japanese glyph
+# forms on every machine. Without it the browser falls back to any CJK font it finds (on some systems a Chinese
+# one, e.g. Microsoft YaHei or WenQuanYi), and some kanji look Chinese.
+font = "Noto Sans JP, Yu Gothic UI, Meiryo, Hiragino Sans, sans-serif"
+
+[[theme.fontFaces]]
+family = "Noto Sans JP"
+url = "app/static/fonts/NotoSansJP-Regular.woff2"
+weight = 400
+
+[[theme.fontFaces]]
+family = "Noto Sans JP"
+url = "app/static/fonts/NotoSansJP-Bold.woff2"
+weight = 700

@@ -239,12 +239,29 @@ def _item_notes(item: ConditionItem, analysis: SheetMetalAnalysis, condition: Qu
             notes.append(f"{label}：{text}（マスター未登録のため別途見積）")
         if unregistered > len(texts):
             notes.append(f"{label}：マスター未登録の加工 {unregistered - len(texts)}件（別途見積）")
+        if item.status == UNREG and not unregistered:  # never drop an unregistered process silently
+            notes.append(f"{label}：マスター未登録の加工あり（別途見積）")
         return notes
     if item.status == UNREG:
         if item.field == "surface_treatment":
             return [f"{label}：マスター未登録の表面処理（別途見積）"]
         return [f"{label}：マスター未登録（{handling}）"]
     return [f"{label}：{item.display}は読み取り値の確認が必要（{handling}）"]
+
+
+def separately_quoted(items: list[ConditionItem] | None, unregistered_texts: list[str] | None) -> list[str]:
+    """Processes the user confirmed although some are not in the master: those are not priced, so the quotation
+    says they are quoted separately (for unconfirmed ones the 概算 notes say it)."""
+    remarks = []
+    for item in items or []:
+        if item.field != "processes" or item.status != CONFIRMED:
+            continue
+        unregistered = sum(1 for p in item.value or [] if p.get("code") == UNREGISTERED)
+        texts = list(unregistered_texts or [])[:unregistered]
+        remarks += [f"追加加工「{text}」はマスター未登録のため、本見積に含めず別途見積とします。" for text in texts]
+        if unregistered > len(texts):
+            remarks.append(f"マスター未登録の追加加工 {unregistered - len(texts)}件は、本見積に含めず別途見積とします。")
+    return remarks
 
 
 def basis_remark(part: PartInfo) -> str:
@@ -280,6 +297,7 @@ def build_document(*, analysis: SheetMetalAnalysis, condition: QuoteCondition, q
         unit_price=summary.unit_price, amount=summary.amount)
     pending = pending_notes(analysis, condition, quote, items, unregistered_texts) if quote.is_estimate else []
     remarks = [r for r in [basis_remark(part)] if r] + list(company.remarks)
+    remarks += separately_quoted(items, unregistered_texts)
     if condition.rush:
         remarks.append("特急対応（特急割増を含みます）。")
     remarks += [FLAG_REMARKS[f] for f in flags or [] if f in FLAG_REMARKS]
