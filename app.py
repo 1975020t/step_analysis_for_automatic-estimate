@@ -15,7 +15,7 @@ from src.past_quotes import OUTCOMES
 from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, condition_items
 from src.quote_document import PartInfo, Recipient, default_subject, load_company
 from src.services.estimate import EstimateService, ServiceError
-from src.services.schemas import AdditionalProcessInput, ConditionInput, DrawingContext, DrawingItem
+from src.services.schemas import ConditionInput, DrawingContext, DrawingItem
 from src.services.settings import Settings
 
 
@@ -29,12 +29,9 @@ masters = service.masters
 try:
     llm = build_llm_client()
     llm_error = None
-    mode_label = "OpenAI API利用中" if llm.mode == "openai" else "Mockモード"
-    st.sidebar.info(f"チャット解釈モード: {mode_label}")
 except Exception as exc:
     llm = None
     llm_error = str(exc)
-    st.sidebar.error(f"チャット設定エラー: {llm_error}")
 upload_col, setting_col = st.columns([2, 1])
 with upload_col:
     uploaded = st.file_uploader("STEP／展開図DXFファイル", type=["step", "stp", "dxf"])
@@ -44,6 +41,9 @@ with setting_col:
     if is_dxf:
         thickness = st.number_input("板厚（mm）", min_value=0.0, value=0.0, step=0.1, format="%g",
                                     help="展開図DXFには板厚が含まれないため入力してください。")
+        flat_confirmed = st.checkbox("曲げなし（平板）", value=False,
+                                     help="曲げ線のない展開図は、曲げ線の描き漏れと区別できないため概算になります。"
+                                          "曲げのない平板であることを確認したらチェックしてください。")
     else:
         k_factor = st.number_input("Kファクター", min_value=0.0, max_value=1.0, value=0.33, step=0.01)
         confirmed_k = st.checkbox("指定済み加工条件として扱う", value=False)
@@ -54,7 +54,8 @@ if is_dxf and not thickness > 0:
     st.info("展開図DXFの解析には板厚（mm）の入力が必要です（図面PDFを指定した場合は図面の板厚を使います）。")
 if analyze_clicked and uploaded is not None:
     data = uploaded.getvalue()
-    for key in ("pdf_reading", "pdf_items", "pdf_unregistered", "doc_files"):
+    for key in ("pdf_reading", "pdf_items", "pdf_unregistered", "doc_files", "pdf_chat_update", "pdf_processes_chat",
+                "pdf_material", "pdf_quantity"):
         st.session_state.pop(key, None)
     if pdf_file is not None:
         with st.spinner("図面PDFから加工条件を読み取っています…（Claude API）"):
@@ -77,7 +78,8 @@ if analyze_clicked and uploaded is not None:
         thickness = float((st.session_state.get("pdf_reading") or {}).get("thickness_mm") or 0)
     if is_dxf:
         with st.spinner("展開図DXFを解析しています…"):
-            st.session_state.analysis_result = service.analyze_bytes(data, uploaded.name, thickness_mm=thickness)
+            st.session_state.analysis_result = service.analyze_bytes(data, uploaded.name, thickness_mm=thickness,
+                                                                     flat_confirmed=flat_confirmed)
             st.session_state.step_bytes = None
     else:
         with st.spinner("STEP形状を解析しています…"):
@@ -108,14 +110,18 @@ def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> Quote
         st.warning("特記事項: " + "、".join(labels.get(f, f) for f in reading["flags"]) + "（見積には含めません）")
     final: list[ConditionItem] = []
     material_codes, finish_codes = list(masters.materials), list(masters.surface_treatments)
+    apply_chat_update(items)
+    unregistered_rows = unregistered_process_rows(items)
     for item in items:
         cols = st.columns([1.1, 2.6, 1.0, 2.6, 1.3])
         cols[0].markdown(f"**{item.label}**")
         key = f"pdf_{item.field}"
         with cols[1]:
             if item.field == "material":
-                default = item.value if item.value in material_codes else base.material
-                value = st.selectbox(item.label, material_codes, index=material_codes.index(default), key=key,
+                # a material that is not in the master (or not on the drawing) is chosen by the user: never price
+                # with whichever material happens to be first in the list
+                index = material_codes.index(item.value) if item.value in material_codes else None
+                value = st.selectbox(item.label, material_codes, index=index, key=key, placeholder="材質を選んでください",
                                      format_func=lambda c: masters.materials[c]["display_name"], label_visibility="collapsed")
             elif item.field == "surface_treatment":
                 default = item.value if item.value in finish_codes else "NONE"
@@ -131,16 +137,24 @@ def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> Quote
             elif item.field == "rush":
                 value = st.checkbox("特急", value=bool(item.value), key=key)
             else:
-                rows = [{"加工": p["code"], "個数/個": int(p.get("count_per_part") or 0)} for p in item.value or []
-                        if p.get("code") in masters.process_rates]
+                # the unregistered processes of the drawing are rows too ("未登録: <drawing text>"): they stay in
+                # the quote as 別途見積 (and keep it an estimate) until the user deletes the row
+                source = st.session_state.get("pdf_processes_chat") or item.value or []
+                rows = [{"加工": p["code"], "個数/個": int(p.get("count_per_part") or 0)} for p in source
+                        if p.get("code") in masters.process_rates] + [{"加工": label, "個数/個": None}
+                                                                       for label in unregistered_rows]
                 table = st.data_editor(
-                    pd.DataFrame(rows, columns=["加工", "個数/個"]), num_rows="dynamic", key=key, hide_index=True,
-                    column_config={"加工": st.column_config.SelectboxColumn(options=masters.llm_process_codes)})
-                value = [{"code": r["加工"], "count_per_part": int(r["個数/個"])} for r in table.to_dict("records")
-                         if r.get("加工") and r.get("個数/個")]
-                # the table offers master processes only: keep the unregistered ones read from the drawing, so the
-                # quotation still lists them (別途見積) instead of dropping them silently
-                value += [p for p in item.value or [] if p.get("code") == "UNREGISTERED"]
+                    pd.DataFrame(rows, columns=["加工", "個数/個"]), num_rows="dynamic", hide_index=True,
+                    key=f"{key}_{st.session_state.get('pdf_processes_version', 0)}",
+                    column_config={"加工": st.column_config.SelectboxColumn(
+                        options=masters.llm_process_codes + list(unregistered_rows))})
+                value = []
+                for r in table.to_dict("records"):
+                    code, count = r.get("加工"), r.get("個数/個")
+                    if code in unregistered_rows:
+                        value.append({"code": "UNREGISTERED", "count_per_part": None, "text": unregistered_rows[code]})
+                    elif code and count == count and count:  # count == count: not NaN
+                        value.append({"code": code, "count_per_part": int(count)})
         cols[2].markdown(BADGE[item.status])
         cols[3].caption(item.display if not item.reasons else f"{item.display} ／ " + "、".join(item.reasons))
         changed = _edited(item, value)
@@ -151,10 +165,45 @@ def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> Quote
                                    CONFIRMED if confirmed else item.status, item.reasons))
     st.session_state.pdf_items = final
     material_input = next(i.value for i in final if i.field == "material")
-    chat_extra = [AdditionalProcessInput(process_code=p.process_code, quantity=p.quantity, source="chat")
-                  for p in base.additional_processes if p.source == "chat"]
-    return service.build_condition(analysis, ConditionInput(material=material_input, additional_processes=chat_extra),
-                                   drawing_context())
+    if material_input is None:
+        return None
+    return service.build_condition(analysis, ConditionInput(material=material_input), drawing_context())
+
+
+def unregistered_process_rows(items: list[ConditionItem]) -> dict[str, str]:
+    """Row label -> drawing text of each unregistered process read from the drawing."""
+    item = next(i for i in items if i.field == "processes")
+    count = sum(1 for p in item.value or [] if p.get("code") == "UNREGISTERED")
+    texts = list(st.session_state.get("pdf_unregistered") or [])
+    texts = (texts + [f"加工{n + 1}" for n in range(len(texts), count)])[:max(count, 0)]
+    return {f"未登録: {text}": text for text in texts}
+
+
+def chat_changes(before: QuoteCondition, after: QuoteCondition) -> dict:
+    """What the chat changed, to carry into the drawing conditions (the edited items become 確定)."""
+    changes = {}
+    if after.material != before.material:
+        changes["material"] = after.material
+    if after.quantity != before.quantity:
+        changes["quantity"] = after.quantity
+    procs = lambda c: sorted((p.process_code, p.quantity) for p in c.additional_processes)  # noqa: E731
+    if procs(after) != procs(before):
+        changes["processes"] = [{"code": p.process_code, "count_per_part": int(p.quantity)}
+                                for p in after.additional_processes if p.process_code in masters.process_rates]
+    return changes
+
+
+def apply_chat_update(items: list[ConditionItem]) -> None:
+    """Put the chat's change into the inputs before they are drawn (a widget's value cannot change afterwards)."""
+    changes = st.session_state.pop("pdf_chat_update", None) or {}
+    if "material" in changes:
+        st.session_state["pdf_material"] = changes["material"]
+    if "quantity" in changes:
+        st.session_state["pdf_quantity"] = changes["quantity"]
+    if "processes" in changes:
+        # the drawing's unregistered processes stay (rows of their own); the table is drawn again from the chat's list
+        st.session_state.pdf_processes_chat = changes["processes"]
+        st.session_state.pdf_processes_version = st.session_state.get("pdf_processes_version", 0) + 1
 
 
 def drawing_context() -> DrawingContext | None:
@@ -166,13 +215,17 @@ def drawing_context() -> DrawingContext | None:
                          reasons=list(i.reasons)) for i in st.session_state.get("pdf_items") or []]
     return DrawingContext(file_name=st.session_state.get("pdf_name", ""), drawing_no=reading.get("drawing_no"),
                           revision=reading.get("revision"), items=items, flags=list(reading.get("flags") or []),
-                          unregistered_texts=st.session_state.get("pdf_unregistered") or [])
+                          unregistered_texts=[p["text"] for i in items if i.field == "processes" for p in i.value or []
+                                              if p.get("code") == "UNREGISTERED" and p.get("text")]
+                          or st.session_state.get("pdf_unregistered") or [])
 
 
 def _edited(item: ConditionItem, value) -> bool:
-    if item.field == "processes":
-        read = sorted((p["code"], p.get("count_per_part")) for p in item.value or [] if p.get("code") != "UNREGISTERED")
-        return read != sorted((p["code"], p["count_per_part"]) for p in value if p.get("code") != "UNREGISTERED")
+    if item.field == "processes":  # the registered processes and how many unregistered ones remain
+        def key(procs):
+            return (sorted((p["code"], p.get("count_per_part")) for p in procs if p.get("code") != "UNREGISTERED"),
+                    sum(1 for p in procs if p.get("code") == "UNREGISTERED"))
+        return key(item.value or []) != key(value)
     if item.value is None or item.value == "UNREGISTERED":
         return False  # a value the user has not looked at is not confirmed by default
     if item.field == "thickness_mm":
@@ -402,6 +455,8 @@ if result.status in {"success", "partial"}:
             st.session_state.quote_condition = condition
 
     try:
+        if condition is None:
+            raise ServiceError("図面の材質がマスターにない（または記載がない）ため、材質を選ぶと金額を出します。")
         outcome = service.price(result, condition, drawing_context())  # the same call as POST /api/quotes
         quote, summary = outcome.quote, outcome.summary
         st.session_state.quote_result = quote
@@ -426,8 +481,7 @@ if result.status in {"success", "partial"}:
         quote_document_section(result, outcome, customer, person, part)
         outcome_section()
 
-    if llm is not None:
-        st.info(f"チャット解釈モード: {mode_label}")
+    if llm is not None and condition is not None:
         prompt = st.chat_input("例: 数量を10個にして、皿もみを2箇所追加")
         if prompt:
             history = st.session_state.get("chat_history", [])
@@ -437,6 +491,8 @@ if result.status in {"success", "partial"}:
                     pending_confirmation=st.session_state.get("pending_confirmation"),
                 )
                 st.session_state.quote_condition = applied.condition
+                if st.session_state.get("pdf_reading") is not None:
+                    st.session_state.pdf_chat_update = chat_changes(condition, applied.condition)
                 st.session_state.chat_history = (history + [
                     {"role": "user", "content": prompt},
                     {"role": "assistant", "content": applied.message},
@@ -447,7 +503,7 @@ if result.status in {"success", "partial"}:
                 st.rerun()
             except Exception as exc:
                 st.error(f"チャットAPIエラー: {exc}。現在の見積は変更していません。")
-    else:
+    elif llm is None:
         st.error(f"チャット設定エラー: {llm_error}。ルールベース見積はそのまま利用できます。")
 
 with st.expander("解析結果 JSON"):

@@ -208,7 +208,13 @@ class Terms:
         return counts.pop() if len(counts) == 1 else None
 
     # ------------------------------------------------------------ rush / flags
-    RUSH_NEG = re.compile(r"急ぎません|急がない|通常|別途|NOT\s+URGENT|NO\s+RUSH|STANDARD\s+LEAD")
+    RUSH_WORD = r"(?:特急|至急|大至急|急ぎ|短納期|URGENT|RUSH|EXPEDITE|ASAP)"
+    RUSH_NEG = re.compile(
+        r"急ぎません|急がない|通常|別途|STANDARD\s+LEAD|NON[\s-]?URGENT"
+        r"|NO[TN]?[\s-]*(?:URGENT|RUSH|EXPEDITE)"                                   # NO URGENT, NOT URGENT, NO RUSH
+        r"|" + RUSH_WORD + r"\s*(?:[:：=]\s*)?(?:は\s*)?(?:無|否|不可|X(?!\w)|NO\b|NONE|N/?A|NOT\s+REQUIRED|-+\s*$)"
+        r"|" + RUSH_WORD + r"[^、。,.\n]{0,6}?(?:不要|なし|無し|しない|でなくて)"                 # 特急不要, 特急扱いなし
+        r"|(?:不要|なし|無し)\s*[:：]?\s*" + RUSH_WORD)                                # 不要：特急
     RUSH_POS = re.compile(r"特急|至急|急ぎ|大至急|短納期|URGENT|RUSH|EXPEDITE|ASAP")
 
     def rush(self, text: str | None) -> bool | None:

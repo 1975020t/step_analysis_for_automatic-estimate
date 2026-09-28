@@ -22,8 +22,9 @@ class AdditionalProcessInput(BaseModel):
 
 
 class ConditionInput(BaseModel):
-    """見積の条件（手入力）。図面の条件（drawing）があるときは、材質はその読み取りが確定でないときの仮の値、
-    追加加工は図面の加工に足すもの。"""
+    """見積の条件（手入力）。図面の条件（drawing）があるときは、材質はその読み取りが確定でないときの仮の値。
+    数量・表面処理・特急は、指定したものが図面の値に代わり確定になる（指定しなければ図面の値）。
+    追加加工は図面の加工に足す。図面と同じ加工は、手入力の個数で置き換える（二重に数えない）。"""
     material: str = Field(description="data/materials.csv のコード")
     quantity: int = Field(1, gt=0)
     surface_treatment: str | None = Field(None, description="data/surface_treatments.csv のコード。None/NONE は処理なし")
@@ -228,6 +229,8 @@ class AnalysisJobRequest(BaseModel):
     thickness_mm: float | None = Field(None, gt=0, description="DXF のとき必須（DXFには板厚がない）")
     k_factor: float = Field(0.33, ge=0, le=1)
     k_factor_confirmed: bool = Field(False, description="Kファクターが指定済みの加工条件か（未指定なら曲げ部品は概算）")
+    flat_confirmed: bool = Field(False, description="DXF：曲げのない平板であることを利用者が確認済みか"
+                                 "（曲げ線がない展開図は、これがないと概算。曲げ線が描き漏れている可能性があるため）")
 
 
 class DrawingJobRequest(BaseModel):

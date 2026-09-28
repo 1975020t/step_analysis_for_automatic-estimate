@@ -12,13 +12,18 @@ Pipeline
      bend-line or centre-line candidates.
   3. Merge endpoints closer than 0.02 mm (distance-based union-find, not grid rounding), drop
      duplicates, node the linework and split it into connected components.
-  4. A component with several faces that encloses other geometry is the frame / title block. The
-     remaining closed loops are nested: the outermost loop is the part, the loops inside it are holes.
+  4. A component with several faces that encloses other geometry and whose extra faces sit in one
+     corner (a title block) is the frame. A part split into strips by a solid bend line is not a frame
+     (its strips span the part). The remaining closed loops are nested: the outermost loop is the part,
+     the loops inside it are holes. A closed line inside the part in another colour or layer than the
+     outline (a marking, a text box, or a hole on its own layer) is never counted silently.
   5. Problems are never confirmed: an open outline (gap >= 0.1 mm) -> OPEN_CONTOUR, two outlines ->
      MULTIPLE_PARTS, no closed outline -> NO_CUT_CONTOUR (all unsupported). Anything the rules cannot
      explain (a gap closed between 0.02 and 0.1 mm, stray or unexplained lines, a bend line that does
      not end on the outline, dimensions or a title-block thickness that disagree with the geometry)
-     gives partial (概算).
+     gives partial (概算). So do: units other than mm ($INSUNITS inch etc.; a mm drawing with a wrong
+     unit setting is 25.4x too large and nothing in the file can tell), and no bend line at all (a flat
+     plate, or bend lines that were not drawn) unless the user states the part is flat.
   6. Bend lines = non-continuous (or bend-layer) straight lines, pieces merged, whose both ends lie on
      the outline. Centre lines are recognised by crossing at a hole centre.
 """
@@ -67,15 +72,17 @@ class Curve:
     color: int
     kind: str                 # LINE / ARC / CIRCLE / ...
     closed: bool = False
+    layer: str = ""
 
 
 @dataclass
 class Drawing:
     curves: list[Curve] = field(default_factory=list)
     texts: list[str] = field(default_factory=list)
-    dimensions: list[tuple[float, float]] = field(default_factory=list)  # (measurement mm, angle deg)
+    dimensions: list[tuple[float, float]] = field(default_factory=list)  # (displayed value mm, rounding mm)
     scale: float = 1.0
     units_known: bool = True
+    units: int = 0                                                       # $INSUNITS
 
 
 class DxfReadError(RuntimeError):
@@ -92,7 +99,7 @@ def read_drawing(path: Path, flatten_mm: float = 0.0005) -> Drawing:
     except (OSError, ezdxf.DXFError) as exc:
         raise DxfReadError(str(exc)) from exc
     units = int(doc.header.get("$INSUNITS", 0) or 0)
-    drawing = Drawing(scale=UNIT_MM.get(units, 1.0), units_known=units in UNIT_MM)
+    drawing = Drawing(scale=UNIT_MM.get(units, 1.0), units_known=units in UNIT_MM, units=units)
     s = drawing.scale
     linetypes = {lt.dxf.name.upper(): lt for lt in doc.linetypes}
     layers = {layer.dxf.name: layer for layer in doc.layers}
@@ -138,10 +145,12 @@ def read_drawing(path: Path, flatten_mm: float = 0.0005) -> Drawing:
             drawing.texts.append(text)
             return
         if kind == "DIMENSION":
-            try:
-                drawing.dimensions.append((float(entity.get_measurement()) * s, float(entity.dxf.get("angle", 0.0))))
-            except Exception:
-                pass
+            # the value the drawing SHOWS (an override text, or the text of the dimension's block), not the
+            # measurement ezdxf computes from the same geometry: comparing that with the geometry proves nothing
+            shown = _dimension_text(entity)
+            if shown is not None:
+                value, step = shown
+                drawing.dimensions.append((value * s, 0.5 * step * s))
             return
         if kind not in ("LINE", "ARC", "CIRCLE", "LWPOLYLINE", "POLYLINE", "ELLIPSE", "SPLINE"):
             return
@@ -156,7 +165,7 @@ def read_drawing(path: Path, flatten_mm: float = 0.0005) -> Drawing:
         if closed and math.dist(flat[0], flat[-1]) > 1e-9:
             flat.append(flat[0])
         drawing.curves.append(Curve(flat, layer_role(attrs["layer"]), is_continuous(attrs["linetype"]),
-                                    int(attrs["color"]), kind, closed))
+                                    int(attrs["color"]), kind, closed, attrs["layer"]))
 
     for entity in doc.modelspace():
         visit(entity, None)
@@ -207,6 +216,32 @@ def merge_endpoints(curves: list[list[tuple[float, float]]], tol: float) -> tupl
     return out, largest
 
 
+def _dimension_text(entity) -> tuple[float, float] | None:
+    """The number a DIMENSION displays and its last digit's step (drawing units), or None when the file does
+    not say. An override text is literal; the text of the dimension's block shows measurement x DIMLFAC (as
+    the CAD drew it; a drawing scaled after it was dimensioned no longer agrees)."""
+    override = (entity.dxf.get("text", "") or "").strip()
+    if override and "<>" not in override:
+        texts, factor = [override], 1.0
+    else:
+        try:
+            block = entity.get_geometry_block()
+        except Exception:
+            block = None
+        texts = [sub.plain_text() if sub.dxftype() == "MTEXT" else sub.dxf.get("text", "")
+                 for sub in block or [] if sub.dxftype() in ("MTEXT", "TEXT")]
+        try:
+            factor = float(entity.override().get("dimlfac", 1.0) or 1.0)
+        except Exception:
+            factor = 1.0
+    for text in texts:
+        match = re.search(r"(?<![\d.])(\d+(?:\.\d+)?)", text.replace(",", ""))
+        if match:
+            decimals = len(match.group(1).partition(".")[2])
+            return float(match.group(1)) / factor, 10.0 ** -decimals / factor
+    return None
+
+
 # ================================================================== analyzer
 @dataclass
 class _Component:
@@ -231,8 +266,10 @@ class DxfAnalyzer:
     ON_OUTLINE_MM = 0.05    # bend-line end on the outline
     MULTI_PART_RATIO = 0.05  # a second outer loop this large (area ratio) is another part
 
-    def __init__(self, thickness_mm: float, k_factor: float = 0.33, k_factor_is_default: bool = True) -> None:
+    def __init__(self, thickness_mm: float, k_factor: float = 0.33, k_factor_is_default: bool = True,
+                 flat_confirmed: bool = False) -> None:
         self.thickness_mm = float(thickness_mm)
+        self.flat_confirmed = flat_confirmed  # the user states the part has no bends (a flat plate)
         self.k_factor = float(k_factor)
         self.k_factor_is_default = k_factor_is_default
 
@@ -277,6 +314,14 @@ class DxfAnalyzer:
         if not drawing.units_known:
             assumptions.append("DXFに単位（$INSUNITS）がないため、mmとして扱いました。")
             warnings.append("DXFの単位が不明です。mmとみなしました。")
+        elif drawing.scale != 1.0:
+            # the file's unit setting is all there is: a mm drawing saved as inch is 25.4 times too large and
+            # nothing else in the file tells (dimension texts are in the same drawing units), so it is not confirmed
+            reasons.append("UNIT_NOT_MM")
+            unit = {1: "インチ", 2: "フィート", 5: "cm", 6: "m", 14: "dm"}.get(drawing.units, f"コード{drawing.units}")
+            assumptions.append(f"DXFの単位（$INSUNITS）が{unit}のため、1単位＝{drawing.scale:g} mm で換算しました。")
+            warnings.append(f"DXFの単位が{unit}に設定されています。mmで描いた図面なら値が{drawing.scale:g}倍になっています。"
+                            "図面の単位を確認してください。")
 
         cut_curves = [c for c in drawing.curves if c.role == "cut" or (c.role not in NON_CUT_ROLES and c.continuous)]
         line_candidates = [c for c in drawing.curves if c not in cut_curves and c.role not in {"dim", "frame", "text", "mark"}
@@ -301,7 +346,7 @@ class DxfAnalyzer:
         frames = []
         for comp in components:
             if comp.multi_face and any(other is not comp and comp.region.contains(other.lines[0].representative_point())
-                                       for other in components):
+                                       for other in components) and self._title_block_layout(comp, components):
                 frames.append(comp)
         rest = [comp for comp in components if comp not in frames]
         loops = [comp for comp in rest if comp.faces]
@@ -360,6 +405,21 @@ class DxfAnalyzer:
         if len(holes) != len(inner):
             reasons.append("UNEXPLAINED_GEOMETRY")
             warnings.append("穴の内側にさらに輪郭があります。")
+        outline_attrs = self._attrs_near(cut_curves, outline.exterior)
+        outline_colors, outline_layers = {c for c, _ in outline_attrs}, {l for _, l in outline_attrs}
+        kept = []
+        for h in holes:
+            attrs = self._attrs_near(cut_curves, h.region.exterior) if outline_attrs else set()
+            if attrs and not ({c for c, _ in attrs} & outline_colors):
+                # another colour than the outline: a marking or a text box rather than a hole (as for open lines)
+                reasons.append("UNEXPLAINED_GEOMETRY")
+                warnings.append("部品内の外形と別の色の閉じた線は穴に数えていません（ケガキ・文字枠の可能性）。確認が必要です。")
+                continue
+            if attrs and not ({l for _, l in attrs} & outline_layers):
+                reasons.append("UNEXPLAINED_GEOMETRY")
+                warnings.append("外形と別のレイヤの閉じた線を穴として数えました（マーク・文字枠の可能性）。確認が必要です。")
+            kept.append(h)
+        holes = kept
         hole_rings = [Polygon(h.region.exterior) for h in holes]
         blank = outline
         for ring in hole_rings:
@@ -378,12 +438,17 @@ class DxfAnalyzer:
         if unexplained:
             reasons.append("UNEXPLAINED_LINE")
             warnings.append(f"役割を判断できない破線・一点鎖線が{unexplained}本あります。")
+        if not bends and not self.flat_confirmed:
+            # a flat plate and a drawing whose bend lines were left out look the same: 0 bends is not confirmed
+            reasons.append("NO_BEND_LINES")
+            warnings.append("曲げ線がありません。曲げのない平板なら「曲げなし（平板）」を指定してください。"
+                            "曲げがある場合は曲げ線が描かれていないため、曲げ費が入っていません。")
 
         # ---- consistency with dimensions and the title block
         minx, miny, maxx, maxy = outline.bounds
         extents = (maxx - minx, maxy - miny)
-        overall = [m for m, _ in drawing.dimensions if m > 0.5 * max(extents)]
-        mismatched = [m for m in overall if not any(abs(m - e) <= max(0.1, 0.005 * e) for e in extents)]
+        overall = [(m, r) for m, r in drawing.dimensions if m > 0.5 * max(extents)]
+        mismatched = [m for m, r in overall if not any(abs(m - e) <= max(0.1, 0.005 * e, r + 1e-6) for e in extents)]
         if mismatched:
             reasons.append("DIMENSION_MISMATCH")
             warnings.append(f"寸法の値（{', '.join(f'{m:.1f}' for m in mismatched)} mm）が外形の大きさと一致しません。")
@@ -522,6 +587,30 @@ class DxfAnalyzer:
         boundary = region.boundary
         counts = Counter(c.color for c in curves if boundary.distance(LineString(c.points)) < 1e-3)
         return counts.most_common(1)[0][0] if counts else None
+
+    @staticmethod
+    def _title_block_layout(comp, components) -> bool:
+        """A frame: the face holding the drawing plus title-block cells in one corner. A part cut into strips by
+        a solid bend line has faces that span the part (full width or full height)."""
+        from shapely.ops import unary_union
+
+        faces = [f for f in comp.faces if 2 * f.area / max(f.length, 1e-12) >= SLIVER_WIDTH_MM]
+        others = [c for c in components if c is not comp]
+        holding = [f for f in faces if any(f.contains(o.lines[0].representative_point()) for o in others)]
+        if len(holding) != 1:
+            return False
+        rest = [f for f in faces if f is not holding[0]]
+        if not rest:
+            return False
+        minx, miny, maxx, maxy = comp.region.bounds
+        rx0, ry0, rx1, ry1 = unary_union(rest).bounds
+        return (rx1 - rx0) < 0.9 * (maxx - minx) and (ry1 - ry0) < 0.9 * (maxy - miny)
+
+    @staticmethod
+    def _attrs_near(curves, geometry):
+        from shapely.geometry import LineString
+
+        return {(c.color, c.layer) for c in curves if LineString(c.points).distance(geometry) < DxfAnalyzer.NEAR_GAP_MM}
 
     @staticmethod
     def _colors_near(curves, geometry):

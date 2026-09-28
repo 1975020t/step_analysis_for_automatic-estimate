@@ -95,7 +95,12 @@ def test_messy_split_lines_tiny_gaps_duplicates_polyline_and_inches(tmp_path):
         msp.add_line((a[0] * s, a[1] * s), (b[0] * s, b[1] * s), dxfattribs={"linetype": "PHANTOM", "color": 4})
     slot_area = 10 * 10 + math.pi * 25 / 2
     slot_len = 10 + 10 + 10 + math.pi * 5
-    assert_exact(analyze(tmp_path, doc), holes=2, area=AREA - slot_area, cut=CUT + slot_len)
+    result = analyze(tmp_path, doc)
+    # the values are right, but a unit other than mm is never confirmed (a mm drawing saved as inch looks the same)
+    assert result.status == "partial" and result.reason_codes == ["UNIT_NOT_MM"]
+    assert result.hole_count == 2 and result.bend_count == 1
+    assert result.blank_area_mm2 == pytest.approx(AREA - slot_area, rel=1e-4)
+    assert result.cut_length_mm == pytest.approx(CUT + slot_len, rel=1e-4)
 
 
 def test_hole_block_insert_inherits_the_insert_style(tmp_path):
@@ -179,6 +184,59 @@ def test_unknown_units_are_assumed_mm_and_flagged(tmp_path):
     result = analyze(tmp_path, doc)
     assert result.status == "partial" and result.assumptions
     assert result.blank_area_mm2 == pytest.approx(AREA, rel=1e-4)
+
+
+def test_dimension_text_is_compared_not_the_geometry_with_itself(tmp_path):
+    doc, msp = new_doc()
+    plate(msp)
+    msp.add_linear_dim(base=(0, -10), p1=(0, 0), p2=(W, 0), text="150").render()  # the drawing says 150
+    result = analyze(tmp_path, doc, name="text.dxf")
+    assert result.status == "partial" and "DIMENSION_MISMATCH" in result.reason_codes
+
+
+def test_part_split_by_a_solid_bend_line_is_not_taken_for_a_frame(tmp_path):
+    doc, msp = new_doc()
+    rectangle(msp, 0, 0, W, H)
+    msp.add_line((90, 0), (90, H))  # bend line drawn as a solid line
+    msp.add_circle((30, 40), R)
+    result = analyze(tmp_path, doc)
+    assert result.status == "partial"  # before: the hole alone was the part (78.5 mm², confirmed)
+    assert result.blank_area_mm2 == pytest.approx(AREA, rel=1e-4) and result.hole_count == 1
+
+
+def test_mm_drawing_saved_as_inch_is_not_confirmed(tmp_path):
+    doc, msp = new_doc(units=1)
+    plate(msp)
+    msp.add_linear_dim(base=(0, -10), p1=(0, 0), p2=(W, 0)).render()
+    result = analyze(tmp_path, doc)
+    assert result.status == "partial" and "UNIT_NOT_MM" in result.reason_codes
+    assert any("25.4倍" in w for w in result.warnings)
+
+
+def test_closed_lines_of_another_colour_or_layer_are_not_counted_silently(tmp_path):
+    doc, msp = new_doc()
+    plate(msp)
+    msp.add_circle((60, 40), 3, dxfattribs={"color": 5})  # a marking circle
+    result = analyze(tmp_path, doc)
+    assert result.status == "partial" and result.hole_count == 1
+    assert result.blank_area_mm2 == pytest.approx(AREA, rel=1e-4)
+    doc, msp = new_doc()
+    doc.layers.add("HOLES")
+    plate(msp)
+    msp.add_circle((60, 40), 3, dxfattribs={"layer": "HOLES"})  # a hole on its own layer (or a mark)
+    result = analyze(tmp_path, doc, name="layer.dxf")
+    assert result.status == "partial" and result.hole_count == 2
+
+
+def test_no_bend_line_is_not_confirmed_as_flat_unless_the_user_says_so(tmp_path):
+    doc, msp = new_doc()
+    plate(msp, bend=False)
+    path = tmp_path / "flat.dxf"
+    doc.saveas(path)
+    result = DxfAnalyzer(thickness_mm=2.0).analyze(path)
+    assert result.status == "partial" and "NO_BEND_LINES" in result.reason_codes and result.bend_count == 0
+    flat = DxfAnalyzer(thickness_mm=2.0, flat_confirmed=True).analyze(path)
+    assert flat.status == "success" and flat.bend_count == 0
 
 
 def test_bad_inputs(tmp_path):

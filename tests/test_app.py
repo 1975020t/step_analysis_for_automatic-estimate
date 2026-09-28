@@ -19,7 +19,7 @@ def test_initial_ui_has_step_input_and_analyze_action():
     assert [u.label for u in app.get("file_uploader")][0] == "STEP／展開図DXFファイル"
     assert app.get("file_uploader")[1].label.startswith("図面PDF")
     assert [button.label for button in app.button] == ["解析を実行"]
-    assert any("チャット解釈モード" in item.value for item in app.info)
+    assert not any("モード" in item.value for item in list(app.info) + list(app.sidebar.info))  # no mode labels
 
 
 def test_success_ui_shows_all_five_results_together():
@@ -59,7 +59,7 @@ def test_success_ui_shows_all_five_results_together():
         "2",
         "1",
     ]
-    assert any("チャット解釈モード" in item.value for item in app.info)
+    assert not any("モード" in item.value for item in list(app.info) + list(app.sidebar.info))  # no mode labels
 
 
 def test_unsupported_ui_shows_reason_code_and_message():
@@ -197,6 +197,45 @@ def test_unregistered_process_from_the_drawing_is_announced_as_separately_quoted
     assert not app.exception
     notice = [w.value for w in app.warning if "概算見積書として出力されます" in w.value]
     assert notice and "M10タップ 6ヶ所（マスター未登録のため別途見積）" in notice[0]
+
+
+def _drawing_app(**reading):
+    values = {"material": "SPCC", "thickness_mm": 2.0, "quantity": 50, "surface_treatment": "NONE",
+              "processes": [{"code": "TAP_M4", "count_per_part": 4}], "rush": False, "flags": [], "needs_review": [],
+              "review_reasons": {}}
+    app = AppTest.from_file(APP_PATH)
+    app.session_state["analysis_result"] = SheetMetalAnalysis(
+        status="success", file_name="p.step", thickness_mm=2.0, blank_area_mm2=4800.0, cut_length_mm=320.0,
+        hole_count=2, bend_count=1)
+    app.session_state["pdf_reading"] = {**values, **reading}
+    app.session_state["pdf_name"] = "drawing.pdf"
+    return app
+
+
+def test_unregistered_material_is_chosen_by_the_user_not_the_first_in_the_list():
+    app = _drawing_app(material="UNREGISTERED")
+    app.run(timeout=30)
+    assert not app.exception
+    assert not any(m.label.startswith("単価") for m in app.metric)  # no amount with a guessed material
+    assert any("材質を選ぶと金額を出します" in e.value for e in app.error)
+    app.selectbox(key="pdf_material").select("SUS304").run(timeout=30)
+    assert not app.exception
+    assert "材料費（SUS304）" in set(cost_lines(app)["項目"])
+    assert any("材質：マスター未登録（材質 SUS304 で仮計算しています）" in w.value for w in app.warning)
+
+
+def test_chat_change_reaches_the_drawing_conditions():
+    app = _drawing_app()
+    app.run(timeout=30)
+    assert not app.exception
+    app.chat_input[0].set_value("数量を10個にして").run(timeout=30)
+    assert not app.exception
+    assert app.number_input(key="pdf_quantity").value == 10
+    assert any("10個" in m.label for m in app.metric)  # 小計（税抜、10個）
+    app.chat_input[0].set_value("皿もみを2箇所追加").run(timeout=30)
+    assert not app.exception
+    codes = list(cost_lines(app)["コード"])
+    assert "TAP_M4" in codes and codes.count("COUNTERSINK") == 1  # the chat's process is priced once, next to the drawing's
 
 
 def test_similar_quotes_on_screen_then_history_and_outcome(_history_copy):

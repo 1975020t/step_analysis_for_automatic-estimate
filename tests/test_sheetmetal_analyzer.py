@@ -315,3 +315,14 @@ def test_hole_crossing_bend_is_not_reported_as_high_confidence_exact(tmp_path: P
     assert "INTERNAL_BOUNDARY_ESTIMATED" in result.reason_codes
     assert result.metric_quality["cut_length_mm"].confidence == "medium"
     assert result.flat_pattern.inner_loops == []
+
+
+def test_unverified_development_far_from_the_physical_estimate_is_not_used():
+    # a closed tube (stress data C3): the 2D development fails its checks and its area came out about 0 or negative,
+    # which became the material cost. Now the volume / thickness estimate is used (still an estimate).
+    path = Path(__file__).resolve().parents[1] / "stress_data" / "C3_closed" / "C3_closed_0000.step"
+    result = SheetMetalAnalyzer(k_factor=0.5, k_factor_is_default=False).analyze(path)
+    assert result.status == "partial" and "FLAT_PATTERN_ESTIMATED" in result.reason_codes
+    assert result.blank_area_mm2 == pytest.approx(34866.498, rel=0.02)  # truth of the stress data
+    assert result.cut_length_mm > 0
+    assert result.metric_quality["blank_area_mm2"].confidence == "low"

@@ -199,7 +199,7 @@ def pending_notes(analysis: SheetMetalAnalysis, condition: QuoteCondition, quote
     """Every condition that keeps the quote an estimate, with how the amount treats it."""
     notes: list[str] = []
     for item in items or []:
-        if item.status == CONFIRMED:
+        if item.status == CONFIRMED and not _has_unregistered(item):
             continue
         notes += _item_notes(item, analysis, condition, unregistered_texts or [])
     notes += [f"{p}（形状データの板厚で計算しています）" for p in condition.pending if p.startswith("板厚：図面")]
@@ -234,7 +234,7 @@ def _item_notes(item: ConditionItem, analysis: SheetMetalAnalysis, condition: Qu
         if item.status == REVIEW:
             notes.append(f"{label}：{item.display}は読み取り値の確認が必要（確認が済むまで{handling}）")
         unregistered = sum(1 for p in item.value or [] if p.get("code") == UNREGISTERED)
-        texts = list(unregistered_texts)[:unregistered] if unregistered else []
+        texts = _unregistered_texts(item, unregistered_texts)
         for text in texts:
             notes.append(f"{label}：{text}（マスター未登録のため別途見積）")
         if unregistered > len(texts):
@@ -249,19 +249,16 @@ def _item_notes(item: ConditionItem, analysis: SheetMetalAnalysis, condition: Qu
     return [f"{label}：{item.display}は読み取り値の確認が必要（{handling}）"]
 
 
-def separately_quoted(items: list[ConditionItem] | None, unregistered_texts: list[str] | None) -> list[str]:
-    """Processes the user confirmed although some are not in the master: those are not priced, so the quotation
-    says they are quoted separately (for unconfirmed ones the 概算 notes say it)."""
-    remarks = []
-    for item in items or []:
-        if item.field != "processes" or item.status != CONFIRMED:
-            continue
-        unregistered = sum(1 for p in item.value or [] if p.get("code") == UNREGISTERED)
-        texts = list(unregistered_texts or [])[:unregistered]
-        remarks += [f"追加加工「{text}」はマスター未登録のため、本見積に含めず別途見積とします。" for text in texts]
-        if unregistered > len(texts):
-            remarks.append(f"マスター未登録の追加加工 {unregistered - len(texts)}件は、本見積に含めず別途見積とします。")
-    return remarks
+def _has_unregistered(item: ConditionItem) -> bool:
+    return item.field == "processes" and any(p.get("code") == UNREGISTERED for p in item.value or [])
+
+
+def _unregistered_texts(item: ConditionItem, unregistered_texts: list[str]) -> list[str]:
+    """The drawing's wording of the unregistered processes still in the item (the screen keeps it in "text")."""
+    entries = [p for p in item.value or [] if p.get("code") == UNREGISTERED]
+    if any(p.get("text") for p in entries):
+        return [p["text"] for p in entries if p.get("text")]
+    return list(unregistered_texts)[:len(entries)]
 
 
 def basis_remark(part: PartInfo) -> str:
@@ -297,7 +294,6 @@ def build_document(*, analysis: SheetMetalAnalysis, condition: QuoteCondition, q
         unit_price=summary.unit_price, amount=summary.amount)
     pending = pending_notes(analysis, condition, quote, items, unregistered_texts) if quote.is_estimate else []
     remarks = [r for r in [basis_remark(part)] if r] + list(company.remarks)
-    remarks += separately_quoted(items, unregistered_texts)
     if condition.rush:
         remarks.append("特急対応（特急割増を含みます）。")
     remarks += [FLAG_REMARKS[f] for f in flags or [] if f in FLAG_REMARKS]

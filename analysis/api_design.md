@@ -63,7 +63,7 @@ GET  /api/documents/{quote_no}/quote.pdf                          → 見積書P
 PUT  /api/history/{quote_no}/outcome  {outcome: 受注}              → 受注の記録
 ```
 
-DXF は `POST /api/analyses` に `thickness_mm` が必要（DXFには板厚がない）。
+DXF は `POST /api/analyses` に `thickness_mm` が必要（DXFには板厚がない）。曲げ線のない展開図は、平板と曲げ線の描き漏れを区別できないため概算になる。平板と確認したときは `flat_confirmed: true` を付ける。
 
 ### 図面PDFがあるとき
 
@@ -72,8 +72,10 @@ POST /api/files {図面PDF}                → {file_id}
 POST /api/drawings/readings {file_id}   → 202 {job_id}
 GET  /api/jobs/{job_id}                 → {result: {reading, drawing: {items[{field, value, status, reasons}], flags, unregistered_texts, ...}}}
    画面で items を確認・修正し、確定にした項目は status を「確定」にする
-POST /api/quotes {analysis_job_id, condition: {material（仮の材質）, additional_processes（手で足す加工）}, drawing}
+POST /api/quotes {analysis_job_id, condition: {material（仮の材質）, quantity・surface_treatment・rush（指定したものだけ図面の値に代わり確定）,
+                  additional_processes（手で足す加工。図面と同じ加工は手入力の個数で置き換え、二重に数えない）}, drawing}
    → 「確定」の項目だけが金額に入り、残りは estimate_reasons に理由として並ぶ（概算）
+   マスターにない加工が drawing の追加加工に残っていれば、確定でも概算（別途見積）
 POST /api/documents {..., drawing}      → 概算なら「概算御見積書」、備考の先頭に未確定の項目
 ```
 

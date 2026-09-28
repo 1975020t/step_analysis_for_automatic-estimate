@@ -116,6 +116,10 @@ def quote_condition(items: list[ConditionItem], masters: MasterLoader, material_
                 confirmed=proc.status in (CONFIRMED, UNREG), source="drawing"))
     if proc.status != CONFIRMED:
         note(proc, "→ 未確認の加工は金額に含めない")
+    elif any(p.get("code") == UNREGISTERED for p in proc.value or []):
+        # confirmed, but a process that is not in the master is still on the drawing: it is not priced, so the
+        # quote stays an estimate (別途見積) until the user removes it from the processes
+        pending.append(f"{proc.label}：{UNREG}（マスター未登録の加工は別途見積）")
     rush = by["rush"]
     if rush.status != CONFIRMED:
         note(rush, "→ 特急割増を含めない")

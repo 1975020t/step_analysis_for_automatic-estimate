@@ -103,14 +103,15 @@ class EstimateService:
     # ------------------------------------------------------------ shape analysis
     @staticmethod
     def analyze_bytes(data: bytes, file_name: str, thickness_mm: float | None = None, k_factor: float = 0.33,
-                      k_factor_confirmed: bool = False) -> SheetMetalAnalysis:
+                      k_factor_confirmed: bool = False, flat_confirmed: bool = False) -> SheetMetalAnalysis:
         """STEP (k factor) or flat-pattern DXF (thickness required) -> SheetMetalAnalysis."""
         if file_name.lower().endswith(".dxf"):
             if not thickness_mm or thickness_mm <= 0:
                 raise ServiceError("展開図DXFの解析には板厚（mm）が必要です。", code="THICKNESS_REQUIRED")
             from src.dxf_analyzer import DxfAnalyzer
 
-            return DxfAnalyzer(thickness_mm=thickness_mm).analyze(io.BytesIO(data), file_name=file_name)
+            return DxfAnalyzer(thickness_mm=thickness_mm, flat_confirmed=flat_confirmed).analyze(
+                io.BytesIO(data), file_name=file_name)
         from src.sheetmetal_analyzer import SheetMetalAnalyzer
 
         return SheetMetalAnalyzer(k_factor=k_factor, k_factor_is_default=not k_factor_confirmed).analyze(
@@ -123,7 +124,8 @@ class EstimateService:
             raise JobError("アップロードしたファイルが見つかりません。") from None
         try:
             analysis = self.analyze_bytes(data, meta["filename"], payload.get("thickness_mm"),
-                                          payload.get("k_factor", 0.33), payload.get("k_factor_confirmed", False))
+                                          payload.get("k_factor", 0.33), payload.get("k_factor_confirmed", False),
+                                          payload.get("flat_confirmed", False))
         except ServiceError as exc:
             raise JobError(str(exc)) from None
         return analysis.model_dump(mode="json")
@@ -197,12 +199,48 @@ class EstimateService:
             extra.append(AdditionalProcess(process_code=p.process_code, quantity=p.quantity,
                                            unit=self.masters.process_rates[p.process_code]["unit"], source=p.source))
         if drawing is not None and drawing.items:
+            drawing = self.with_manual_input(drawing, condition)
             base = quote_condition(self.condition_items(drawing), self.masters, condition.material,
                                    analysis_thickness=analysis.thickness_mm)
-            return base.model_copy(update={"additional_processes": base.additional_processes + extra})
+            # a process entered by hand replaces the drawing's process of the same code (never both: M4タップ×4
+            # on the drawing and in the chat is 4 holes, not 8)
+            manual = {p.process_code for p in extra}
+            drawn = [p for p in base.additional_processes if p.process_code not in manual]
+            return base.model_copy(update={"additional_processes": drawn + extra})
         finish = condition.surface_treatment if condition.surface_treatment not in ("", "NONE") else None
         return QuoteCondition(material=condition.material, quantity=condition.quantity, surface_treatment=finish,
                               rush=condition.rush, additional_processes=extra)
+
+    MANUAL_FIELDS = ("quantity", "surface_treatment", "rush")
+
+    def with_manual_input(self, drawing: DrawingContext | None, condition: ConditionInput) -> DrawingContext | None:
+        """The drawing items with what the user entered by hand: an explicitly given quantity, surface treatment or
+        rush replaces the drawing's item and counts as confirmed (as an edit on the screen does). Nothing entered
+        by hand is dropped because a drawing was read."""
+        given = [f for f in self.MANUAL_FIELDS if f in condition.model_fields_set]
+        if drawing is None or not drawing.items or not given:
+            return drawing
+        items = []
+        for item in drawing.items:
+            if item.field not in given:
+                items.append(item)
+                continue
+            value = getattr(condition, item.field)
+            if item.field == "surface_treatment" and value in (None, ""):
+                value = "NONE"  # "no treatment" entered by hand is a confirmed value, not a missing one
+            display = self._display(item.field, value)
+            if item.value is not None and item.value != value:
+                display += f"（手入力。図面は {item.display}）"
+            items.append(item.model_copy(update={"value": value, "display": display, "status": "確定",
+                                                 "reasons": ["手入力"]}))
+        return drawing.model_copy(update={"items": items})
+
+    def _display(self, field: str, value) -> str:
+        if field == "quantity":
+            return f"{value} 個"
+        if field == "rush":
+            return "あり" if value else "なし"
+        return self.masters.surface_treatments.get(value, {}).get("display_name", str(value))
 
     def price(self, analysis: SheetMetalAnalysis, condition: QuoteCondition,
               drawing: DrawingContext | None = None) -> QuoteOutcome:
@@ -221,7 +259,8 @@ class EstimateService:
 
     def quote(self, analysis: SheetMetalAnalysis, condition: ConditionInput,
               drawing: DrawingContext | None = None) -> QuoteOutcome:
-        return self.price(analysis, self.build_condition(analysis, condition, drawing), drawing)
+        return self.price(analysis, self.build_condition(analysis, condition, drawing),
+                          self.with_manual_input(drawing, condition))
 
     # ------------------------------------------------------------ quotation document
     def issue_document(self, analysis: SheetMetalAnalysis, condition: QuoteCondition, drawing: DrawingContext | None,
