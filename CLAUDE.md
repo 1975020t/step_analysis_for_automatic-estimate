@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 STEP形式の板金部品を解析し、ルールベースで見積を出すシステムのバックエンド（デモUIはStreamlit）。
-現在の主タスクは **過去の類似見積の参照**（このPhaseではLLM APIを使わない）。最終ゴールと受入条件は [analysis/handoff_similar_quotes.md](analysis/handoff_similar_quotes.md) にある。着手前に読むこと。
-見積書PDFの出力（[analysis/handoff_quote_document.md](analysis/handoff_quote_document.md)）は実装済み。図面PDF読み取りの懸念点への対応（[analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)）はAPIが使えるようになってから別に行う。今回は図面PDFの読み取りのコードを変えない。
+現在の主タスクは **本番に向けたサーバー（API）の切り出し**（段階1。FastAPI）。最終ゴールと受入条件は [analysis/handoff_api.md](analysis/handoff_api.md) にある。着手前に読むこと。
+見積書PDFの出力と過去の類似見積の参照は実装済み。図面PDF読み取りの懸念点への対応（[analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)）はAPIが使えるようになってから別に行う。今回は図面PDFの読み取りのロジックを変えない。
 STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）と展開図DXFの解析（[analysis/handoff_dxf.md](analysis/handoff_dxf.md)）は完了済み。壊さないこと。
 進め方・設計は任されている。途中で確認を取らずに、受入条件を満たすまで進めてよい。
 
