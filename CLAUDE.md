@@ -42,6 +42,7 @@ python scripts/evaluate_dxf.py --data dxf_data --analyzer src.dxf_analyzer:DxfAn
 - `scripts/evaluate_golden.py` 評価ハーネス（STEP）、`scripts/evaluate_dxf.py`（DXF）
 - `golden/dxf_golden.py` 展開図DXFの生成器（変種 D0/D1/D2/X）。`golden/datasets/dxf_v1.json` が開発用、`dxf_holdout_v1.json` が最終判定用（開発中は開かない）
 - `golden/dxf_naive_baseline.py` DXFの素朴なベースライン（比較用。本番コードではない）
+- `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること
 
