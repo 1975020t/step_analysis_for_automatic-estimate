@@ -29,3 +29,5 @@ golden_seed*/
 stress_data/
 dxf_data/
 dxf_holdout/
+pdf_data/
+pdf_holdout/

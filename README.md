@@ -95,7 +95,7 @@ D0〜D2 は全件が「確定で正解」でした。面積・切断長の最大
 
 ## 見積
 
-金額はLLMではなく、`data/materials.csv` と `data/process_rates.csv` の単価だけで計算します。
+金額はLLMではなく、マスター（`data/materials.csv`、`data/process_rates.csv`、`data/surface_treatments.csv`、`data/pricing_policy.csv`）の単価と率だけで計算します。粗利率は `pricing_policy.csv` の `margin_rate` です。各マスター行の `aliases` は図面の表記ゆれ（例：SPCC-SD、ボンデ鋼板、ユニクロ、PEMナット）で、`MasterLoader.resolve_alias` で照合します。マスターにない材質・処理・加工は似たものに寄せず「未登録」として扱います。
 
 - 材料：展開面積 × 板厚 × 密度 × 材料単価 × 歩留まり係数
 - 切断：切断長 × レーザー切断単価
@@ -171,6 +171,17 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 ```
 
 設計と生成器の検証は [analysis/dxf_golden_design.md](analysis/dxf_golden_design.md)、解析ロジック開発の受入条件は [analysis/handoff_dxf.md](analysis/handoff_dxf.md)、素朴なベースラインの結果は [analysis/dxf_eval_baseline.md](analysis/dxf_eval_baseline.md)、解析器の方式と結果は上の「解析方式」を参照してください。
+
+## 図面PDFのゴールデンデータ
+
+図面PDFから見積に効く加工条件（材質・板厚・数量・表面処理・追加加工・特急、補助として図番・改訂、特記事項として公差・外観・検査）を読み取るロジックを評価するデータセットです。CAD出力（文字データあり）50%、スキャン20%、FAX20%、手書き・押印入り10%で、書く項目・書く場所・表記ゆれ・改訂・手書きの訂正を変えています。正解は改訂後の最新値、書かれていない項目は「記載なし」、マスターにないものは「未登録」です。
+
+```powershell
+.venv\Scripts\python.exe scripts\generate_pdf_golden.py --per-level 60 --seed 31 --out pdf_data
+.venv\Scripts\python.exe scripts\evaluate_pdf.py --data pdf_data --reader golden.pdf_naive_baseline:NaiveTextReader --verify-frozen --report analysis\pdf_eval_baseline.md
+```
+
+設計は [analysis/pdf_golden_design.md](analysis/pdf_golden_design.md)（[例](analysis/pdf_samples.png)）、読み取りロジック開発の受入条件は [analysis/handoff_pdf.md](analysis/handoff_pdf.md)、素朴なベースラインの結果は [analysis/pdf_eval_baseline.md](analysis/pdf_eval_baseline.md) を参照してください。
 
 ## 現時点の評価制約
 

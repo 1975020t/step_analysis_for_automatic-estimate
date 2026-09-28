@@ -1,0 +1,10 @@
+treatment_code,display_name,unit_price,charge_scope,aliases
+NONE,なし（生地）,0,per_part,なし|生地|生地のまま|無処理|NO FINISH|NONE
+ZINC_CLEAR,三価クロメート（光沢）,40,per_part,三価クロメート（光沢）|三価クロメート（クリア）|三価クリア|ユニクロ|ZINC PLATED CLEAR|CLEAR ZINC
+ZINC_YELLOW,三価クロメート（有色）,45,per_part,三価クロメート（有色）|三価有色|有色クロメート|ZINC PLATED YELLOW|YELLOW ZINC
+ZINC_BLACK,三価クロメート（黒）,55,per_part,三価クロメート（黒）|三価黒|黒クロメート|ZINC PLATED BLACK|BLACK ZINC
+POWDER_COAT,粉体塗装,180,per_part,粉体塗装|静電粉体塗装|POWDER COAT|POWDER COATED
+BAKING_PAINT,焼付塗装,150,per_part,焼付塗装|メラミン焼付塗装|BAKED ENAMEL
+ELECTROLESS_NI,無電解ニッケルめっき,120,per_part,無電解ニッケルめっき|無電解Niめっき|カニゼン|ELECTROLESS NICKEL
+ANODIZE_CLEAR,白アルマイト,90,per_part,白アルマイト|アルマイト|クリアアルマイト|CLEAR ANODIZE|ANODIZE CLEAR
+ANODIZE_BLACK,黒アルマイト,110,per_part,黒アルマイト|BLACK ANODIZE|ANODIZE BLACK

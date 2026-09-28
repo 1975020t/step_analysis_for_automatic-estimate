@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 STEP形式の板金部品を解析し、ルールベースで見積を出すシステムのバックエンド（デモUIはStreamlit）。
-現在の主タスクは **展開図DXFの解析**。最終ゴールと受入条件は [analysis/handoff_dxf.md](analysis/handoff_dxf.md) にある。着手前に読むこと。
-STEPの解析（完了済み、[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）は壊さないこと。
+現在の主タスクは **図面PDFの加工条件の読み取り**。最終ゴールと受入条件は [analysis/handoff_pdf.md](analysis/handoff_pdf.md) にある。着手前に読むこと。
+STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）と展開図DXFの解析（[analysis/handoff_dxf.md](analysis/handoff_dxf.md)）は完了済み。壊さないこと。
 進め方・設計は任されている。途中で確認を取らずに、受入条件を満たすまで進めてよい。
 
 ## 環境
@@ -26,6 +26,9 @@ python scripts/check_claude_api.py                                        # Clau
 python scripts/generate_dxf_golden.py --per-level 40 --seed 21 --out dxf_data        # DXF開発用データ800件（約2分）
 python scripts/evaluate_dxf.py --data dxf_data --analyzer src.dxf_analyzer:DxfAnalyzer --verify-frozen --gate \
     --report analysis/dxf_eval_latest.md                                 # DXF評価。結果は dxf_data/results.csv
+python scripts/generate_pdf_golden.py --per-level 60 --seed 31 --out pdf_data        # 図面PDF開発用データ300枚（約2分）
+python scripts/evaluate_pdf.py --data pdf_data --reader src.pdf_reader:PdfConditionReader --verify-frozen --gate \
+    --report analysis/pdf_eval_latest.md                                 # 図面PDF評価。結果は pdf_data/results.csv
 ```
 
 部品ごとの結果は `golden_data/results.csv`（誤差・理由コード・展開方式・LLMトークン数）。失敗の分析はまずここから。
@@ -43,12 +46,15 @@ python scripts/evaluate_dxf.py --data dxf_data --analyzer src.dxf_analyzer:DxfAn
 - `scripts/evaluate_golden.py` 評価ハーネス（STEP）、`scripts/evaluate_dxf.py`（DXF）
 - `golden/dxf_golden.py` 展開図DXFの生成器（変種 D0/D1/D2/X）。`golden/datasets/dxf_v1.json` が開発用、`dxf_holdout_v1.json` が最終判定用（開発中は開かない）
 - `golden/dxf_naive_baseline.py` DXFの素朴なベースライン（比較用。本番コードではない）
+- `golden/pdf_golden.py` 図面PDFの生成器（描画は `golden/pdf_render.py`）。`golden/datasets/pdf_v1.json` が開発用、`pdf_holdout_v1.json` が最終判定用。`golden/pdf_unseen.py` はホールドアウト専用の様式（開発中は開かない）
+- `golden/pdf_naive_baseline.py` 図面PDFの素朴なベースライン（比較用）
+- `data/` マスター：材料・工程（追加加工を含む）・表面処理・価格方針（粗利率、特急割増）。各行の `aliases` が表記ゆれ。照合は `MasterLoader.resolve_alias`
 - `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること
 
-1. **正解データを変えて合格させない。** `golden/sheetgen.py`・`golden/sampler.py`・`golden/dxf_golden.py`・`golden/truth_v2.py`・`golden/datasets/` は変更しない。生成器の不具合を見つけたら `golden_v2` を新設し、`golden_v1` は残して報告する
-2. **ホールドアウトで調整しない。** 正解値 `golden/datasets/holdout_v1.json`・`dxf_holdout_v1.json` は開かない。seed=2（STEP）・seed=22（DXF）のデータは最終判定のときだけ生成する
+1. **正解データを変えて合格させない。** `golden/sheetgen.py`・`golden/sampler.py`・`golden/dxf_golden.py`・`golden/pdf_golden.py`・`golden/pdf_render.py`・`golden/pdf_unseen.py`・`golden/truth_v2.py`・`golden/datasets/` は変更しない。マスターの行を増やして合格させない（別名の追加はよい）。生成器の不具合を見つけたら `golden_v2` を新設し、`golden_v1` は残して報告する
+2. **ホールドアウトで調整しない。** 正解値 `golden/datasets/holdout_v1.json`・`dxf_holdout_v1.json`・`pdf_holdout_v1.json` と `golden/pdf_unseen.py` は開かない。seed=2（STEP）・seed=22（DXF）・seed=32（図面PDF）のデータは最終判定のときだけ生成する
 3. **金額をLLMに計算させない。** 金額はマスターCSVとルールで決定論的に計算する
 4. **LLMの出力をそのまま数値に使わない。** 数値を出す場合は幾何計算で検算する。形状データをClaude APIへ送ることは承認済み
 5. **pytest からAPIを呼ばない。** 記録済みの応答か偽のクライアントを使う

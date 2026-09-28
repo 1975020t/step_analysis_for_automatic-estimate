@@ -18,6 +18,7 @@ class QuoteEngine:
 
     def __init__(self, masters: MasterLoader) -> None:
         self.masters = masters
+        self.margin_rate = masters.policy("margin_rate", self.MARGIN_RATE)
 
     @staticmethod
     def _round_up(value: float, unit: int = 10) -> int:
@@ -69,12 +70,12 @@ class QuoteEngine:
             ))
 
         subtotal = sum(line.amount for line in lines)
-        final_price = subtotal * (1 + self.MARGIN_RATE)
+        final_price = subtotal * (1 + self.margin_rate)
         estimated = analysis.status == "partial" or bool(analysis.assumptions) or any(
             quality.confidence in {"medium", "low"} for quality in analysis.metric_quality.values()
         )
         return QuoteResult(
-            lines=lines, subtotal_cost=subtotal, margin_rate=self.MARGIN_RATE,
+            lines=lines, subtotal_cost=subtotal, margin_rate=self.margin_rate,
             final_price=final_price, rounded_final_price=self._round_up(final_price),
             estimated_minutes=0.0, is_estimate=estimated,
             warnings=list(analysis.warnings) if estimated else [],
