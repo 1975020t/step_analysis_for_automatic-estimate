@@ -38,7 +38,6 @@ python scripts/evaluate_dxf.py --data dxf_data --analyzer src.dxf_analyzer:DxfAn
 - `src/sheetmetal_geometry.py` 公差、面隣接グラフ、2Dループ処理
 - `src/quote_engine.py` 見積計算。`is_estimate`（概算表示）は解析結果の status / 信頼度から決まる
 - `src/claude_api.py` Claude APIクライアント（応答キャッシュ、トークン集計）
-- `src/llm_only_analyzer.py` LLM単独の解析器（比較用。結果は常に概算。`--analyzer src.llm_only_analyzer:LLMOnlyAnalyzer` で評価できる）
 - `golden/` ゴールデンデータ生成器、`golden/datasets/golden_v1.json` が開発用の凍結正解値（508件）、`holdout_v1.json` が最終判定用（200件、開発中は開かない）
 - `scripts/evaluate_golden.py` 評価ハーネス（STEP）、`scripts/evaluate_dxf.py`（DXF）
 - `golden/dxf_golden.py` 展開図DXFの生成器（変種 D0/D1/D2/X）。`golden/datasets/dxf_v1.json` が開発用、`dxf_holdout_v1.json` が最終判定用（開発中は開かない）
