@@ -1,0 +1,114 @@
+{
+  "name": "A_Lv3_0030",
+  "level": "A_Lv3",
+  "note": "多段フランジ（任意姿勢）",
+  "thickness_mm": 1.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 32321.642,
+  "cut_length_mm": 1508.5785,
+  "hole_count": 13,
+  "bend_count": 8,
+  "flat_bbox_mm": [
+    475.336,
+    96.86
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "up",
+      "length_mm": 45.8277,
+      "bend_allowance_mm": 2.8274
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.4,
+      "direction": "up",
+      "length_mm": 43.4277,
+      "bend_allowance_mm": 4.7124
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "up",
+      "length_mm": 267.9816,
+      "bend_allowance_mm": 2.8274
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.4,
+      "direction": "down",
+      "length_mm": 45.8277,
+      "bend_allowance_mm": 4.7124
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "down",
+      "length_mm": 43.4277,
+      "bend_allowance_mm": 2.8274
+    },
+    {
+      "angle_deg": 135.0,
+      "inner_radius_mm": 1.8,
+      "direction": "down",
+      "length_mm": 216.1051,
+      "bend_allowance_mm": 5.6549
+    },
+    {
+      "angle_deg": 120.0,
+      "inner_radius_mm": 2.4,
+      "direction": "down",
+      "length_mm": 28.1906,
+      "bend_allowance_mm": 6.2832
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.6,
+      "direction": "down",
+      "length_mm": 30.0902,
+      "bend_allowance_mm": 1.885
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 91,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -2e-06
+  },
+  "seed": [
+    21,
+    30,
+    0
+  ],
+  "truth_version": "v2",
+  "pose": [
+    [
+      -0.855205559,
+      -0.026801977,
+      0.517595504,
+      -141.647665353
+    ],
+    [
+      -0.308738019,
+      -0.775797829,
+      -0.550289528,
+      -177.454236224
+    ],
+    [
+      0.416298316,
+      -0.630412074,
+      0.655191827,
+      428.652863988
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ]
+}

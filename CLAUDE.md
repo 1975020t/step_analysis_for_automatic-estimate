@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 STEP形式の板金部品を解析し、ルールベースで見積を出すシステムのバックエンド（デモUIはStreamlit）。
-現在の主タスクは **見積書PDFの出力**（このPhaseではLLM APIを使わない）。最終ゴールと受入条件は [analysis/handoff_quote_document.md](analysis/handoff_quote_document.md) にある。着手前に読むこと。
-図面PDF読み取りの懸念点への対応（[analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)）はAPIが使えるようになってから別に行う。今回は図面PDFの読み取りのコードを変えない。
+現在の主タスクは **過去の類似見積の参照**（このPhaseではLLM APIを使わない）。最終ゴールと受入条件は [analysis/handoff_similar_quotes.md](analysis/handoff_similar_quotes.md) にある。着手前に読むこと。
+見積書PDFの出力（[analysis/handoff_quote_document.md](analysis/handoff_quote_document.md)）は実装済み。図面PDF読み取りの懸念点への対応（[analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)）はAPIが使えるようになってから別に行う。今回は図面PDFの読み取りのコードを変えない。
 STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）と展開図DXFの解析（[analysis/handoff_dxf.md](analysis/handoff_dxf.md)）は完了済み。壊さないこと。
 進め方・設計は任されている。途中で確認を取らずに、受入条件を満たすまで進めてよい。
 
@@ -12,6 +12,12 @@ STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_l
 - ユーザーは Windows / PowerShell。README のコマンドは `.venv\Scripts\python.exe` 形式
 - Claude APIキーは環境変数 `ANALYSIS_ANTHROPIC_API_KEY`（クラウド環境に設定済み。`ANTHROPIC_API_KEY` や `.env` でも可）
 - 秘密情報は `.env`（Git管理外、雛形は `.env.example`）。プッシュ前に `python scripts/check_secrets.py --history`
+
+## データ
+
+- 開発用のデータはリポジトリにファイルとして置いてある（生成し直す必要はない）：`golden_data`（STEP）、`stress_data`、`dxf_data`、`pdf_data`、`pdf_shift_dev`。生成コマンドで作り直しても同じファイルになる（`golden/file_normalize.py`）。評価の出力 `*/results.csv` はGit管理外
+- **ホールドアウトのデータは置かない**（`golden_holdout`、`dxf_holdout`、`pdf_holdout`、STEP の seed=3・4、DXF の seed=23、図面PDFの seed=33、判定用の語彙ずらし）。最終判定のときだけ生成する
+- 過去見積の種データは `data/past_quotes/`
 
 ## よく使うコマンド
 
@@ -56,12 +62,13 @@ python scripts/evaluate_pdf.py --data pdf_shift_dev --reader src.pdf_reader:PdfC
 - `src/pdf_reader.py`・`src/pdf_terms.py`・`src/pdf_quote.py` 図面PDFの読み取り、語の解釈ルール、見積への反映
 - `data/` マスター：材料・工程（追加加工を含む）・表面処理・価格方針（粗利率、特急割増）。各行の `aliases` が表記ゆれ。照合は `MasterLoader.resolve_alias`
 - `src/quote_document.py`・`src/quote_pdf.py`・`src/quote_log.py` 見積書PDF（中身と金額の端数処理、reportlab での描画、見積番号と `output/quote_log.csv`）。自社情報は `data/company.csv`（`data/company.local.csv` を優先）、フォントは `fonts/ipag.ttf`。例は `python scripts/make_quote_examples.py`
+- `src/past_quotes.py`・`src/similar_quotes.py` 見積履歴（`data/past_quotes/history.csv`、コミットする）と類似見積の検索。取り込みは `scripts/import_past_quotes.py`、効果の評価は `scripts/evaluate_similar_quotes.py`（`analysis/similar_quotes_eval.md`）。テストは履歴の一時コピーを使う（`tests/conftest.py`）
 - `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること
 
 1. **正解データを変えて合格させない。** `golden/sheetgen.py`・`golden/sampler.py`・`golden/dxf_golden.py`・`golden/pdf_golden.py`・`golden/pdf_render.py`・`golden/pdf_unseen.py`・`golden/truth_v2.py`・`golden/datasets/` は変更しない。マスターの行を増やして合格させない（別名の追加はよい）。生成器の不具合を見つけたら `golden_v2` を新設し、`golden_v1` は残して報告する
-2. **ホールドアウトで調整しない。** 正解値 `golden/datasets/holdout_v1.json`・`dxf_holdout_v1.json`・`pdf_holdout_v1.json`・`pdf_holdout_s33_v1.json` と `golden/pdf_unseen.py` は開かない。seed=2（STEP）・seed=22（DXF）・seed=32 と 33（図面PDF）のデータは最終判定のときだけ生成する。ホールドアウトの評価には `--hide-examples` を付ける
+2. **ホールドアウトで調整しない。** 正解値 `golden/datasets/holdout_v1.json`・`dxf_holdout_v1.json`・`pdf_holdout_v1.json`・`pdf_holdout_s33_v1.json` と `golden/pdf_unseen.py` は開かない。seed=2（STEP）・seed=22（DXF）・seed=32 と 33（図面PDF）のデータは最終判定のときだけ生成する。ホールドアウトの評価には `--hide-examples` を付ける。なお STEP の holdout_v1・DXF の dxf_holdout_v1・図面PDFの pdf_holdout_v1 は評価を終え、過去見積の種データ（`data/past_quotes/`）に使ったので、今後の最終判定には使わない（STEP は seed=3・4、DXF は seed=23、図面PDFは seed=33 などの別データを使う）
 3. **金額をLLMに計算させない。** 金額はマスターCSVとルールで決定論的に計算する
 4. **LLMの出力をそのまま数値に使わない。** 数値を出す場合は幾何計算で検算する。形状データをClaude APIへ送ることは承認済み
 5. **pytest からAPIを呼ばない。** 記録済みの応答か偽のクライアントを使う

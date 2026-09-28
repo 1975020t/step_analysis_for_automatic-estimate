@@ -62,6 +62,8 @@ def main(argv=None):
     print(f"generated {len(truths) - len(failed)} parts ({len(failed)} failed) in {time.time() - started:.0f}s -> {out}")
     for f in failed[:10]:
         print("  failed:", f["name"], f["error"][:200])
+    from golden.file_normalize import normalize_tree  # byte-identical files on every run (kept in Git)
+    normalize_tree(out)
     return 0 if not failed else 1
 
 

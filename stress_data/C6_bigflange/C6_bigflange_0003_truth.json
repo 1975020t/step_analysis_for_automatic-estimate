@@ -1,0 +1,39 @@
+{
+  "name": "C6_bigflange_0003",
+  "level": "C6_bigflange",
+  "note": "底面より大きいフランジ",
+  "thickness_mm": 1.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 6440.9184,
+  "cut_length_mm": 516.239,
+  "hole_count": 3,
+  "bend_count": 1,
+  "flat_bbox_mm": [
+    150.047,
+    46.184
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.8,
+      "direction": "up",
+      "length_mm": 46.1836,
+      "bend_allowance_mm": 3.7699
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 13,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -8e-06
+  },
+  "truth_version": "v2",
+  "seed": [
+    21,
+    3,
+    0
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "name": "C4_short_0003",
+  "level": "C4_short",
+  "note": "短い平坦部（ジョグ）",
+  "thickness_mm": 3.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 12977.6489,
+  "cut_length_mm": 518.7469,
+  "hole_count": 1,
+  "bend_count": 4,
+  "flat_bbox_mm": [
+    171.086,
+    76.13
+  ],
+  "bends": [
+    {
+      "angle_deg": 120.0,
+      "inner_radius_mm": 3.2,
+      "direction": "up",
+      "length_mm": 76.1296,
+      "bend_allowance_mm": 10.0531
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 4.8,
+      "direction": "down",
+      "length_mm": 76.1296,
+      "bend_allowance_mm": 10.0531
+    },
+    {
+      "angle_deg": 105.0,
+      "inner_radius_mm": 6.4,
+      "direction": "up",
+      "length_mm": 76.1296,
+      "bend_allowance_mm": 14.6608
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 3.2,
+      "direction": "down",
+      "length_mm": 76.1296,
+      "bend_allowance_mm": 7.5398
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 23,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -0.0
+  },
+  "truth_version": "v2",
+  "seed": [
+    21,
+    3,
+    0
+  ]
+}

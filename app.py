@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import io
 import os
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -20,6 +20,8 @@ from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, cond
 from src.quote_document import (PartInfo, Recipient, build_document, default_subject, load_company, log_row,
                                 price_summary, unregistered_process_texts)
 from src.quote_log import QuoteLog
+from src.past_quotes import OUTCOMES, HistoryStore, from_document
+from src.similar_quotes import SimilarQuoteSearch, query_for
 from src.quote_pdf import render_internal, render_quote
 from src.sheetmetal_analyzer import SheetMetalAnalyzer
 
@@ -168,13 +170,25 @@ def _edited(item: ConditionItem, value) -> bool:
     return item.value != value
 
 
-def quote_document_section(analysis, condition: QuoteCondition, quote) -> None:
-    """見積書を出力: recipient and terms, then a PDF (and the internal basis) to download. No LLM."""
+def history_store() -> HistoryStore:
+    return HistoryStore(os.environ.get("PAST_QUOTES_PATH", "data/past_quotes/history.csv"))
+
+
+@st.cache_resource(show_spinner=False)
+def _search_index(path: str, mtime: float) -> SimilarQuoteSearch:  # rebuilt when the history file changes
+    return SimilarQuoteSearch(HistoryStore(path).load(), masters)
+
+
+def search_index() -> SimilarQuoteSearch:
+    store = history_store()
+    return _search_index(str(store.path), store.path.stat().st_mtime if store.path.exists() else 0.0)
+
+
+def case_inputs(analysis):
+    """Recipient and part: used by the similar-quote search and printed on the quotation."""
     st.divider()
-    st.subheader("見積書を出力")
-    company = load_company("data")
+    st.subheader("顧客と部品")
     reading = st.session_state.get("pdf_reading") or {}
-    items = st.session_state.get("pdf_items") if reading else None
     col1, col2 = st.columns(2)
     customer = col1.text_input("宛先の会社名（必須）", key="doc_customer", placeholder="サンプル電機株式会社")
     person = col2.text_input("部署・担当者名（任意）", key="doc_person", placeholder="購買部　山田 太郎")
@@ -184,6 +198,69 @@ def quote_document_section(analysis, condition: QuoteCondition, quote) -> None:
         drawing_no=col4.text_input("図番", value=reading.get("drawing_no") or "", key=f"doc_dwg_{analysis.file_name}"),
         revision=col5.text_input("改訂", value=reading.get("revision") or "", key=f"doc_rev_{analysis.file_name}"),
         shape_file=analysis.file_name, drawing_file=st.session_state.get("pdf_name", "") if reading else "")
+    return customer, person, part
+
+
+def _yen(value) -> str:
+    return "-" if value is None else f"¥{value:,.0f}"
+
+
+def similar_quotes_section(analysis, condition: QuoteCondition, quote, summary, customer: str, part: PartInfo) -> None:
+    """類似見積（参考）: up to 5 past quotes with reasons, differences and prices. The quote is not changed."""
+    st.divider()
+    st.subheader("類似見積（参考）")
+    index = search_index()
+    if not index.quotes:
+        st.info("見積履歴がありません（data/past_quotes/history.csv）。")
+        return
+    query = query_for(analysis, condition, summary.unit_price, quote.final_price / condition.quantity, customer,
+                      part.drawing_no, part.revision, today=date.today())
+    matches = index.search(query)
+    st.caption(f"履歴 {len(index.quotes):,}件から、値段を決める要素（材質の系統・板厚・数量帯・大きさ・加工）が近いものを最大5件。"
+               "リピート（同じ顧客・同じ図番）は必ず先頭に出します。参考表示のみで、今回の単価は変えません。")
+    if not matches:
+        st.info("材質の系統と板厚が近い過去の見積はありません。")
+        return
+    reference = index.reference(matches)
+    if reference:
+        gap = (summary.unit_price - reference.unit) / reference.unit
+        st.info(f"参考：過去の出し値の水準で見た今回の単価 **{_yen(reference.unit)}**（{reference.basis}）。"
+                f"今回の単価 {_yen(summary.unit_price)} はこれより {gap:+.1%}。")
+    for n, m in enumerate(matches, start=1):
+        q = m.quote
+        with st.container(border=True):
+            drawing = " ".join(x for x in (q.drawing_no, f"Rev.{q.revision}" if q.revision else "") if x) or "図番なし"
+            st.markdown(f"**{n}. 【{m.category}】** {q.date:%Y/%m/%d}　{q.customer}　{drawing}　{q.part_name}")
+            procs = q.processes_text or "追加加工なし"
+            st.caption(f"{q.material_text or '-'} t{q.thickness:g}　数量 {q.quantity or '-'}　"
+                       f"表面処理 {q.finish_text or '記録なし'}　{procs}　{'特急' if q.rush else ''}　結果 {q.outcome}"
+                       if q.thickness is not None else f"{q.material_text}　数量 {q.quantity}　結果 {q.outcome}")
+            cols = st.columns(3)
+            diff = f"（今回比 {m.price_diff:+.1%}）" if m.price_diff is not None else ""
+            cols[0].markdown(f"単価 **{_yen(q.unit_price)}**{diff}")
+            if m.leveled_unit:
+                cols[1].markdown(f"出し値÷今のマスターの標準単価 **{m.ratio:.2f}**（標準 {_yen(m.past_standard)}）")
+                cols[2].markdown(f"この水準で見た今回の単価 **{_yen(m.leveled_unit)}**")
+            else:
+                cols[1].caption(m.standard_note or "標準単価を計算できません")
+            st.markdown("似ている理由：" + "、".join(m.reasons))
+            st.markdown("今回との違い：" + "、".join(m.differences))
+            for warning in m.warnings:
+                st.warning(warning)
+            with st.expander("この見積の全項目"):
+                detail = {k: v for k, v in q.original.items()} or {}
+                st.dataframe(pd.DataFrame([{"項目": k, "値": str(v)} for k, v in detail.items()]
+                                          + [{"項目": "（取り込み元）", "値": q.source}]),
+                             hide_index=True, width="stretch")
+
+
+def quote_document_section(analysis, condition: QuoteCondition, quote, customer: str, person: str, part: PartInfo) -> None:
+    """見積書を出力: terms, then a PDF (and the internal basis) to download; the quote enters the history. No LLM."""
+    st.divider()
+    st.subheader("見積書を出力")
+    company = load_company("data")
+    reading = st.session_state.get("pdf_reading") or {}
+    items = st.session_state.get("pdf_items") if reading else None
     col6, col7 = st.columns([2, 1])
     subject = col6.text_input("件名", value=default_subject(part))
     delivery_place = col7.text_input("受渡場所", value=company.delivery_place)
@@ -208,10 +285,13 @@ def quote_document_section(analysis, condition: QuoteCondition, quote) -> None:
     if st.button("見積書PDFを作成", type="primary", disabled=not customer.strip()):
         issued_at = datetime.now().replace(microsecond=0)
         doc = document(issued_at)
-        doc.number = QuoteLog(os.environ.get("QUOTE_LOG_PATH", "output/quote_log.csv")).issue(issued_at, log_row(doc))
+        store = history_store()
+        taken = [q.quote_no for q in search_index().quotes]
+        doc.number = QuoteLog(os.environ.get("QUOTE_LOG_PATH", "output/quote_log.csv")).issue(issued_at, log_row(doc), taken)
         files = {f"{doc.number}_{doc.title}.pdf": render_quote(doc)}
         if with_internal:
             files[f"{doc.number}_見積根拠（社内用）.pdf"] = render_internal(doc)
+        store.append([from_document(doc, masters)])
         st.session_state.doc_files = (inputs, files)
     made_for, files = st.session_state.get("doc_files") or (None, {})
     if files and made_for != inputs:
@@ -219,6 +299,31 @@ def quote_document_section(analysis, condition: QuoteCondition, quote) -> None:
         files = {}
     for name, data in files.items():
         st.download_button(f"ダウンロード: {name}", data=data, file_name=name, mime="application/pdf", key=f"dl_{name}")
+    if files:
+        st.caption("この見積は見積履歴（data/past_quotes/history.csv）に入り、次からの類似見積の検索対象になります。")
+
+
+def outcome_section() -> None:
+    """受注・失注の記録: the outcome of a quote in the history."""
+    with st.expander("受注・失注の記録"):
+        quotes = search_index().quotes
+        if not quotes:
+            st.caption("見積履歴がありません。")
+            return
+        mine = st.checkbox("この画面で出力した見積だけ", value=True, key="outcome_app_only")
+        rows = [q for q in quotes if q.source == "app"] if mine else list(quotes)
+        rows = sorted(rows, key=lambda q: (q.date, q.quote_no), reverse=True)[:200]
+        if not rows:
+            st.caption("この画面で出力した見積はまだありません。")
+            return
+        labels = {f"{q.quote_no}｜{q.date:%Y/%m/%d}｜{q.customer}｜{q.drawing_no or q.part_name}｜{q.outcome}": q for q in rows}
+        chosen = labels[st.selectbox("見積", list(labels), key="outcome_quote")]
+        outcome = st.radio("結果", list(OUTCOMES), index=list(OUTCOMES).index(chosen.outcome), horizontal=True,
+                           key=f"outcome_{chosen.quote_no}")
+        if st.button("結果を記録", key="outcome_save"):
+            history_store().set_outcome(chosen.quote_no, outcome, chosen.customer)
+            st.success(f"{chosen.quote_no} を「{outcome}」にしました。")
+            st.rerun()
 
 
 result = st.session_state.get("analysis_result")
@@ -335,9 +440,13 @@ if result.status in {"success", "partial"}:
              "単位": line.unit, "単価": line.unit_price, "金額": round(line.amount)}
             for line in quote.lines
         ]), hide_index=True, width="stretch")
-        quote_document_section(result, condition, quote)
     except QuoteUnavailableError as exc:
         st.error(str(exc))
+    else:
+        customer, person, part = case_inputs(result)
+        similar_quotes_section(result, condition, quote, summary, customer, part)
+        quote_document_section(result, condition, quote, customer, person, part)
+        outcome_section()
 
     if llm is not None:
         st.info(f"チャット解釈モード: {mode_label}")

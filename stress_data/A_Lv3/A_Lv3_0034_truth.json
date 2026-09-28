@@ -1,0 +1,107 @@
+{
+  "name": "A_Lv3_0034",
+  "level": "A_Lv3",
+  "note": "多段フランジ（任意姿勢）",
+  "thickness_mm": 0.8,
+  "k_factor": 0.5,
+  "blank_area_mm2": 41485.3421,
+  "cut_length_mm": 1112.7322,
+  "hole_count": 3,
+  "bend_count": 7,
+  "flat_bbox_mm": [
+    311.742,
+    190.764
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.8,
+      "direction": "down",
+      "length_mm": 209.9443,
+      "bend_allowance_mm": 1.885
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.4,
+      "direction": "down",
+      "length_mm": 56.1898,
+      "bend_allowance_mm": 1.2566
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "down",
+      "length_mm": 209.1443,
+      "bend_allowance_mm": 2.5133
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.6,
+      "direction": "down",
+      "length_mm": 40.8213,
+      "bend_allowance_mm": 3.1416
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.8,
+      "direction": "down",
+      "length_mm": 209.9443,
+      "bend_allowance_mm": 1.885
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.6,
+      "direction": "down",
+      "length_mm": 34.6178,
+      "bend_allowance_mm": 3.1416
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.8,
+      "direction": "up",
+      "length_mm": 105.4849,
+      "bend_allowance_mm": 1.885
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 71,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": -0.0,
+    "area_solid_vs_layout": -1e-06
+  },
+  "seed": [
+    21,
+    34,
+    0
+  ],
+  "truth_version": "v2",
+  "pose": [
+    [
+      0.48507537,
+      -0.664918533,
+      -0.56796587,
+      -106.958716808
+    ],
+    [
+      0.703451121,
+      -0.089130546,
+      0.705132801,
+      -71.566093916
+    ],
+    [
+      -0.519478976,
+      -0.741578782,
+      0.424502655,
+      498.669036386
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ]
+}

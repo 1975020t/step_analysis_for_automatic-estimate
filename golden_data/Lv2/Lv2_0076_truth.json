@@ -1,0 +1,45 @@
+{
+  "name": "Lv2_0076",
+  "level": "Lv2",
+  "note": "底面＋1段フランジ",
+  "thickness_mm": 2.0,
+  "k_factor": 0.5,
+  "blank_area_mm2": 41504.8989,
+  "cut_length_mm": 1216.0875,
+  "hole_count": 7,
+  "bend_count": 2,
+  "flat_bbox_mm": [
+    318.146,
+    139.904
+  ],
+  "bends": [
+    {
+      "angle_deg": 45.0,
+      "inner_radius_mm": 1.0,
+      "direction": "down",
+      "length_mm": 272.8645,
+      "bend_allowance_mm": 1.5708
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 4.0,
+      "direction": "down",
+      "length_mm": 92.8766,
+      "bend_allowance_mm": 7.854
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 35,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -1e-06
+  },
+  "seed": [
+    1,
+    76,
+    0
+  ]
+}

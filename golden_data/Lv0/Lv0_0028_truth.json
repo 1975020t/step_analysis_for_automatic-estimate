@@ -1,0 +1,30 @@
+{
+  "name": "Lv0_0028",
+  "level": "Lv0",
+  "note": "平板",
+  "thickness_mm": 1.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 11231.6188,
+  "cut_length_mm": 835.5305,
+  "hole_count": 9,
+  "bend_count": 0,
+  "flat_bbox_mm": [
+    72.664,
+    171.419
+  ],
+  "bends": [],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 15,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -1.1e-05
+  },
+  "seed": [
+    1,
+    28,
+    0
+  ]
+}

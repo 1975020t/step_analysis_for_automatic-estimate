@@ -1,0 +1,53 @@
+{
+  "name": "C1_slanted_0005",
+  "level": "C1_slanted",
+  "note": "多角形底面・斜め辺フランジ",
+  "thickness_mm": 3.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 14367.176,
+  "cut_length_mm": 814.2499,
+  "hole_count": 6,
+  "bend_count": 3,
+  "flat_bbox_mm": [
+    160.836,
+    161.291
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 4.8,
+      "direction": "up",
+      "length_mm": 18.5649,
+      "bend_allowance_mm": 10.0531
+    },
+    {
+      "angle_deg": 120.0,
+      "inner_radius_mm": 3.2,
+      "direction": "up",
+      "length_mm": 89.8398,
+      "bend_allowance_mm": 10.0531
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 3.2,
+      "direction": "up",
+      "length_mm": 70.9763,
+      "bend_allowance_mm": 7.5398
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 44,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": -0.0,
+    "area_solid_vs_layout": -3e-06
+  },
+  "truth_version": "v2",
+  "seed": [
+    21,
+    5,
+    0
+  ]
+}

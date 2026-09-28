@@ -1,0 +1,86 @@
+{
+  "name": "A_Lv1_0030",
+  "level": "A_Lv1",
+  "note": "平行曲げ chain（任意姿勢）",
+  "thickness_mm": 1.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 34294.6642,
+  "cut_length_mm": 977.2099,
+  "hole_count": 7,
+  "bend_count": 4,
+  "flat_bbox_mm": [
+    222.194,
+    157.759
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.6,
+      "direction": "up",
+      "length_mm": 157.7586,
+      "bend_allowance_mm": 1.885
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "down",
+      "length_mm": 157.7586,
+      "bend_allowance_mm": 2.8274
+    },
+    {
+      "angle_deg": 30.0,
+      "inner_radius_mm": 0.6,
+      "direction": "up",
+      "length_mm": 157.7586,
+      "bend_allowance_mm": 0.6283
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "up",
+      "length_mm": 157.7586,
+      "bend_allowance_mm": 2.8274
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 29,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -2e-06
+  },
+  "seed": [
+    21,
+    30,
+    0
+  ],
+  "truth_version": "v2",
+  "pose": [
+    [
+      0.003436351,
+      -0.890824712,
+      -0.454334155,
+      289.220880634
+    ],
+    [
+      -0.418708535,
+      0.411310398,
+      -0.809633818,
+      -67.868701636
+    ],
+    [
+      0.908114175,
+      0.193015774,
+      -0.371582503,
+      254.442749422
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ]
+}

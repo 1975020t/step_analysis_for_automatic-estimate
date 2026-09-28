@@ -8,6 +8,10 @@ from src.models import FlatPatternSummary, SheetMetalAnalysis
 APP_PATH = Path(__file__).resolve().parents[1] / "app.py"
 
 
+def cost_lines(app):
+    return next(d.value for d in app.dataframe if "コード" in d.value.columns)
+
+
 def test_initial_ui_has_step_input_and_analyze_action():
     app = AppTest.from_file(APP_PATH).run(timeout=20)
 
@@ -117,13 +121,13 @@ def test_pdf_conditions_panel_shows_statuses_and_keeps_the_quote_estimate_until_
     assert "✅ 確定" in text and "⚠️ 要確認" in text and "❌ 未登録" in text
     assert any("検査・証明書" in w.value for w in app.warning)
     assert any("概算見積" in w.value for w in app.warning)
-    lines = app.dataframe[-1].value
+    lines = cost_lines(app)
     assert "TAP_M4" in set(lines["コード"]) and "RUSH" not in set(lines["コード"])  # rush is 要確認: not priced yet
 
     app.checkbox(key="pdf_rush_ok").check().run(timeout=30)
     app.checkbox(key="pdf_surface_treatment_ok").check().run(timeout=30)
     assert not app.exception
-    assert "RUSH" in set(app.dataframe[-1].value["コード"])
+    assert "RUSH" in set(cost_lines(app)["コード"])
     assert not any("概算見積" in w.value for w in app.warning)
 
 
@@ -176,3 +180,37 @@ def test_estimate_is_announced_before_output():
     assert not app.exception
     notice = [w.value for w in app.warning if "概算見積書として出力されます" in w.value]
     assert notice and "形状解析：Kファクター未指定" in notice[0]
+
+
+def test_similar_quotes_on_screen_then_history_and_outcome(_history_copy):
+    from src.past_quotes import HistoryStore
+
+    past = next(q for q in HistoryStore(_history_copy).load() if q.drawing_no and q.material_code == "SPCC")
+    app = AppTest.from_file(APP_PATH)
+    app.session_state["analysis_result"] = SheetMetalAnalysis(
+        status="success", file_name="rep.step", thickness_mm=past.thickness, blank_area_mm2=30000.0,
+        cut_length_mm=900.0, hole_count=4, bend_count=2)
+    app.run(timeout=30)
+    app.selectbox[0].select("SPCC").run(timeout=30)
+    app.text_input(key="doc_customer").input(past.customer).run(timeout=30)
+    app.text_input(key="doc_dwg_rep.step").input(past.drawing_no).run(timeout=30)
+    assert not app.exception
+    text = " ".join(m.value for m in app.markdown)
+    assert "【リピート】" in text and past.drawing_no in text
+    assert text.index("【リピート】") < text.find("【同じ顧客】") if "【同じ顧客】" in text else True
+    assert text.count("似ている理由：") == text.count("今回との違い：") and 1 <= text.count("似ている理由：") <= 5
+    assert any("参考：過去の出し値の水準" in i.value for i in app.info)
+
+    next(b for b in app.button if b.label == "見積書PDFを作成").click().run(timeout=30)
+    assert not app.exception
+    history = HistoryStore(_history_copy).load()
+    issued = [q for q in history if q.source == "app"]
+    assert len(issued) == 1 and issued[0].customer == past.customer and issued[0].drawing_no == past.drawing_no
+    app.run(timeout=30)
+    first = next(m.value for m in app.markdown if m.value.startswith("**1. 【"))
+    assert first.startswith("**1. 【リピート】**") and issued[0].date.strftime("%Y/%m/%d") in first  # found next time
+
+    app.radio(key=f"outcome_{issued[0].quote_no}").set_value("受注").run(timeout=30)
+    next(b for b in app.button if b.label == "結果を記録").click().run(timeout=30)
+    assert not app.exception
+    assert next(q for q in HistoryStore(_history_copy).load() if q.quote_no == issued[0].quote_no).outcome == "受注"

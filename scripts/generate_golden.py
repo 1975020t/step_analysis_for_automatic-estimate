@@ -57,6 +57,8 @@ def main(argv=None):
         {"seed": args.seed, "per_level": args.per_level, "truth_version": args.truth_version, "parts": [t for t in truths if "error" not in t],
          "generation_failures": failed}, ensure_ascii=False, indent=2))
     print(f"generated {len(truths) - len(failed)} parts ({len(failed)} failed) in {time.time() - started:.0f}s -> {out}")
+    from golden.file_normalize import normalize_tree  # byte-identical files on every run (kept in Git)
+    normalize_tree(out)
     return 0 if not failed else 1
 
 

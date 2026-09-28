@@ -29,7 +29,19 @@ def _one(job):
         return {"name": f"{level}_{index:04d}_{variant}", "level": level, "variant": variant, "error": repr(exc)}
 
 
+def _fixed_hash_seed() -> None:
+    """golden/dxf_golden.py writes the layer table in set order, which depends on Python's string hashing.
+    Re-run this script with a fixed PYTHONHASHSEED so the files are byte-identical on every run."""
+    import os
+    import subprocess
+    if os.environ.get("PYTHONHASHSEED") != "0":
+        env = dict(os.environ, PYTHONHASHSEED="0")
+        raise SystemExit(subprocess.run([sys.executable, *sys.argv], env=env).returncode)
+
+
 def main(argv=None):
+    if argv is None:
+        _fixed_hash_seed()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--per-level", type=int, default=40)
     parser.add_argument("--seed", type=int, default=21)
@@ -50,6 +62,8 @@ def main(argv=None):
         {"seed": args.seed, "per_level": args.per_level, "parts": [t for t in truths if "error" not in t],
          "generation_failures": failed}, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"generated {len(truths) - len(failed)} DXF files ({len(failed)} failed) in {time.time() - started:.0f}s -> {out}")
+    from golden.file_normalize import normalize_tree  # byte-identical files on every run (kept in Git)
+    normalize_tree(out)
     return 0 if not failed else 1
 
 
