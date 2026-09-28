@@ -132,6 +132,17 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 
 穴数の正解値の不具合（曲げリリーフの切欠きが穴と数えられることがある）を直した `golden_v2` を追加しました（`--truth-version v2`、[golden/truth_v2.py](golden/truth_v2.py)）。`golden_v1` は変更していません。seed=1 では v1 と v2 の値は同一です。
 
+## 展開図DXFのゴールデンデータ
+
+展開図DXF（平らに広げた輪郭の図面）の解析を評価するデータセットです。同じ部品を、きれいな図面（D0）、注記入りの図面（D1）、レイヤが整理されていない乱雑な図面（D2）、確定してはいけない問題のある図面（X：外周が開いている・2部品）の4通りに描き分けています。板厚はDXFに含まれないため、入力として渡します。
+
+```powershell
+.venv\Scripts\python.exe scripts\generate_dxf_golden.py --per-level 40 --seed 21 --out dxf_data
+.venv\Scripts\python.exe scripts\evaluate_dxf.py --data dxf_data --analyzer src.dxf_analyzer:DxfAnalyzer --verify-frozen --gate --report analysis\dxf_eval_latest.md
+```
+
+設計と生成器の検証は [analysis/dxf_golden_design.md](analysis/dxf_golden_design.md)、解析ロジック開発の受入条件は [analysis/handoff_dxf.md](analysis/handoff_dxf.md)、素朴なベースラインの結果は [analysis/dxf_eval_baseline.md](analysis/dxf_eval_baseline.md) を参照してください。
+
 ## 現時点の評価制約
 
 テスト形状はCadQueryでパラメトリック生成し、理論値と比較しています。実部品のGolden Dataはまだありません。そのため、カバレッジ90%、10%以内正解率95%、危険誤答率1%未満は開発目標であり、現時点の達成値としては主張しません。実データ入手後に形状分類ごとの母数、正解値、誤差分布を記録して評価します。
