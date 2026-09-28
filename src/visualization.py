@@ -41,19 +41,19 @@ def flat_pattern_figure(pattern: FlatPatternSummary):
         x, y = zip(*loop)
         figure.add_trace(go.Scatter(
             x=x, y=y, mode="lines", line={"color": "#146c94", "width": 3},
-            name="外周" if index == 0 else "外周", fill="toself", fillcolor="rgba(20,108,148,0.10)",
+            name="外周", showlegend=index == 0, fill="toself", fillcolor="rgba(20,108,148,0.10)",
         ))
     for index, loop in enumerate(pattern.inner_loops):
         x, y = zip(*loop)
         figure.add_trace(go.Scatter(
             x=x, y=y, mode="lines", line={"color": "#d1495b", "width": 2},
-            name="穴・内周" if index == 0 else "穴・内周", fill="toself", fillcolor="white",
+            name="穴・内周", showlegend=index == 0, fill="toself", fillcolor="white",
         ))
     for index, line in enumerate(pattern.bend_lines):
         x, y = zip(*line)
         figure.add_trace(go.Scatter(
             x=x, y=y, mode="lines", line={"color": "#ed8b00", "width": 2, "dash": "dash"},
-            name="曲げ線" if index == 0 else "曲げ線",
+            name="曲げ線", showlegend=index == 0,
         ))
     figure.update_layout(
         title="解析後の展開形状（ローカル描画）", height=430,
