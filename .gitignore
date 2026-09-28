@@ -27,3 +27,5 @@ golden_holdout/
 .claude_cache/
 golden_seed*/
 stress_data/
+dxf_data/
+dxf_holdout/

@@ -11,13 +11,14 @@ from src.llm_client import build_llm_client
 from src.master_loader import MasterLoader
 from src.models import QuoteCondition
 from src.quote_engine import QuoteEngine, QuoteUnavailableError
+from src.dxf_analyzer import DxfAnalyzer
 from src.sheetmetal_analyzer import SheetMetalAnalyzer
 
 
 load_dotenv()
-st.set_page_config(page_title="STEP板金解析・見積デモ", page_icon="◫", layout="wide")
-st.title("STEP板金解析・見積デモ")
-st.caption("STEP形状をローカル解析し、マスター単価でルールベース見積を作成します。")
+st.set_page_config(page_title="STEP・DXF板金解析・見積デモ", page_icon="◫", layout="wide")
+st.title("STEP・DXF板金解析・見積デモ")
+st.caption("STEP形状または展開図DXFをローカル解析し、マスター単価でルールベース見積を作成します。")
 
 masters = MasterLoader("data")
 try:
@@ -31,29 +32,43 @@ except Exception as exc:
     st.sidebar.error(f"チャット設定エラー: {llm_error}")
 upload_col, setting_col = st.columns([2, 1])
 with upload_col:
-    uploaded = st.file_uploader("STEPファイル", type=["step", "stp"])
+    uploaded = st.file_uploader("STEP／展開図DXFファイル", type=["step", "stp", "dxf"])
+is_dxf = uploaded is not None and uploaded.name.lower().endswith(".dxf")
 with setting_col:
-    k_factor = st.number_input("Kファクター", min_value=0.0, max_value=1.0, value=0.33, step=0.01)
-    confirmed_k = st.checkbox("指定済み加工条件として扱う", value=False)
+    if is_dxf:
+        thickness = st.number_input("板厚（mm）", min_value=0.0, value=0.0, step=0.1, format="%g",
+                                    help="展開図DXFには板厚が含まれないため入力してください。")
+    else:
+        k_factor = st.number_input("Kファクター", min_value=0.0, max_value=1.0, value=0.33, step=0.01)
+        confirmed_k = st.checkbox("指定済み加工条件として扱う", value=False)
 
-analyze_clicked = st.button("解析を実行", type="primary", disabled=uploaded is None)
+analyze_clicked = st.button("解析を実行", type="primary",
+                            disabled=uploaded is None or (is_dxf and not thickness > 0))
+if is_dxf and not thickness > 0:
+    st.info("展開図DXFの解析には板厚（mm）の入力が必要です。")
 if analyze_clicked and uploaded is not None:
     data = uploaded.getvalue()
-    with st.spinner("STEP形状を解析しています…"):
-        st.session_state.analysis_result = SheetMetalAnalyzer(
-            k_factor=k_factor, k_factor_is_default=not confirmed_k,
-        ).analyze(io.BytesIO(data), file_name=uploaded.name)
-        st.session_state.step_bytes = data
-        st.session_state.step_suffix = "." + uploaded.name.rsplit(".", 1)[-1].lower()
-        st.session_state.quote_condition = QuoteCondition(
-            material=masters.material_names[0], quantity=1
-        )
-        st.session_state.chat_history = []
-        st.session_state.pop("quote_result", None)
+    if is_dxf:
+        with st.spinner("展開図DXFを解析しています…"):
+            st.session_state.analysis_result = DxfAnalyzer(thickness_mm=thickness).analyze(
+                io.BytesIO(data), file_name=uploaded.name)
+            st.session_state.step_bytes = None
+    else:
+        with st.spinner("STEP形状を解析しています…"):
+            st.session_state.analysis_result = SheetMetalAnalyzer(
+                k_factor=k_factor, k_factor_is_default=not confirmed_k,
+            ).analyze(io.BytesIO(data), file_name=uploaded.name)
+            st.session_state.step_bytes = data
+            st.session_state.step_suffix = "." + uploaded.name.rsplit(".", 1)[-1].lower()
+    st.session_state.quote_condition = QuoteCondition(
+        material=masters.material_names[0], quantity=1
+    )
+    st.session_state.chat_history = []
+    st.session_state.pop("quote_result", None)
 
 result = st.session_state.get("analysis_result")
 if result is None:
-    st.info(".step または .stp ファイルを指定し、「解析を実行」を押してください。")
+    st.info(".step／.stp、または展開図の .dxf（板厚を入力）を指定し、「解析を実行」を押してください。")
     st.stop()
 
 st.write(f"**ファイル:** {result.file_name}")
@@ -76,7 +91,11 @@ if result.status in {"success", "partial"}:
     for warning in result.warnings:
         st.warning(warning)
 
-    if st.session_state.get("step_bytes"):
+    if not st.session_state.get("step_bytes") and result.flat_pattern and result.flat_pattern.outer_loops:
+        from src.visualization import flat_pattern_figure
+
+        st.plotly_chart(flat_pattern_figure(result.flat_pattern), width="stretch")
+    elif st.session_state.get("step_bytes"):
         try:
             from src.visualization import flat_pattern_figure, original_shape_figure
 
