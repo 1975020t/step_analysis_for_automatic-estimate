@@ -1,0 +1,6544 @@
+{
+ "dataset": "pdf_shift_dev_v1",
+ "description": "Vocabulary shift, development (readers may be tuned on it). Regenerate: python scripts/generate_pdf_golden.py --per-level 20 --seed 41 --vocab golden/vocab/shift_dev.json --out pdf_shift_dev",
+ "seed": 41,
+ "per_level": 20,
+ "unseen_ratio": 0.0,
+ "vocab": "shift_dev",
+ "drawings": [
+  {
+   "name": "Lv0_0000",
+   "file": "pdf/Lv0_0000.pdf",
+   "step_file": "step/Lv0_0000.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    0
+   ],
+   "kind": "handwritten",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 9091.717,
+    "cut_length_mm": 519.8804,
+    "hole_count": 1,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D2025-6548",
+    "revision": "2",
+    "material": "SS400",
+    "material_text": "一般構造用鋼 SS400",
+    "thickness_mm": 2.0,
+    "quantity": 100,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "焼付塗装仕上げ（グレー）",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 2,
+      "text": "セルフクリンチングナット M3 2個"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": null,
+      "text": "受領済 9/8"
+     }
+    ],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "triangle",
+    "revision_mode": {},
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0001",
+   "file": "pdf/Lv0_0001.pdf",
+   "step_file": "step/Lv0_0001.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    1
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 14644.1055,
+    "cut_length_mm": 685.625,
+    "hole_count": 2,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D2024-9566",
+    "revision": "3",
+    "material": null,
+    "material_text": null,
+    "thickness_mm": 0.8,
+    "quantity": null,
+    "surface_treatment": "UNREGISTERED",
+    "surface_treatment_text": "ニッケルクロムめっき",
+    "processes": [
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 6,
+      "text": "クリンチングスタッド M6×12 6本"
+     },
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 2,
+      "text": "エンボス加工 2ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "thickness": "notes",
+     "processes": [
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "1",
+      "field": "finish",
+      "from": "無電解Ni-Pめっき 10μm",
+      "to": "ニッケルクロムめっき"
+     },
+     {
+      "rev": "3",
+      "field": "thickness",
+      "from": "1.0",
+      "to": "t0.8"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "number",
+    "revision_mode": {
+     "thickness": "stale",
+     "finish": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0002",
+   "file": "pdf/Lv0_0002.pdf",
+   "step_file": "step/Lv0_0002.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    2
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 5330.3319,
+    "cut_length_mm": 632.0171,
+    "hole_count": 8,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D2023-3545",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS400（酸洗）",
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "セルフクリンチングナット M6 3個"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "notes",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0003",
+   "file": "pdf/Lv0_0003.pdf",
+   "step_file": "step/Lv0_0003.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    3
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 8094.2885,
+    "cut_length_mm": 689.9945,
+    "hole_count": 6,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D85597-07",
+    "revision": "3",
+    "material": "AL5052",
+    "material_text": "5052-H32 ALUMINUM",
+    "thickness_mm": 1.2,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 4,
+      "text": "3X CSINK Ø6.4 90° + 1X CSINK Ø6.4 90°"
+     },
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 2,
+      "text": "2X CLINCH NUT M3"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "△1",
+      "field": "thickness",
+      "from": "2.3mm",
+      "to": "1.2 THK"
+     },
+     {
+      "rev": "△2",
+      "field": "material",
+      "from": "EG STEEL SECC",
+      "to": "HRPO SPHC"
+     },
+     {
+      "rev": "△3",
+      "field": "material",
+      "from": "HRPO SPHC",
+      "to": "5052-H32 ALUMINUM"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "triangle",
+    "revision_mode": {
+     "material": "updated",
+     "thickness": "stale"
+    },
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0004",
+   "file": "pdf/Lv0_0004.pdf",
+   "step_file": "step/Lv0_0004.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    4
+   ],
+   "kind": "scan",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 19251.8051,
+    "cut_length_mm": 996.972,
+    "hole_count": 7,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "MX-20-7775",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "SUS304（2B仕上）",
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "free"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0005",
+   "file": "pdf/Lv0_0005.pdf",
+   "step_file": "step/Lv0_0005.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    5
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 7600.1339,
+    "cut_length_mm": 843.9284,
+    "hole_count": 10,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": null,
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "SUS-304",
+    "thickness_mm": 0.8,
+    "quantity": 1,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0006",
+   "file": "pdf/Lv0_0006.pdf",
+   "step_file": "step/Lv0_0006.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    6
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 15046.3521,
+    "cut_length_mm": 862.716,
+    "hole_count": 6,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D2025-6708",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "COLD-ROLLED SHEET, SPCC-1B",
+    "thickness_mm": 1.6,
+    "quantity": null,
+    "surface_treatment": "ZINC_CLEAR",
+    "surface_treatment_text": "ZINC PLATE, CLEAR TRIVALENT PASSIVATE",
+    "processes": [
+     {
+      "code": "TAP_M5",
+      "count_per_part": 7,
+      "text": "TAP M5x0.8 (2) + TAP M5x0.8 (5)"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "thickness": "notes",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0007",
+   "file": "pdf/Lv0_0007.pdf",
+   "step_file": "step/Lv0_0007.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    7
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 29104.0811,
+    "cut_length_mm": 955.271,
+    "hole_count": 4,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "BA-24-8849",
+    "revision": "2",
+    "material": "SECC",
+    "material_text": "SECC-P",
+    "thickness_mm": 0.8,
+    "quantity": 2,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "処理不要",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "3-クリンチングナット M6（かしめ）"
+     },
+     {
+      "code": "TAP_M4",
+      "count_per_part": 3,
+      "text": "タップ M4×0.7（3）"
+     }
+    ],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "callouts"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [
+     {
+      "rev": "△1",
+      "field": "quantity",
+      "from": "N=150",
+      "to": "2個"
+     },
+     {
+      "rev": "△2",
+      "field": "thickness",
+      "from": "4.5",
+      "to": "0.8"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "triangle",
+    "revision_mode": {
+     "thickness": "updated",
+     "quantity": "stale"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0008",
+   "file": "pdf/Lv0_0008.pdf",
+   "step_file": "step/Lv0_0008.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    8
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 9466.0556,
+    "cut_length_mm": 943.1312,
+    "hole_count": 9,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "BR761-9904",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "ステンレス鋼板 SUS304-2B",
+    "thickness_mm": 2.3,
+    "quantity": 2,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "仕上げなし（素材のまま）",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "3-クリンチングナット M6（かしめ）"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 4,
+      "text": "クリンチングスタッド M3×12 4本"
+     },
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 3,
+      "text": "エンボス加工 3ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "callouts",
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [
+     "特急不要",
+     "相手材：SUS304（支給品）"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0009",
+   "file": "pdf/Lv0_0009.pdf",
+   "step_file": "step/Lv0_0009.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    9
+   ],
+   "kind": "fax",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 15379.6688,
+    "cut_length_mm": 885.4296,
+    "hole_count": 10,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D28759-11",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "ステンレス鋼板 SUS304-2B",
+    "thickness_mm": 1.0,
+    "quantity": 20,
+    "surface_treatment": "UNREGISTERED",
+    "surface_treatment_text": "黒染め（四三酸化鉄皮膜）",
+    "processes": [],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "bom",
+     "quantity": "title",
+     "thickness": "title",
+     "rush": "stamp"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "stamp_rush",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0010",
+   "file": "pdf/Lv0_0010.pdf",
+   "step_file": "step/Lv0_0010.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    10
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 11309.6288,
+    "cut_length_mm": 694.9842,
+    "hole_count": 5,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D91539-15",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "SPCC-1B",
+    "thickness_mm": 2.3,
+    "quantity": 3,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 4,
+      "text": "皿ザグリ φ6.4×90° 2ヶ所 + 皿ザグリ φ6.4×90° 2ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0011",
+   "file": "pdf/Lv0_0011.pdf",
+   "step_file": "step/Lv0_0011.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    11
+   ],
+   "kind": "scan",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 22261.15,
+    "cut_length_mm": 838.1273,
+    "hole_count": 4,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "A10726-06",
+    "revision": "1",
+    "material": "SECC",
+    "material_text": "EG STEEL SECC",
+    "thickness_mm": 1.6,
+    "quantity": 100,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "NO COATING",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 4,
+      "text": "4X CSINK Ø10.4 90°"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 3,
+      "text": "3X CLINCH STUD M6x12"
+     },
+     {
+      "code": "TAP_M6",
+      "count_per_part": 7,
+      "text": "3-M6x1.0 TAPPED + 4-M6x1.0 TAPPED"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "notes",
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "1",
+      "field": "finish",
+      "from": "ZINC PLATE, CLEAR TRIVALENT PASSIVATE",
+      "to": "NO COATING"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [
+     "STANDARD DELIVERY OK"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "number",
+    "revision_mode": {
+     "finish": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0012",
+   "file": "pdf/Lv0_0012.pdf",
+   "step_file": "step/Lv0_0012.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    12
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 15304.5897,
+    "cut_length_mm": 933.1124,
+    "hole_count": 4,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "MC-26-6204",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "CRS SPCC-SB",
+    "thickness_mm": 0.8,
+    "quantity": 1000,
+    "surface_treatment": "ELECTROLESS_NI",
+    "surface_treatment_text": "EN PLATE 10um",
+    "processes": [
+     {
+      "code": "TAP_M4",
+      "count_per_part": 1,
+      "text": "1-M4x0.7 TAPPED"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0013",
+   "file": "pdf/Lv0_0013.pdf",
+   "step_file": "step/Lv0_0013.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    13
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 16794.1341,
+    "cut_length_mm": 911.9288,
+    "hole_count": 4,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "S33781-03",
+    "revision": "3",
+    "material": "SPHC",
+    "material_text": "SPHC 酸洗材",
+    "thickness_mm": null,
+    "quantity": 10,
+    "surface_treatment": "UNREGISTERED",
+    "surface_treatment_text": "リン酸マンガン処理",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "3-クリンチングナット M6（かしめ）"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 3,
+      "text": "クリンチングスタッド M3×12 3本"
+     },
+     {
+      "code": "TAP_M4",
+      "count_per_part": 3,
+      "text": "タップ M4×0.7（1） + タップ M4×0.7（2）"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "processes": [
+      "callouts",
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "2",
+      "field": "quantity",
+      "from": "20枚",
+      "to": "10個"
+     },
+     {
+      "rev": "3",
+      "field": "finish",
+      "from": "無電解Ni-Pめっき 10μm",
+      "to": "リン酸マンガン処理"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "number",
+    "revision_mode": {
+     "finish": "stale",
+     "quantity": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0014",
+   "file": "pdf/Lv0_0014.pdf",
+   "step_file": "step/Lv0_0014.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    14
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 6644.3132,
+    "cut_length_mm": 795.339,
+    "hole_count": 10,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "TK713-9195",
+    "revision": null,
+    "material": "AL5052",
+    "material_text": "AL5052-H32",
+    "thickness_mm": 1.2,
+    "quantity": 1,
+    "surface_treatment": "ANODIZE_CLEAR",
+    "surface_treatment_text": "アルマイト処理（シルバー）",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 4,
+      "text": "クリンチナット M5"
+     },
+     {
+      "code": "TAP_M6",
+      "count_per_part": 4,
+      "text": "M6 めねじ 4ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "quantity": "bom",
+     "thickness": "title",
+     "processes": [
+      "bom",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0015",
+   "file": "pdf/Lv0_0015.pdf",
+   "step_file": "step/Lv0_0015.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    15
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 4.5,
+    "blank_area_mm2": 10902.0944,
+    "cut_length_mm": 624.1034,
+    "hole_count": 3,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "S74110-15",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-20/20",
+    "thickness_mm": 4.5,
+    "quantity": 1,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 4,
+      "text": "セルフクリンチングナット M5 4個"
+     },
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 5,
+      "text": "プラグ溶接 5ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "notes",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0016",
+   "file": "pdf/Lv0_0016.pdf",
+   "step_file": "step/Lv0_0016.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    16
+   ],
+   "kind": "scan",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 6566.006,
+    "cut_length_mm": 644.3537,
+    "hole_count": 5,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "A12013-12",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "冷延鋼板 SPCC-SB",
+    "thickness_mm": 3.2,
+    "quantity": null,
+    "surface_treatment": "ZINC_BLACK",
+    "surface_treatment_text": "黒色三価クロメート",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 6,
+      "text": "セルフクリンチングナット M6 6個"
+     }
+    ],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "thickness": "title",
+     "processes": [
+      "notes"
+     ],
+     "rush": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0017",
+   "file": "pdf/Lv0_0017.pdf",
+   "step_file": "step/Lv0_0017.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    17
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 17730.2384,
+    "cut_length_mm": 958.0157,
+    "hole_count": 8,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": null,
+    "revision": null,
+    "material": null,
+    "material_text": null,
+    "thickness_mm": 1.6,
+    "quantity": 5,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "アクリル焼付塗装 N7",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "quantity": "free",
+     "thickness": "free"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [
+     "急ぎではありません",
+     "相手材：SUS304（支給品）"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0018",
+   "file": "pdf/Lv0_0018.pdf",
+   "step_file": "step/Lv0_0018.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    18
+   ],
+   "kind": "handwritten",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 9830.7371,
+    "cut_length_mm": 527.0688,
+    "hole_count": 2,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "TC520-7499",
+    "revision": null,
+    "material": "UNREGISTERED",
+    "material_text": "SPFC590",
+    "thickness_mm": 1.2,
+    "quantity": 3,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "粉体 N7",
+    "processes": [
+     {
+      "code": "TAP_M4",
+      "count_per_part": 1,
+      "text": "1-M4 通し"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "bom",
+     "quantity": "bom",
+     "thickness": "title",
+     "processes": [
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": "finish",
+      "text": "粉体 N7"
+     },
+     {
+      "affects": null,
+      "text": "寸法OK"
+     }
+    ],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv0_0019",
+   "file": "pdf/Lv0_0019.pdf",
+   "step_file": "step/Lv0_0019.step",
+   "level": "Lv0",
+   "seed": [
+    41,
+    19
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 9085.2419,
+    "cut_length_mm": 855.924,
+    "hole_count": 8,
+    "bend_count": 0
+   },
+   "truth": {
+    "drawing_no": "D2025-9755",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "SUS-304",
+    "thickness_mm": 1.2,
+    "quantity": 150,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance",
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [
+     "納期は通常で可",
+     "年間 500 個見込み（参考）"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0000",
+   "file": "pdf/Lv1_0000.pdf",
+   "step_file": "step/Lv1_0000.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    0
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 23112.2905,
+    "cut_length_mm": 981.3712,
+    "hole_count": 6,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "MR-23-2883",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-20/20",
+    "thickness_mm": 3.2,
+    "quantity": 500,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "粉体焼付塗装 黒",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0001",
+   "file": "pdf/Lv1_0001.pdf",
+   "step_file": "step/Lv1_0001.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    1
+   ],
+   "kind": "scan",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 6209.8315,
+    "cut_length_mm": 502.8103,
+    "hole_count": 1,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": null,
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "ステンレス鋼板 SUS304-2B",
+    "thickness_mm": null,
+    "quantity": 300,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "quantity": "bom"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [
+     "特急不要"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0002",
+   "file": "pdf/Lv1_0002.pdf",
+   "step_file": "step/Lv1_0002.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    2
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 15798.4787,
+    "cut_length_mm": 838.2382,
+    "hole_count": 6,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "C11950-13",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS400（酸洗）",
+    "thickness_mm": 1.2,
+    "quantity": 10,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "SPOT_WELD",
+      "count_per_part": 10,
+      "text": "スポット 10打点"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "notes",
+     "quantity": "bom",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0003",
+   "file": "pdf/Lv1_0003.pdf",
+   "step_file": "step/Lv1_0003.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    3
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 39576.0809,
+    "cut_length_mm": 943.2665,
+    "hole_count": 3,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "D2019-6658",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "SUS304（2B仕上）",
+    "thickness_mm": 1.6,
+    "quantity": null,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "仕上げなし（素材のまま）",
+    "processes": [
+     {
+      "code": "TAP_M5",
+      "count_per_part": 2,
+      "text": "M5 めねじ 2ヶ所"
+     }
+    ],
+    "rush": true,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "thickness": "title",
+     "processes": [
+      "notes"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0004",
+   "file": "pdf/Lv1_0004.pdf",
+   "step_file": "step/Lv1_0004.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    4
+   ],
+   "kind": "scan",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 28578.5837,
+    "cut_length_mm": 829.9011,
+    "hole_count": 4,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": null,
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "SPCC-1B",
+    "thickness_mm": 2.3,
+    "quantity": null,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "粉体焼付塗装 黒",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 3,
+      "text": "皿ザグリ φ8.4×90° 3ヶ所"
+     }
+    ],
+    "rush": true,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "thickness": "free",
+     "processes": [
+      "free"
+     ],
+     "rush": "stamp"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "stamp_rush",
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0005",
+   "file": "pdf/Lv1_0005.pdf",
+   "step_file": "step/Lv1_0005.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    5
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 16404.0193,
+    "cut_length_mm": 874.7222,
+    "hole_count": 8,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "C85939-17",
+    "revision": "1",
+    "material": "SUS304",
+    "material_text": "SUS-304",
+    "thickness_mm": 3.2,
+    "quantity": 2000,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "パウダーコート（白）",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes"
+    },
+    "revision_changes": [
+     {
+      "rev": "△1",
+      "field": "quantity",
+      "from": "N=300",
+      "to": "2,000"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "triangle",
+    "revision_mode": {
+     "quantity": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0006",
+   "file": "pdf/Lv1_0006.pdf",
+   "step_file": "step/Lv1_0006.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    6
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 17053.6347,
+    "cut_length_mm": 1031.201,
+    "hole_count": 5,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "SS-26-3435",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-20/20",
+    "thickness_mm": 2.3,
+    "quantity": 50,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "粉体焼付塗装 黒",
+    "processes": [
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 4,
+      "text": "プラグ溶接 4ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "quantity": "bom",
+     "thickness": "free",
+     "processes": [
+      "free"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0007",
+   "file": "pdf/Lv1_0007.pdf",
+   "step_file": "step/Lv1_0007.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    7
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 17875.5098,
+    "cut_length_mm": 917.2066,
+    "hole_count": 8,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "BR342-3365",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "一般構造用鋼 SS400",
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "パウダーコート（白）",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0008",
+   "file": "pdf/Lv1_0008.pdf",
+   "step_file": "step/Lv1_0008.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    8
+   ],
+   "kind": "handwritten",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 22580.0115,
+    "cut_length_mm": 785.9677,
+    "hole_count": 7,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "TR-24-8462",
+    "revision": "3",
+    "material": "SPHC",
+    "material_text": "熱延鋼板 SPHC",
+    "thickness_mm": 1.2,
+    "quantity": 3,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "粉体焼付塗装 黒",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "セルフクリンチングナット M3 3個"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 5,
+      "text": "クリンチングスタッド M6×12 5本"
+     },
+     {
+      "code": "TAP_M4",
+      "count_per_part": 9,
+      "text": "M4 めねじ 5ヶ所 + M4タップ 4ヶ所追加"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance",
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "△1",
+      "field": "thickness",
+      "from": "t1.6",
+      "to": "t1.2mm"
+     },
+     {
+      "rev": "△3",
+      "field": "quantity",
+      "from": "1,000ヶ",
+      "to": "3"
+     }
+    ],
+    "handwriting": [
+     {
+      "affects": "process",
+      "text": "M4タップ 4ヶ所追加"
+     },
+     {
+      "affects": null,
+      "text": "CHK 7/4"
+     }
+    ],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "triangle",
+    "revision_mode": {
+     "quantity": "stale",
+     "thickness": "stale"
+    },
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0009",
+   "file": "pdf/Lv1_0009.pdf",
+   "step_file": "step/Lv1_0009.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    9
+   ],
+   "kind": "fax",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 17102.8187,
+    "cut_length_mm": 783.1585,
+    "hole_count": 6,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "D2023-8333",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "304 STAINLESS, 2B",
+    "thickness_mm": 2.0,
+    "quantity": 1000,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "NO COATING",
+    "processes": [
+     {
+      "code": "TAP_M5",
+      "count_per_part": 1,
+      "text": "TAP M5x0.8 (1)"
+     }
+    ],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes",
+     "processes": [
+      "callouts"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0010",
+   "file": "pdf/Lv1_0010.pdf",
+   "step_file": "step/Lv1_0010.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    10
+   ],
+   "kind": "handwritten",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 11175.9665,
+    "cut_length_mm": 663.7677,
+    "hole_count": 5,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "D91437-17",
+    "revision": "C",
+    "material": "UNREGISTERED",
+    "material_text": "SPCE",
+    "thickness_mm": 3.2,
+    "quantity": 30,
+    "surface_treatment": "ZINC_CLEAR",
+    "surface_treatment_text": "三価クリア",
+    "processes": [
+     {
+      "code": "SPOT_WELD",
+      "count_per_part": 10,
+      "text": "スポット 10打点"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "C",
+      "field": "quantity",
+      "from": "150ヶ",
+      "to": "N=30"
+     }
+    ],
+    "handwriting": [
+     {
+      "affects": "finish",
+      "text": "三価クリア"
+     }
+    ],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [
+     "旧品番 AB-26-9723 から変更"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "letter",
+    "revision_mode": {
+     "quantity": "updated"
+    },
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0011",
+   "file": "pdf/Lv1_0011.pdf",
+   "step_file": "step/Lv1_0011.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    11
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 26688.1787,
+    "cut_length_mm": 813.7373,
+    "hole_count": 2,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "BC993-4760",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "JIS G3141 SPCC-SB",
+    "thickness_mm": 1.2,
+    "quantity": 20,
+    "surface_treatment": "ZINC_CLEAR",
+    "surface_treatment_text": "亜鉛めっき 8μm 光沢クロメート（三価）",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 6,
+      "text": "6-皿穴（M5皿ビス）"
+     },
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 6,
+      "text": "6-クリンチングナット M4（かしめ）"
+     },
+     {
+      "code": "TAP_M4",
+      "count_per_part": 1,
+      "text": "1-M4 通し"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes",
+     "processes": [
+      "notes",
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0012",
+   "file": "pdf/Lv1_0012.pdf",
+   "step_file": "step/Lv1_0012.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    12
+   ],
+   "kind": "scan",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 4.5,
+    "blank_area_mm2": 25692.6064,
+    "cut_length_mm": 783.9935,
+    "hole_count": 2,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "D2023-3308",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS-400",
+    "thickness_mm": 4.5,
+    "quantity": 150,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0013",
+   "file": "pdf/Lv1_0013.pdf",
+   "step_file": "step/Lv1_0013.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    13
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 24824.4478,
+    "cut_length_mm": 868.1612,
+    "hole_count": 5,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "D2023-7208",
+    "revision": "1",
+    "material": "SPHC",
+    "material_text": "SPHC-PO（酸洗）",
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title"
+    },
+    "revision_changes": [
+     {
+      "rev": "1",
+      "field": "material",
+      "from": "SECC-20/20",
+      "to": "SPHC-PO（酸洗）"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "number",
+    "revision_mode": {
+     "material": "updated"
+    },
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0014",
+   "file": "pdf/Lv1_0014.pdf",
+   "step_file": "step/Lv1_0014.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    14
+   ],
+   "kind": "fax",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 38784.6866,
+    "cut_length_mm": 1209.9208,
+    "hole_count": 8,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "KC546-5373",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "SPCC（冷間圧延鋼板）",
+    "thickness_mm": 2.3,
+    "quantity": 20,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "bom",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0015",
+   "file": "pdf/Lv1_0015.pdf",
+   "step_file": "step/Lv1_0015.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    15
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 5699.4094,
+    "cut_length_mm": 468.831,
+    "hole_count": 4,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "K47673-18",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "SPCC（冷間圧延鋼板）",
+    "thickness_mm": 2.3,
+    "quantity": 20,
+    "surface_treatment": "ZINC_CLEAR",
+    "surface_treatment_text": "三価クロメート処理（クリア）",
+    "processes": [
+     {
+      "code": "SPOT_WELD",
+      "count_per_part": 10,
+      "text": "スポット 10打点"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [
+     "旧品番 TP-20-5618 から変更"
+    ],
+    "pages": 2,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0016",
+   "file": "pdf/Lv1_0016.pdf",
+   "step_file": "step/Lv1_0016.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    16
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 24492.4397,
+    "cut_length_mm": 922.8764,
+    "hole_count": 4,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "SA-26-9225",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "一般構造用鋼 SS400",
+    "thickness_mm": 2.0,
+    "quantity": 50,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 4,
+      "text": "PEMスタッド FH-M6-10"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "inspection",
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes",
+     "processes": [
+      "bom"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0017",
+   "file": "pdf/Lv1_0017.pdf",
+   "step_file": "step/Lv1_0017.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    17
+   ],
+   "kind": "fax",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 41321.7799,
+    "cut_length_mm": 988.3157,
+    "hole_count": 6,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "BB843-5869",
+    "revision": "1",
+    "material": "SPCC",
+    "material_text": "COLD-ROLLED SHEET, SPCC-1B",
+    "thickness_mm": 1.0,
+    "quantity": null,
+    "surface_treatment": "UNREGISTERED",
+    "surface_treatment_text": "NICKEL-CHROME PLATE",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "thickness": "notes"
+    },
+    "revision_changes": [
+     {
+      "rev": "1",
+      "field": "finish",
+      "from": "ZINC PLATE, YELLOW TRIVALENT PASSIVATE",
+      "to": "NICKEL-CHROME PLATE"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [
+     "NO RUSH REQUIRED"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "number",
+    "revision_mode": {
+     "finish": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0018",
+   "file": "pdf/Lv1_0018.pdf",
+   "step_file": "step/Lv1_0018.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    18
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 4.5,
+    "blank_area_mm2": 30005.4446,
+    "cut_length_mm": 822.207,
+    "hole_count": 2,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "D89555-11",
+    "revision": null,
+    "material": "UNREGISTERED",
+    "material_text": "SPCE",
+    "thickness_mm": 4.5,
+    "quantity": 2000,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [
+     "急ぎではありません"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv1_0019",
+   "file": "pdf/Lv1_0019.pdf",
+   "step_file": "step/Lv1_0019.step",
+   "level": "Lv1",
+   "seed": [
+    41,
+    19
+   ],
+   "kind": "scan",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 10611.4617,
+    "cut_length_mm": 416.7576,
+    "hole_count": 0,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "DC-26-0396",
+    "revision": null,
+    "material": "UNREGISTERED",
+    "material_text": "A6061-T6",
+    "thickness_mm": 1.6,
+    "quantity": 1,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "NO COATING",
+    "processes": [
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 2,
+      "text": "2X CLINCH STUD M3x12"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "notes",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0000",
+   "file": "pdf/Lv2_0000.pdf",
+   "step_file": "step/Lv2_0000.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    0
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 24140.9539,
+    "cut_length_mm": 1005.8945,
+    "hole_count": 7,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "AC764-1407",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "CRS SPCC-SB",
+    "thickness_mm": 2.3,
+    "quantity": 20,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "TAP_M5",
+      "count_per_part": 5,
+      "text": "TAP M5x0.8 (2) + TAP M5x0.8 (3)"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 2,
+      "text": "TIG WELD ALL 2 CORNERS"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "notes",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0001",
+   "file": "pdf/Lv2_0001.pdf",
+   "step_file": "step/Lv2_0001.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    1
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 55672.5855,
+    "cut_length_mm": 1493.8071,
+    "hole_count": 9,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "M25309-17",
+    "revision": "1",
+    "material": "SUS304",
+    "material_text": "ステンレス鋼板 SUS304-2B",
+    "thickness_mm": 1.0,
+    "quantity": 150,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "triangle",
+    "revision_mode": {},
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0002",
+   "file": "pdf/Lv2_0002.pdf",
+   "step_file": "step/Lv2_0002.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    2
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 15469.8139,
+    "cut_length_mm": 741.1357,
+    "hole_count": 5,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "DB-22-1546",
+    "revision": "A",
+    "material": "SPCC",
+    "material_text": "冷延鋼板 SPCC-SB",
+    "thickness_mm": 1.6,
+    "quantity": null,
+    "surface_treatment": "ZINC_YELLOW",
+    "surface_treatment_text": "亜鉛めっき 有色クロメート（3価）",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [
+     {
+      "rev": "A",
+      "field": "finish",
+      "from": "アクリル焼付塗装 N7",
+      "to": "亜鉛めっき 有色クロメート（3価）"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "letter",
+    "revision_mode": {
+     "finish": "stale"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0003",
+   "file": "pdf/Lv2_0003.pdf",
+   "step_file": "step/Lv2_0003.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    3
+   ],
+   "kind": "handwritten",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 39690.8686,
+    "cut_length_mm": 1240.6578,
+    "hole_count": 8,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "SA-23-8392",
+    "revision": null,
+    "material": "SPHC",
+    "material_text": "SPHC 酸洗材",
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "TAP_M5",
+      "count_per_part": 1,
+      "text": "+ M5タップ 1ヶ所"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 2,
+      "text": "TIG 2ヶ所 溶接"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "processes": [
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": "process",
+      "text": "+ M5タップ 1ヶ所"
+     },
+     {
+      "affects": null,
+      "text": "OK 済"
+     }
+    ],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0004",
+   "file": "pdf/Lv2_0004.pdf",
+   "step_file": "step/Lv2_0004.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    4
+   ],
+   "kind": "fax",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 10734.6168,
+    "cut_length_mm": 712.502,
+    "hole_count": 8,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "D2019-8481",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "ステンレス鋼板 SUS304-2B",
+    "thickness_mm": 1.0,
+    "quantity": 3,
+    "surface_treatment": "UNREGISTERED",
+    "surface_treatment_text": "ニッケルクロムめっき",
+    "processes": [
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 2,
+      "text": "圧入スタッド M4×10"
+     },
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 2,
+      "text": "ハーフパンチ 2ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free",
+     "processes": [
+      "bom",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0005",
+   "file": "pdf/Lv2_0005.pdf",
+   "step_file": "step/Lv2_0005.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    5
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 25359.1726,
+    "cut_length_mm": 1331.4208,
+    "hole_count": 11,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "DS-21-5477",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "CRS SPCC-SB",
+    "thickness_mm": null,
+    "quantity": 150,
+    "surface_treatment": "ZINC_CLEAR",
+    "surface_treatment_text": "ZINC PLATE, CLEAR TRIVALENT PASSIVATE",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0006",
+   "file": "pdf/Lv2_0006.pdf",
+   "step_file": "step/Lv2_0006.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    6
+   ],
+   "kind": "scan",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 50811.6603,
+    "cut_length_mm": 1186.6696,
+    "hole_count": 2,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "A72714-16",
+    "revision": "B",
+    "material": "SUS304",
+    "material_text": "304 STAINLESS, 2B",
+    "thickness_mm": 3.2,
+    "quantity": 3,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "SPOT_WELD",
+      "count_per_part": 9,
+      "text": "SPOT WELD (9)"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "inspection",
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "A",
+      "field": "quantity",
+      "from": "10 PCS",
+      "to": "3"
+     },
+     {
+      "rev": "B",
+      "field": "material",
+      "from": "HRPO SPHC",
+      "to": "304 STAINLESS, 2B"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": false,
+    "revision_style": "letter",
+    "revision_mode": {
+     "material": "updated",
+     "quantity": "updated"
+    },
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0007",
+   "file": "pdf/Lv2_0007.pdf",
+   "step_file": "step/Lv2_0007.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    7
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 51303.8379,
+    "cut_length_mm": 1256.8774,
+    "hole_count": 6,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "D38586-09",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "電気亜鉛めっき鋼板（SECC）",
+    "thickness_mm": 0.8,
+    "quantity": 100,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 4,
+      "text": "角部TIG溶接×4"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance",
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "free",
+     "quantity": "bom",
+     "thickness": "free",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0008",
+   "file": "pdf/Lv2_0008.pdf",
+   "step_file": "step/Lv2_0008.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    8
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 45887.2533,
+    "cut_length_mm": 1405.2592,
+    "hole_count": 9,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "SX-24-6711",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS-400",
+    "thickness_mm": 2.3,
+    "quantity": 20,
+    "surface_treatment": "ZINC_YELLOW",
+    "surface_treatment_text": "三価イエロークロメート",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0009",
+   "file": "pdf/Lv2_0009.pdf",
+   "step_file": "step/Lv2_0009.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    9
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 46613.5933,
+    "cut_length_mm": 1429.2583,
+    "hole_count": 8,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "MK-21-5128",
+    "revision": null,
+    "material": null,
+    "material_text": null,
+    "thickness_mm": 1.6,
+    "quantity": 100,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "BARE METAL",
+    "processes": [
+     {
+      "code": "TAP_M6",
+      "count_per_part": 2,
+      "text": "TAP M6x1.0 (2)"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 4,
+      "text": "TIG WELD ALL 4 CORNERS"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [
+     "STANDARD DELIVERY OK"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0010",
+   "file": "pdf/Lv2_0010.pdf",
+   "step_file": "step/Lv2_0010.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    10
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 41881.8103,
+    "cut_length_mm": 1088.0005,
+    "hole_count": 6,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "T36286-14",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-P",
+    "thickness_mm": 1.2,
+    "quantity": 3,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [
+     {
+      "code": "TAP_M3",
+      "count_per_part": 1,
+      "text": "1-M3 通し"
+     },
+     {
+      "code": "TAP_M5",
+      "count_per_part": 3,
+      "text": "M5 めねじ 3ヶ所"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 4,
+      "text": "TIG 4ヶ所 溶接"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0011",
+   "file": "pdf/Lv2_0011.pdf",
+   "step_file": "step/Lv2_0011.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    11
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 17150.7198,
+    "cut_length_mm": 1117.6383,
+    "hole_count": 10,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "C44401-12",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "COLD-ROLLED SHEET, SPCC-1B",
+    "thickness_mm": 1.2,
+    "quantity": null,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "BAKED ENAMEL, GRAY",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 3,
+      "text": "3X CSINK Ø8.4 90°"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0012",
+   "file": "pdf/Lv2_0012.pdf",
+   "step_file": "step/Lv2_0012.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    12
+   ],
+   "kind": "fax",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 89231.526,
+    "cut_length_mm": 1614.334,
+    "hole_count": 9,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "MA671-3737",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-20/20",
+    "thickness_mm": 1.6,
+    "quantity": 2,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "仕上げなし（素材のまま）",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "bom",
+     "quantity": "title",
+     "thickness": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0013",
+   "file": "pdf/Lv2_0013.pdf",
+   "step_file": "step/Lv2_0013.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    13
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 48443.943,
+    "cut_length_mm": 1315.5213,
+    "hole_count": 5,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "D2019-6414",
+    "revision": null,
+    "material": null,
+    "material_text": null,
+    "thickness_mm": 2.3,
+    "quantity": 200,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "アクリル焼付塗装 N7",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 5,
+      "text": "皿ザグリ φ8.4×90° 5ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0014",
+   "file": "pdf/Lv2_0014.pdf",
+   "step_file": "step/Lv2_0014.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    14
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 33283.5109,
+    "cut_length_mm": 1120.8209,
+    "hole_count": 5,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "D2026-5028",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "COLD-ROLLED SHEET, SPCC-1B",
+    "thickness_mm": 2.3,
+    "quantity": 20,
+    "surface_treatment": "ELECTROLESS_NI",
+    "surface_treatment_text": "EN PLATE 10um",
+    "processes": [
+     {
+      "code": "TAP_M5",
+      "count_per_part": 8,
+      "text": "8-M5x0.8 TAPPED"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [
+     "NO RUSH REQUIRED",
+     "REPLACES P/N D2025-6642"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0015",
+   "file": "pdf/Lv2_0015.pdf",
+   "step_file": "step/Lv2_0015.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    15
+   ],
+   "kind": "handwritten",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 45904.9539,
+    "cut_length_mm": 1016.1792,
+    "hole_count": 3,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "CB-25-3177",
+    "revision": null,
+    "material": "UNREGISTERED",
+    "material_text": "SUS301-CSP",
+    "thickness_mm": 1.6,
+    "quantity": 30,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 4,
+      "text": "4-クリンチングナット M5（かしめ）"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 4,
+      "text": "クリンチングスタッド M6×12 4本"
+     }
+    ],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "notes",
+     "processes": [
+      "callouts",
+      "callouts"
+     ],
+     "rush": "handwriting"
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": "rush",
+      "text": "超特急!!"
+     },
+     {
+      "affects": null,
+      "text": "OK 済"
+     }
+    ],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [
+     "旧品番 K71754-12 から変更"
+    ],
+    "pages": 2,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0016",
+   "file": "pdf/Lv2_0016.pdf",
+   "step_file": "step/Lv2_0016.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    16
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 53478.9556,
+    "cut_length_mm": 1120.0868,
+    "hole_count": 0,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "CB-26-8308",
+    "revision": null,
+    "material": "AL5052",
+    "material_text": "AL5052-H32",
+    "thickness_mm": 2.3,
+    "quantity": 200,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "仕上げなし（素材のまま）",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 6,
+      "text": "6-クリンチングナット M4（かしめ）"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 3,
+      "text": "クリンチングスタッド M4×12 3本"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "notes",
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0017",
+   "file": "pdf/Lv2_0017.pdf",
+   "step_file": "step/Lv2_0017.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    17
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 37125.4616,
+    "cut_length_mm": 1425.7228,
+    "hole_count": 10,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "MP-22-4155",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "ステンレス鋼板 SUS304-2B",
+    "thickness_mm": 2.3,
+    "quantity": 1000,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0018",
+   "file": "pdf/Lv2_0018.pdf",
+   "step_file": "step/Lv2_0018.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    18
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 15139.4136,
+    "cut_length_mm": 923.4335,
+    "hole_count": 8,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "T24775-03",
+    "revision": null,
+    "material": "SPHC",
+    "material_text": "SPHC-PO（酸洗）",
+    "thickness_mm": 1.2,
+    "quantity": null,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "アクリル焼付塗装 N7",
+    "processes": [
+     {
+      "code": "TAP_M3",
+      "count_per_part": 5,
+      "text": "5-M3 通し"
+     }
+    ],
+    "rush": true,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv2_0019",
+   "file": "pdf/Lv2_0019.pdf",
+   "step_file": "step/Lv2_0019.step",
+   "level": "Lv2",
+   "seed": [
+    41,
+    19
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 56374.7545,
+    "cut_length_mm": 1230.3973,
+    "hole_count": 5,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "DR917-7584",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "SPCC（冷間圧延鋼板）",
+    "thickness_mm": 1.0,
+    "quantity": 5,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "アクリル焼付塗装 N7",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0000",
+   "file": "pdf/Lv3_0000.pdf",
+   "step_file": "step/Lv3_0000.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    0
+   ],
+   "kind": "scan",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 18396.8955,
+    "cut_length_mm": 880.3689,
+    "hole_count": 8,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "D2021-4496",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "JIS G3141 SPCC-SB",
+    "thickness_mm": 1.6,
+    "quantity": 50,
+    "surface_treatment": "ZINC_YELLOW",
+    "surface_treatment_text": "亜鉛めっき 有色クロメート（3価）",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 4,
+      "text": "クリンチナット M3"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "bom",
+     "quantity": "free",
+     "thickness": "free",
+     "processes": [
+      "bom"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0001",
+   "file": "pdf/Lv3_0001.pdf",
+   "step_file": "step/Lv3_0001.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    1
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 34489.3637,
+    "cut_length_mm": 1083.0083,
+    "hole_count": 8,
+    "bend_count": 5
+   },
+   "truth": {
+    "drawing_no": "D2025-9748",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "SUS304（2B仕上）",
+    "thickness_mm": null,
+    "quantity": 50,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "処理不要",
+    "processes": [
+     {
+      "code": "TAP_M5",
+      "count_per_part": 6,
+      "text": "M5 めねじ 6ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0002",
+   "file": "pdf/Lv3_0002.pdf",
+   "step_file": "step/Lv3_0002.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    2
+   ],
+   "kind": "scan",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 12259.7044,
+    "cut_length_mm": 951.3989,
+    "hole_count": 7,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "D2022-2239",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS-400",
+    "thickness_mm": null,
+    "quantity": 300,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "仕上げなし（素材のまま）",
+    "processes": [
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 2,
+      "text": "PEMスタッド FH-M6-10"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "processes": [
+      "bom"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0003",
+   "file": "pdf/Lv3_0003.pdf",
+   "step_file": "step/Lv3_0003.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    3
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 4.5,
+    "blank_area_mm2": 36072.9706,
+    "cut_length_mm": 1390.7322,
+    "hole_count": 8,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "SB526-4655",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "JIS G3141 SPCC-SB",
+    "thickness_mm": 4.5,
+    "quantity": 150,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "TAP_M6",
+      "count_per_part": 3,
+      "text": "タップ M6×1.0（3）"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0004",
+   "file": "pdf/Lv3_0004.pdf",
+   "step_file": "step/Lv3_0004.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    4
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 118168.6342,
+    "cut_length_mm": 1800.8516,
+    "hole_count": 7,
+    "bend_count": 6
+   },
+   "truth": {
+    "drawing_no": "D2022-8908",
+    "revision": null,
+    "material": null,
+    "material_text": null,
+    "thickness_mm": 2.0,
+    "quantity": 10,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "3-クリンチングナット M3（かしめ）"
+     }
+    ],
+    "rush": true,
+    "flags": [
+     "inspection",
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0005",
+   "file": "pdf/Lv3_0005.pdf",
+   "step_file": "step/Lv3_0005.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    5
+   ],
+   "kind": "handwritten",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 46651.5463,
+    "cut_length_mm": 1504.817,
+    "hole_count": 9,
+    "bend_count": 5
+   },
+   "truth": {
+    "drawing_no": "D24009-02",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS400（酸洗）",
+    "thickness_mm": 1.2,
+    "quantity": 5,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [
+     {
+      "code": "SPOT_WELD",
+      "count_per_part": 10,
+      "text": "抵抗溶接（スポット）10点"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "notes",
+     "processes": [
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": "quantity",
+      "text": "5"
+     },
+     {
+      "affects": null,
+      "text": "OK 済"
+     }
+    ],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [
+     "前回ロット 1000 個"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0006",
+   "file": "pdf/Lv3_0006.pdf",
+   "step_file": "step/Lv3_0006.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    6
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 40138.7883,
+    "cut_length_mm": 1749.8233,
+    "hole_count": 15,
+    "bend_count": 10
+   },
+   "truth": {
+    "drawing_no": "AA-26-3761",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "一般構造用鋼 SS400",
+    "thickness_mm": 2.0,
+    "quantity": 30,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "処理不要",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 5,
+      "text": "5-クリンチングナット M4（かしめ）"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 5,
+      "text": "クリンチングスタッド M6×12 5本"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 2,
+      "text": "角部TIG溶接×2"
+     }
+    ],
+    "rush": true,
+    "flags": [
+     "appearance",
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "notes",
+      "callouts",
+      "callouts"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0007",
+   "file": "pdf/Lv3_0007.pdf",
+   "step_file": "step/Lv3_0007.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    7
+   ],
+   "kind": "fax",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 23107.2075,
+    "cut_length_mm": 774.5729,
+    "hole_count": 3,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "D2025-6455",
+    "revision": "1",
+    "material": "SUS304",
+    "material_text": "SUS304（2B仕上）",
+    "thickness_mm": 1.0,
+    "quantity": 1,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "仕上げなし（素材のまま）",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "bom",
+     "quantity": "title",
+     "thickness": "notes"
+    },
+    "revision_changes": [
+     {
+      "rev": "1",
+      "field": "quantity",
+      "from": "1000",
+      "to": "1"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": true,
+    "revision_style": "number",
+    "revision_mode": {
+     "quantity": "updated"
+    },
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0008",
+   "file": "pdf/Lv3_0008.pdf",
+   "step_file": "step/Lv3_0008.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    8
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 25360.7892,
+    "cut_length_mm": 1071.2897,
+    "hole_count": 3,
+    "bend_count": 5
+   },
+   "truth": {
+    "drawing_no": "TS-25-7263",
+    "revision": "A",
+    "material": "SPCC",
+    "material_text": "冷延鋼板 SPCC-SB",
+    "thickness_mm": 2.3,
+    "quantity": 3,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "SPOT_WELD",
+      "count_per_part": 12,
+      "text": "スポット 12打点"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 4,
+      "text": "TIG 4ヶ所 溶接"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "A",
+      "field": "thickness",
+      "from": "1.6t",
+      "to": "2.3mm"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "letter",
+    "revision_mode": {
+     "thickness": "updated"
+    },
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0009",
+   "file": "pdf/Lv3_0009.pdf",
+   "step_file": "step/Lv3_0009.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    9
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 4.5,
+    "blank_area_mm2": 60357.2114,
+    "cut_length_mm": 1552.7222,
+    "hole_count": 6,
+    "bend_count": 5
+   },
+   "truth": {
+    "drawing_no": "M94163-10",
+    "revision": "1",
+    "material": "SPCC",
+    "material_text": "SPCC-1B",
+    "thickness_mm": 4.5,
+    "quantity": 3,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "パウダーコート（白）",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 4,
+      "text": "4-皿穴（M3皿ビス）"
+     },
+     {
+      "code": "TAP_M8",
+      "count_per_part": 1,
+      "text": "1-M8 通し"
+     }
+    ],
+    "rush": true,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "notes",
+      "notes"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "triangle",
+    "revision_mode": {},
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0010",
+   "file": "pdf/Lv3_0010.pdf",
+   "step_file": "step/Lv3_0010.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    10
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 18759.6318,
+    "cut_length_mm": 913.9849,
+    "hole_count": 2,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "TS696-4810",
+    "revision": null,
+    "material": "SPHC",
+    "material_text": "熱延鋼板 SPHC",
+    "thickness_mm": 3.2,
+    "quantity": 300,
+    "surface_treatment": "ZINC_CLEAR",
+    "surface_treatment_text": "三価クロメート処理（クリア）",
+    "processes": [
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 3,
+      "text": "ルーバー 3ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [
+     "特急不要"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0011",
+   "file": "pdf/Lv3_0011.pdf",
+   "step_file": "step/Lv3_0011.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    11
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 35920.6759,
+    "cut_length_mm": 1107.6375,
+    "hole_count": 5,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "MB184-8534",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-P",
+    "thickness_mm": 1.0,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 2,
+      "text": "角部TIG溶接×2"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0012",
+   "file": "pdf/Lv3_0012.pdf",
+   "step_file": "step/Lv3_0012.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    12
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 56571.7222,
+    "cut_length_mm": 1290.198,
+    "hole_count": 4,
+    "bend_count": 4
+   },
+   "truth": {
+    "drawing_no": "KK179-9835",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "JIS G3141 SPCC-SB",
+    "thickness_mm": 1.2,
+    "quantity": 100,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0013",
+   "file": "pdf/Lv3_0013.pdf",
+   "step_file": "step/Lv3_0013.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    13
+   ],
+   "kind": "handwritten",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 33004.7347,
+    "cut_length_mm": 1542.3137,
+    "hole_count": 10,
+    "bend_count": 6
+   },
+   "truth": {
+    "drawing_no": "D2026-2425",
+    "revision": null,
+    "material": null,
+    "material_text": null,
+    "thickness_mm": 1.6,
+    "quantity": null,
+    "surface_treatment": "UNREGISTERED",
+    "surface_treatment_text": "ニッケルクロムめっき",
+    "processes": [
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 4,
+      "text": "クリンチングスタッド M4×12 4本"
+     },
+     {
+      "code": "TAP_M5",
+      "count_per_part": 2,
+      "text": "M5 めねじ 2ヶ所"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 4,
+      "text": "TIG 4ヶ所 溶接"
+     }
+    ],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "thickness": "free",
+     "processes": [
+      "callouts",
+      "callouts",
+      "free"
+     ],
+     "rush": "handwriting"
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": "rush",
+      "text": "超特急!!"
+     }
+    ],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0014",
+   "file": "pdf/Lv3_0014.pdf",
+   "step_file": "step/Lv3_0014.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    14
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 33143.6493,
+    "cut_length_mm": 1035.6382,
+    "hole_count": 4,
+    "bend_count": 5
+   },
+   "truth": {
+    "drawing_no": "A16849-11",
+    "revision": null,
+    "material": "UNREGISTERED",
+    "material_text": "A6061-T6",
+    "thickness_mm": 1.2,
+    "quantity": 2,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "BARE METAL",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0015",
+   "file": "pdf/Lv3_0015.pdf",
+   "step_file": "step/Lv3_0015.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    15
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 32217.8785,
+    "cut_length_mm": 1025.979,
+    "hole_count": 6,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "T44815-12",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-20/20",
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": "UNREGISTERED",
+    "surface_treatment_text": "ニッケルクロムめっき",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "inspection"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0016",
+   "file": "pdf/Lv3_0016.pdf",
+   "step_file": "step/Lv3_0016.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    16
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 42522.8817,
+    "cut_length_mm": 1340.7201,
+    "hole_count": 8,
+    "bend_count": 5
+   },
+   "truth": {
+    "drawing_no": "D2026-0470",
+    "revision": "A",
+    "material": "SPCC",
+    "material_text": "冷延鋼板 SPCC-SB",
+    "thickness_mm": 1.6,
+    "quantity": 1,
+    "surface_treatment": "ZINC_YELLOW",
+    "surface_treatment_text": "三価イエロークロメート",
+    "processes": [
+     {
+      "code": "TAP_M6",
+      "count_per_part": 1,
+      "text": "タップ M6×1.0（1）"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": true,
+    "revision_style": "letter",
+    "revision_mode": {},
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0017",
+   "file": "pdf/Lv3_0017.pdf",
+   "step_file": "step/Lv3_0017.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    17
+   ],
+   "kind": "fax",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 118899.8183,
+    "cut_length_mm": 1925.6959,
+    "hole_count": 7,
+    "bend_count": 7
+   },
+   "truth": {
+    "drawing_no": "D2023-6038",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "SUS304（2B仕上）",
+    "thickness_mm": null,
+    "quantity": 200,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "3-クリンチングナット M6（かしめ）"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 4,
+      "text": "クリンチングスタッド M5×12 4本"
+     },
+     {
+      "code": "TIG_WELD",
+      "count_per_part": 3,
+      "text": "TIG 3ヶ所 溶接"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "processes": [
+      "notes",
+      "callouts",
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [
+     "前回ロット 2000 個"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0018",
+   "file": "pdf/Lv3_0018.pdf",
+   "step_file": "step/Lv3_0018.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    18
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 34019.997,
+    "cut_length_mm": 852.0453,
+    "hole_count": 2,
+    "bend_count": 3
+   },
+   "truth": {
+    "drawing_no": "D2026-1556",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "一般構造用鋼 SS400",
+    "thickness_mm": null,
+    "quantity": 1,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "粉体焼付塗装 黒",
+    "processes": [
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 2,
+      "text": "プラグ溶接 2ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv3_0019",
+   "file": "pdf/Lv3_0019.pdf",
+   "step_file": "step/Lv3_0019.step",
+   "level": "Lv3",
+   "seed": [
+    41,
+    19
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 83762.4682,
+    "cut_length_mm": 1420.1145,
+    "hole_count": 3,
+    "bend_count": 5
+   },
+   "truth": {
+    "drawing_no": "AK-25-7705",
+    "revision": null,
+    "material": "UNREGISTERED",
+    "material_text": "SUS301-CSP",
+    "thickness_mm": 0.8,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "UNREGISTERED",
+      "count_per_part": 3,
+      "text": "エンボス加工 3ヶ所"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0000",
+   "file": "pdf/Lv4_0000.pdf",
+   "step_file": "step/Lv4_0000.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    0
+   ],
+   "kind": "handwritten",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 5379.4788,
+    "cut_length_mm": 468.4517,
+    "hole_count": 0,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "K99549-17",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "JIS G3141 SPCC-SB",
+    "thickness_mm": 3.2,
+    "quantity": 30,
+    "surface_treatment": "ZINC_CLEAR",
+    "surface_treatment_text": "三価クリア",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": "finish",
+      "text": "三価クリア"
+     },
+     {
+      "affects": null,
+      "text": "CHK 11/11"
+     }
+    ],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0001",
+   "file": "pdf/Lv4_0001.pdf",
+   "step_file": "step/Lv4_0001.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    1
+   ],
+   "kind": "fax",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 30564.754,
+    "cut_length_mm": 798.3107,
+    "hole_count": 2,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "CS401-5125",
+    "revision": "3",
+    "material": "SPCC",
+    "material_text": "冷延鋼板 SPCC-SB",
+    "thickness_mm": null,
+    "quantity": 20,
+    "surface_treatment": "ZINC_YELLOW",
+    "surface_treatment_text": "三価イエロークロメート",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 2,
+      "text": "PEMナット CLS-M6-1"
+     }
+    ],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "processes": [
+      "bom"
+     ],
+     "rush": "stamp"
+    },
+    "revision_changes": [
+     {
+      "rev": "2",
+      "field": "finish",
+      "from": "亜鉛めっき 黒（三価）",
+      "to": "三価イエロークロメート"
+     },
+     {
+      "rev": "3",
+      "field": "quantity",
+      "from": "300 pcs",
+      "to": "20個"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "stamp_rush",
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "number",
+    "revision_mode": {
+     "quantity": "updated",
+     "finish": "updated"
+    },
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0002",
+   "file": "pdf/Lv4_0002.pdf",
+   "step_file": "step/Lv4_0002.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    2
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 10646.2332,
+    "cut_length_mm": 585.8089,
+    "hole_count": 6,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "MR555-2018",
+    "revision": "2",
+    "material": "SPCC",
+    "material_text": "JIS G3141 SPCC-SB",
+    "thickness_mm": null,
+    "quantity": 10,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "TAP_M3",
+      "count_per_part": 6,
+      "text": "タップ M3×0.5（6）"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "notes",
+     "quantity": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "1",
+      "field": "quantity",
+      "from": "N=100",
+      "to": "10"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": false,
+    "revision_style": "number",
+    "revision_mode": {
+     "quantity": "stale"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0003",
+   "file": "pdf/Lv4_0003.pdf",
+   "step_file": "step/Lv4_0003.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    3
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.2,
+    "blank_area_mm2": 4888.5924,
+    "cut_length_mm": 493.4459,
+    "hole_count": 4,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "DR789-7752",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "一般構造用鋼 SS400",
+    "thickness_mm": 1.2,
+    "quantity": 20,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 3,
+      "text": "クリンチングスタッド M6×12 3本"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0004",
+   "file": "pdf/Lv4_0004.pdf",
+   "step_file": "step/Lv4_0004.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    4
+   ],
+   "kind": "fax",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 1.6,
+    "blank_area_mm2": 15353.255,
+    "cut_length_mm": 509.8378,
+    "hole_count": 0,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "SR502-5758",
+    "revision": "A",
+    "material": "AL5052",
+    "material_text": "5052-H32 ALUMINUM",
+    "thickness_mm": 1.6,
+    "quantity": 2,
+    "surface_treatment": "ANODIZE_BLACK",
+    "surface_treatment_text": "ANODIZE TYPE II, BLACK",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 6,
+      "text": "6X CLINCH NUT M5"
+     },
+     {
+      "code": "TAP_M3",
+      "count_per_part": 7,
+      "text": "TAP M3x0.5 (7)"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title",
+     "processes": [
+      "callouts",
+      "notes"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "A",
+      "field": "quantity",
+      "from": "10 PCS",
+      "to": "2"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "letter",
+    "revision_mode": {
+     "quantity": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0005",
+   "file": "pdf/Lv4_0005.pdf",
+   "step_file": "step/Lv4_0005.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    5
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.3,
+    "blank_area_mm2": 10739.7444,
+    "cut_length_mm": 618.0125,
+    "hole_count": 4,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "AA665-5514",
+    "revision": "A",
+    "material": "SECC",
+    "material_text": "SECC-P",
+    "thickness_mm": null,
+    "quantity": 100,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 5,
+      "text": "5-クリンチングナット M4（かしめ）"
+     }
+    ],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "bom",
+     "quantity": "bom",
+     "processes": [
+      "notes"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "A",
+      "field": "finish",
+      "from": "黒色三価クロメート",
+      "to": "無"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "letter",
+    "revision_mode": {
+     "finish": "updated"
+    },
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0006",
+   "file": "pdf/Lv4_0006.pdf",
+   "step_file": "step/Lv4_0006.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    6
+   ],
+   "kind": "scan",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 2090.5995,
+    "cut_length_mm": 244.9451,
+    "hole_count": 1,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "KS488-8825",
+    "revision": null,
+    "material": "SUS304",
+    "material_text": "SUS-304",
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "無",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "seal"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0007",
+   "file": "pdf/Lv4_0007.pdf",
+   "step_file": "step/Lv4_0007.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    7
+   ],
+   "kind": "vector",
+   "style": "jis_bom",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 26658.4646,
+    "cut_length_mm": 918.6275,
+    "hole_count": 5,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "AX450-7748",
+    "revision": null,
+    "material": null,
+    "material_text": null,
+    "thickness_mm": null,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "rush": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "bom_mode": "per_part",
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0008",
+   "file": "pdf/Lv4_0008.pdf",
+   "step_file": "step/Lv4_0008.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    8
+   ],
+   "kind": "vector",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 4.5,
+    "blank_area_mm2": 32051.4958,
+    "cut_length_mm": 942.0051,
+    "hole_count": 3,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "MX-20-7549",
+    "revision": "3",
+    "material": "SECC",
+    "material_text": "SECC-P",
+    "thickness_mm": 4.5,
+    "quantity": 100,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "焼付塗装仕上げ（グレー）",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "tolerance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title"
+    },
+    "revision_changes": [
+     {
+      "rev": "△1",
+      "field": "thickness",
+      "from": "2.3mm",
+      "to": "t4.5"
+     },
+     {
+      "rev": "△2",
+      "field": "quantity",
+      "from": "200",
+      "to": "N=100"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "triangle",
+    "revision_mode": {
+     "quantity": "updated",
+     "thickness": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0009",
+   "file": "pdf/Lv4_0009.pdf",
+   "step_file": "step/Lv4_0009.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    9
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 10163.5686,
+    "cut_length_mm": 498.3486,
+    "hole_count": 4,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "D2024-8989",
+    "revision": "A",
+    "material": "SECC",
+    "material_text": "EG STEEL SECC",
+    "thickness_mm": 2.0,
+    "quantity": 5,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "BARE METAL",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 3,
+      "text": "3X CSINK Ø10.4 90°"
+     }
+    ],
+    "rush": true,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ],
+     "rush": "notes"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": true,
+    "revision_style": "letter",
+    "revision_mode": {},
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0010",
+   "file": "pdf/Lv4_0010.pdf",
+   "step_file": "step/Lv4_0010.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    10
+   ],
+   "kind": "fax",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 25018.903,
+    "cut_length_mm": 943.2998,
+    "hole_count": 5,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "D92154-10",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS400（酸洗）",
+    "thickness_mm": 3.2,
+    "quantity": 20,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0011",
+   "file": "pdf/Lv4_0011.pdf",
+   "step_file": "step/Lv4_0011.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    11
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 13643.5352,
+    "cut_length_mm": 531.8647,
+    "hole_count": 2,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "TS788-8538",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-P",
+    "thickness_mm": 3.2,
+    "quantity": 100,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "粉体焼付塗装 黒",
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 2,
+      "text": "皿ザグリ φ8.4×90° 1ヶ所 + 皿ザグリ φ8.4×90° 1ヶ所"
+     },
+     {
+      "code": "PRESS_STUD",
+      "count_per_part": 2,
+      "text": "圧入スタッド M4×10"
+     },
+     {
+      "code": "SPOT_WELD",
+      "count_per_part": 5,
+      "text": "抵抗溶接（スポット）5点"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "quantity": "bom",
+     "thickness": "free",
+     "processes": [
+      "callouts",
+      "bom",
+      "free"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "bom_mode": "total",
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0012",
+   "file": "pdf/Lv4_0012.pdf",
+   "step_file": "step/Lv4_0012.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    12
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 13808.7741,
+    "cut_length_mm": 555.6034,
+    "hole_count": 1,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "TR-24-7504",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "SECC-20/20",
+    "thickness_mm": 3.2,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "material": "free",
+     "thickness": "free"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0013",
+   "file": "pdf/Lv4_0013.pdf",
+   "step_file": "step/Lv4_0013.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    13
+   ],
+   "kind": "vector",
+   "style": "memo",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 3.2,
+    "blank_area_mm2": 9323.6707,
+    "cut_length_mm": 498.6508,
+    "hole_count": 3,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": null,
+    "revision": null,
+    "material": "UNREGISTERED",
+    "material_text": "SUS301-CSP",
+    "thickness_mm": 3.2,
+    "quantity": 150,
+    "surface_treatment": "NONE",
+    "surface_treatment_text": "処理不要",
+    "processes": [],
+    "rush": false,
+    "flags": [
+     "appearance"
+    ]
+   },
+   "meta": {
+    "sources": {
+     "finish": "free",
+     "material": "free",
+     "quantity": "free",
+     "thickness": "free"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [
+     "特急不要"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4P",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0014",
+   "file": "pdf/Lv4_0014.pdf",
+   "step_file": "step/Lv4_0014.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    14
+   ],
+   "kind": "scan",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 16919.8279,
+    "cut_length_mm": 585.6303,
+    "hole_count": 1,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "A29574-02",
+    "revision": "B",
+    "material": "SPCC",
+    "material_text": "JIS G3141 SPCC-SB",
+    "thickness_mm": 2.0,
+    "quantity": 100,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "notes",
+     "quantity": "title",
+     "thickness": "notes"
+    },
+    "revision_changes": [
+     {
+      "rev": "A",
+      "field": "quantity",
+      "from": "200個",
+      "to": "10枚"
+     },
+     {
+      "rev": "B",
+      "field": "quantity",
+      "from": "10枚",
+      "to": "100ヶ"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [
+     "年間 1000 個見込み（参考）"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "revision_style": "letter",
+    "revision_mode": {
+     "quantity": "updated"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0015",
+   "file": "pdf/Lv4_0015.pdf",
+   "step_file": "step/Lv4_0015.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    15
+   ],
+   "kind": "handwritten",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 8076.9959,
+    "cut_length_mm": 418.6807,
+    "hole_count": 1,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "C18622-14",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "COLD-ROLLED SHEET, SPCC-1B",
+    "thickness_mm": null,
+    "quantity": 3,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "2X CLINCH NUT M5 + 1X CLINCH NUT M5"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [
+     {
+      "affects": null,
+      "text": "受領済 7/27"
+     }
+    ],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [
+     "STANDARD DELIVERY OK",
+     "ANNUAL VOLUME 1000 PCS (EST.)"
+    ],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A3L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0016",
+   "file": "pdf/Lv4_0016.pdf",
+   "step_file": "step/Lv4_0016.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    16
+   ],
+   "kind": "vector",
+   "style": "bilingual",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 3127.2296,
+    "cut_length_mm": 347.8834,
+    "hole_count": 3,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "CK-21-2465",
+    "revision": null,
+    "material": "SECC",
+    "material_text": "電気亜鉛めっき鋼板（SECC）",
+    "thickness_mm": 2.0,
+    "quantity": 3,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [
+     {
+      "code": "COUNTERSINK",
+      "count_per_part": 2,
+      "text": "皿ザグリ φ6.4×90° 2ヶ所"
+     },
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "セルフクリンチングナット M6 3個"
+     },
+     {
+      "code": "TAP_M6",
+      "count_per_part": 4,
+      "text": "タップ M6×1.0（4）"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "quantity": "title",
+     "thickness": "notes",
+     "processes": [
+      "notes",
+      "callouts",
+      "notes"
+     ]
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0017",
+   "file": "pdf/Lv4_0017.pdf",
+   "step_file": "step/Lv4_0017.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    17
+   ],
+   "kind": "fax",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 16543.6336,
+    "cut_length_mm": 711.2398,
+    "hole_count": 4,
+    "bend_count": 2
+   },
+   "truth": {
+    "drawing_no": "D2019-7347",
+    "revision": "1",
+    "material": "SS400",
+    "material_text": "SS400 (JIS G3101)",
+    "thickness_mm": 0.8,
+    "quantity": 150,
+    "surface_treatment": "BAKING_PAINT",
+    "surface_treatment_text": "BAKED ENAMEL, GRAY",
+    "processes": [
+     {
+      "code": "PRESS_NUT",
+      "count_per_part": 3,
+      "text": "2X CLINCH NUT M4 + 1X CLINCH NUT M4"
+     }
+    ],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "title",
+     "material": "title",
+     "quantity": "notes",
+     "thickness": "title",
+     "processes": [
+      "callouts"
+     ]
+    },
+    "revision_changes": [
+     {
+      "rev": "1",
+      "field": "material",
+      "from": "304 STAINLESS, 2B",
+      "to": "SS400 (JIS G3101)"
+     }
+    ],
+    "handwriting": [],
+    "stamps": [
+     "seal"
+    ],
+    "distractors": [
+     "REPLACES P/N CR-25-0332"
+    ],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "revision_style": "number",
+    "revision_mode": {
+     "material": "stale"
+    },
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0018",
+   "file": "pdf/Lv4_0018.pdf",
+   "step_file": "step/Lv4_0018.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    18
+   ],
+   "kind": "vector",
+   "style": "iso_en",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 0.8,
+    "blank_area_mm2": 10466.1106,
+    "cut_length_mm": 614.1122,
+    "hole_count": 5,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "DC968-9572",
+    "revision": null,
+    "material": "SPCC",
+    "material_text": "CRS SPCC-SB",
+    "thickness_mm": 0.8,
+    "quantity": 50,
+    "surface_treatment": "POWDER_COAT",
+    "surface_treatment_text": "POWDERCOAT, TEXTURED BLACK",
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "finish": "notes",
+     "material": "notes",
+     "quantity": "notes",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [],
+    "distractors": [],
+    "pages": 1,
+    "all_price_fields_written": true,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "en",
+    "vocab": "shift_dev"
+   }
+  },
+  {
+   "name": "Lv4_0019",
+   "file": "pdf/Lv4_0019.pdf",
+   "step_file": "step/Lv4_0019.step",
+   "level": "Lv4",
+   "seed": [
+    41,
+    19
+   ],
+   "kind": "scan",
+   "style": "jis_cad",
+   "unseen": false,
+   "part_truth": {
+    "thickness_mm": 2.0,
+    "blank_area_mm2": 26446.2567,
+    "cut_length_mm": 829.214,
+    "hole_count": 3,
+    "bend_count": 1
+   },
+   "truth": {
+    "drawing_no": "KP-22-5893",
+    "revision": null,
+    "material": "SS400",
+    "material_text": "SS-400",
+    "thickness_mm": 2.0,
+    "quantity": null,
+    "surface_treatment": null,
+    "surface_treatment_text": null,
+    "processes": [],
+    "rush": false,
+    "flags": []
+   },
+   "meta": {
+    "sources": {
+     "material": "title",
+     "thickness": "title"
+    },
+    "revision_changes": [],
+    "handwriting": [],
+    "stamps": [
+     "seal",
+     "date_stamp"
+    ],
+    "distractors": [],
+    "pages": 2,
+    "all_price_fields_written": false,
+    "unseen": false,
+    "page_size": "A4L",
+    "lang": "ja",
+    "vocab": "shift_dev"
+   }
+  }
+ ]
+}

@@ -32,3 +32,5 @@ dxf_holdout/
 # development drawing PDFs + STEPs are committed (pdf_data/pdf, pdf_data/step); evaluation output is not
 pdf_data/results.csv
 pdf_holdout/
+pdf_shift_dev/
+pdf_holdout_s33/
