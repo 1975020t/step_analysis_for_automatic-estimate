@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import io
-import os
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
@@ -12,18 +10,13 @@ from dotenv import load_dotenv
 
 from src.chat_service import ChatQuoteService
 from src.llm_client import build_llm_client
-from src.master_loader import MasterLoader
 from src.models import QuoteCondition
-from src.quote_engine import QuoteEngine, QuoteUnavailableError
-from src.dxf_analyzer import DxfAnalyzer
-from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, condition_items, quote_condition
-from src.quote_document import (PartInfo, Recipient, build_document, default_subject, load_company, log_row,
-                                price_summary, unregistered_process_texts)
-from src.quote_log import QuoteLog
-from src.past_quotes import OUTCOMES, HistoryStore, from_document
-from src.similar_quotes import SimilarQuoteSearch, query_for
-from src.quote_pdf import render_internal, render_quote
-from src.sheetmetal_analyzer import SheetMetalAnalyzer
+from src.past_quotes import OUTCOMES
+from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, condition_items
+from src.quote_document import PartInfo, Recipient, default_subject, load_company
+from src.services.estimate import EstimateService, ServiceError
+from src.services.schemas import AdditionalProcessInput, ConditionInput, DrawingContext, DrawingItem
+from src.services.settings import Settings
 
 
 load_dotenv()
@@ -31,7 +24,8 @@ st.set_page_config(page_title="STEP・DXF板金解析・見積デモ", page_icon
 st.title("STEP・DXF板金解析・見積デモ")
 st.caption("STEP形状または展開図DXFをローカル解析し、図面PDFの加工条件と合わせて、マスター単価でルールベース見積を作成します。")
 
-masters = MasterLoader("data")
+service = EstimateService(Settings.from_env())  # the same processing layer as the API (api/main.py)
+masters = service.masters
 try:
     llm = build_llm_client()
     llm_error = None
@@ -64,31 +58,31 @@ if analyze_clicked and uploaded is not None:
         st.session_state.pop(key, None)
     if pdf_file is not None:
         with st.spinner("図面PDFから加工条件を読み取っています…（Claude API）"):
+            handle = None
             try:
-                from src.pdf_reader import PdfConditionReader
-
                 with NamedTemporaryFile(suffix=".pdf", delete=False) as handle:
                     handle.write(pdf_file.getvalue())
-                reading = PdfConditionReader().read(handle.name)
-                st.session_state.pdf_unregistered = unregistered_process_texts(reading.pop("evidence", None), masters)
+                reading, drawing = service.read_drawing(handle.name, pdf_file.name)
+                st.session_state.pdf_unregistered = drawing.unregistered_texts
                 st.session_state.pdf_reading = reading
                 st.session_state.pdf_name = pdf_file.name
+            except ServiceError as exc:
+                st.error(str(exc))
             except Exception as exc:
                 st.error(f"図面PDFを読み取れませんでした: {exc}。加工条件は手入力してください。")
             finally:
-                Path(handle.name).unlink(missing_ok=True)
+                if handle is not None:
+                    Path(handle.name).unlink(missing_ok=True)
     if is_dxf and not thickness > 0:
         thickness = float((st.session_state.get("pdf_reading") or {}).get("thickness_mm") or 0)
     if is_dxf:
         with st.spinner("展開図DXFを解析しています…"):
-            st.session_state.analysis_result = DxfAnalyzer(thickness_mm=thickness).analyze(
-                io.BytesIO(data), file_name=uploaded.name)
+            st.session_state.analysis_result = service.analyze_bytes(data, uploaded.name, thickness_mm=thickness)
             st.session_state.step_bytes = None
     else:
         with st.spinner("STEP形状を解析しています…"):
-            st.session_state.analysis_result = SheetMetalAnalyzer(
-                k_factor=k_factor, k_factor_is_default=not confirmed_k,
-            ).analyze(io.BytesIO(data), file_name=uploaded.name)
+            st.session_state.analysis_result = service.analyze_bytes(
+                data, uploaded.name, k_factor=k_factor, k_factor_confirmed=confirmed_k)
             st.session_state.step_bytes = data
             st.session_state.step_suffix = "." + uploaded.name.rsplit(".", 1)[-1].lower()
     st.session_state.quote_condition = QuoteCondition(
@@ -154,9 +148,22 @@ def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> Quote
                                    CONFIRMED if confirmed else item.status, item.reasons))
     st.session_state.pdf_items = final
     material_input = next(i.value for i in final if i.field == "material")
-    condition = quote_condition(final, masters, material_input, analysis_thickness=analysis.thickness_mm)
-    chat_extra = [p for p in base.additional_processes if p.source == "chat"]
-    return condition.model_copy(update={"additional_processes": condition.additional_processes + chat_extra})
+    chat_extra = [AdditionalProcessInput(process_code=p.process_code, quantity=p.quantity, source="chat")
+                  for p in base.additional_processes if p.source == "chat"]
+    return service.build_condition(analysis, ConditionInput(material=material_input, additional_processes=chat_extra),
+                                   drawing_context())
+
+
+def drawing_context() -> DrawingContext | None:
+    """The drawing conditions as the user confirmed them (None without a drawing PDF)."""
+    reading = st.session_state.get("pdf_reading")
+    if reading is None:
+        return None
+    items = [DrawingItem(field=i.field, label=i.label, value=i.value, display=i.display, status=i.status,
+                         reasons=list(i.reasons)) for i in st.session_state.get("pdf_items") or []]
+    return DrawingContext(file_name=st.session_state.get("pdf_name", ""), drawing_no=reading.get("drawing_no"),
+                          revision=reading.get("revision"), items=items, flags=list(reading.get("flags") or []),
+                          unregistered_texts=st.session_state.get("pdf_unregistered") or [])
 
 
 def _edited(item: ConditionItem, value) -> bool:
@@ -168,20 +175,6 @@ def _edited(item: ConditionItem, value) -> bool:
     if item.field == "thickness_mm":
         return abs(float(item.value) - float(value)) > 1e-9
     return item.value != value
-
-
-def history_store() -> HistoryStore:
-    return HistoryStore(os.environ.get("PAST_QUOTES_PATH", "data/past_quotes/history.csv"))
-
-
-@st.cache_resource(show_spinner=False)
-def _search_index(path: str, mtime: float) -> SimilarQuoteSearch:  # rebuilt when the history file changes
-    return SimilarQuoteSearch(HistoryStore(path).load(), masters)
-
-
-def search_index() -> SimilarQuoteSearch:
-    store = history_store()
-    return _search_index(str(store.path), store.path.stat().st_mtime if store.path.exists() else 0.0)
 
 
 def case_inputs(analysis):
@@ -205,23 +198,21 @@ def _yen(value) -> str:
     return "-" if value is None else f"¥{value:,.0f}"
 
 
-def similar_quotes_section(analysis, condition: QuoteCondition, quote, summary, customer: str, part: PartInfo) -> None:
+def similar_quotes_section(analysis, outcome, customer: str, part: PartInfo) -> None:
     """類似見積（参考）: up to 5 past quotes with reasons, differences and prices. The quote is not changed."""
     st.divider()
     st.subheader("類似見積（参考）")
-    index = search_index()
-    if not index.quotes:
+    summary = outcome.summary
+    matches, reference, size = service.similar(analysis, outcome, customer, part.drawing_no, part.revision,
+                                               today=date.today())
+    if not size:
         st.info("見積履歴がありません（data/past_quotes/history.csv）。")
         return
-    query = query_for(analysis, condition, summary.unit_price, quote.final_price / condition.quantity, customer,
-                      part.drawing_no, part.revision, today=date.today())
-    matches = index.search(query)
-    st.caption(f"履歴 {len(index.quotes):,}件から、値段を決める要素（材質の系統・板厚・数量帯・大きさ・加工）が近いものを最大5件。"
+    st.caption(f"履歴 {size:,}件から、値段を決める要素（材質の系統・板厚・数量帯・大きさ・加工）が近いものを最大5件。"
                "リピート（同じ顧客・同じ図番）は必ず先頭に出します。参考表示のみで、今回の単価は変えません。")
     if not matches:
         st.info("材質の系統と板厚が近い過去の見積はありません。")
         return
-    reference = index.reference(matches)
     if reference:
         gap = (summary.unit_price - reference.unit) / reference.unit
         st.info(f"参考：過去の出し値の水準で見た今回の単価 **{_yen(reference.unit)}**（{reference.basis}）。"
@@ -254,45 +245,29 @@ def similar_quotes_section(analysis, condition: QuoteCondition, quote, summary, 
                              hide_index=True, width="stretch")
 
 
-def quote_document_section(analysis, condition: QuoteCondition, quote, customer: str, person: str, part: PartInfo) -> None:
+def quote_document_section(analysis, outcome, customer: str, person: str, part: PartInfo) -> None:
     """見積書を出力: terms, then a PDF (and the internal basis) to download; the quote enters the history. No LLM."""
     st.divider()
     st.subheader("見積書を出力")
-    company = load_company("data")
-    reading = st.session_state.get("pdf_reading") or {}
-    items = st.session_state.get("pdf_items") if reading else None
+    company = load_company(service.settings.data_dir)
     col6, col7 = st.columns([2, 1])
     subject = col6.text_input("件名", value=default_subject(part))
     delivery_place = col7.text_input("受渡場所", value=company.delivery_place)
     free_remarks = st.text_area("備考（任意、1行に1項目）", key="doc_remarks", height=80)
     with_internal = st.checkbox("社内用の内訳も出力する（別PDF、社外秘）", key="doc_internal")
-
-    def document(issued_at, number=""):
-        return build_document(
-            analysis=analysis, condition=condition, quote=quote, masters=masters, company=company,
-            recipient=Recipient(customer or "（宛先未入力）", person), part=part, issued_at=issued_at, number=number,
-            subject=subject, delivery_place=delivery_place, free_remarks=free_remarks, items=items,
-            flags=reading.get("flags"), unregistered_texts=st.session_state.get("pdf_unregistered"))
-
-    preview = document(datetime.now())
-    if preview.is_estimate:
+    if outcome.is_estimate:
         st.warning("未確定の条件があるため概算見積書として出力されます。\n\n"
-                   + "\n".join(f"- {note}" for note in preview.pending))
+                   + "\n".join(f"- {note}" for note in outcome.reasons))
     if not customer.strip():
         st.info("宛先の会社名を入力すると、見積書PDFを作成できます。")
-    inputs = repr((condition.model_dump(), quote.final_price, customer, person, part, subject, delivery_place,
+    condition = outcome.condition
+    inputs = repr((condition.model_dump(), outcome.quote.final_price, customer, person, part, subject, delivery_place,
                    free_remarks, with_internal))
     if st.button("見積書PDFを作成", type="primary", disabled=not customer.strip()):
-        issued_at = datetime.now().replace(microsecond=0)
-        doc = document(issued_at)
-        store = history_store()
-        taken = [q.quote_no for q in search_index().quotes]
-        doc.number = QuoteLog(os.environ.get("QUOTE_LOG_PATH", "output/quote_log.csv")).issue(issued_at, log_row(doc), taken)
-        files = {f"{doc.number}_{doc.title}.pdf": render_quote(doc)}
-        if with_internal:
-            files[f"{doc.number}_見積根拠（社内用）.pdf"] = render_internal(doc)
-        store.append([from_document(doc, masters)])
-        st.session_state.doc_files = (inputs, files)
+        issued = service.issue_document(analysis, condition, drawing_context(), Recipient(customer, person), part,
+                                        subject=subject, delivery_place=delivery_place, remarks=free_remarks,
+                                        include_internal=with_internal)
+        st.session_state.doc_files = (inputs, dict(issued.files.values()))
     made_for, files = st.session_state.get("doc_files") or (None, {})
     if files and made_for != inputs:
         st.caption("条件か入力が変わったため、作成済みの見積書は表示していません。もう一度作成してください。")
@@ -306,7 +281,7 @@ def quote_document_section(analysis, condition: QuoteCondition, quote, customer:
 def outcome_section() -> None:
     """受注・失注の記録: the outcome of a quote in the history."""
     with st.expander("受注・失注の記録"):
-        quotes = search_index().quotes
+        quotes = service.search_index().quotes
         if not quotes:
             st.caption("見積履歴がありません。")
             return
@@ -321,7 +296,7 @@ def outcome_section() -> None:
         outcome = st.radio("結果", list(OUTCOMES), index=list(OUTCOMES).index(chosen.outcome), horizontal=True,
                            key=f"outcome_{chosen.quote_no}")
         if st.button("結果を記録", key="outcome_save"):
-            history_store().set_outcome(chosen.quote_no, outcome, chosen.customer)
+            service.set_outcome(chosen.quote_no, outcome, chosen.customer)
             st.success(f"{chosen.quote_no} を「{outcome}」にしました。")
             st.rerun()
 
@@ -424,11 +399,11 @@ if result.status in {"success", "partial"}:
             st.session_state.quote_condition = condition
 
     try:
-        quote = QuoteEngine(masters).calculate(result, condition)
+        outcome = service.price(result, condition, drawing_context())  # the same call as POST /api/quotes
+        quote, summary = outcome.quote, outcome.summary
         st.session_state.quote_result = quote
         if quote.is_estimate:
             st.warning("概算見積: 加工条件または解析値に概算を含みます。")
-        summary = price_summary(quote, condition.quantity, masters.policy("tax_rate", 0.10))
         amount_cols = st.columns(4)
         amount_cols[0].metric("単価（1個）", f"¥{summary.unit_price:,}")
         amount_cols[1].metric(f"小計（税抜、{summary.quantity:,}個）", f"¥{summary.subtotal:,}")
@@ -440,12 +415,12 @@ if result.status in {"success", "partial"}:
              "単位": line.unit, "単価": line.unit_price, "金額": round(line.amount)}
             for line in quote.lines
         ]), hide_index=True, width="stretch")
-    except QuoteUnavailableError as exc:
+    except ServiceError as exc:
         st.error(str(exc))
     else:
         customer, person, part = case_inputs(result)
-        similar_quotes_section(result, condition, quote, summary, customer, part)
-        quote_document_section(result, condition, quote, customer, person, part)
+        similar_quotes_section(result, outcome, customer, part)
+        quote_document_section(result, outcome, customer, person, part)
         outcome_section()
 
     if llm is not None:

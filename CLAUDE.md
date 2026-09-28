@@ -1,8 +1,8 @@
 # CLAUDE.md
 
 STEP形式の板金部品を解析し、ルールベースで見積を出すシステムのバックエンド（デモUIはStreamlit）。
-現在の主タスクは **過去の類似見積の参照**（このPhaseではLLM APIを使わない）。最終ゴールと受入条件は [analysis/handoff_similar_quotes.md](analysis/handoff_similar_quotes.md) にある。着手前に読むこと。
-見積書PDFの出力（[analysis/handoff_quote_document.md](analysis/handoff_quote_document.md)）は実装済み。図面PDF読み取りの懸念点への対応（[analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)）はAPIが使えるようになってから別に行う。今回は図面PDFの読み取りのコードを変えない。
+現在の主タスクは **本番に向けたサーバー（API）の切り出し**（段階1。FastAPI）。最終ゴールと受入条件は [analysis/handoff_api.md](analysis/handoff_api.md) にある。着手前に読むこと。
+見積書PDFの出力と過去の類似見積の参照は実装済み。図面PDF読み取りの懸念点への対応（[analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)）はAPIが使えるようになってから別に行う。今回は図面PDFの読み取りのロジックを変えない。
 STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）と展開図DXFの解析（[analysis/handoff_dxf.md](analysis/handoff_dxf.md)）は完了済み。壊さないこと。
 進め方・設計は任されている。途中で確認を取らずに、受入条件を満たすまで進めてよい。
 
@@ -63,6 +63,7 @@ python scripts/evaluate_pdf.py --data pdf_shift_dev --reader src.pdf_reader:PdfC
 - `data/` マスター：材料・工程（追加加工を含む）・表面処理・価格方針（粗利率、特急割増）。各行の `aliases` が表記ゆれ。照合は `MasterLoader.resolve_alias`
 - `src/quote_document.py`・`src/quote_pdf.py`・`src/quote_log.py` 見積書PDF（中身と金額の端数処理、reportlab での描画、見積番号と `output/quote_log.csv`）。自社情報は `data/company.csv`（`data/company.local.csv` を優先）、フォントは `fonts/ipag.ttf`。例は `python scripts/make_quote_examples.py`
 - `src/past_quotes.py`・`src/similar_quotes.py` 見積履歴（`data/past_quotes/history.csv`、コミットする）と類似見積の検索。取り込みは `scripts/import_past_quotes.py`、効果の評価は `scripts/evaluate_similar_quotes.py`（`analysis/similar_quotes_eval.md`）。テストは履歴の一時コピーを使う（`tests/conftest.py`）
+- `src/services/` 処理の層（API と Streamlit が共通で呼ぶ。`EstimateService`、受付 `jobs.py`、入出力の型 `schemas.py`、設定 `settings.py`）。`api/main.py` が FastAPI（`create_app`）。設計は `analysis/api_design.md`。`Dockerfile`・`docker-compose.yml` で API とデモを起動
 - `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること

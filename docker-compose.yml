@@ -1,0 +1,36 @@
+# docker compose up --build   ->  API http://localhost:8000/docs , demo http://localhost:8501
+# Works on any Docker host (in-house server or a cloud VM); no cloud-specific service is used.
+x-common: &common
+  build:
+    context: .
+    args:
+      BASE_IMAGE: ${BASE_IMAGE:-python:3.11-slim}
+  image: sheetmetal-estimate:latest
+  environment:
+    ESTIMATE_DATA_DIR: /app/data
+    ESTIMATE_STORAGE_DIR: /app/output                     # uploads, jobs, documents, 3D view files
+    PAST_QUOTES_PATH: /app/data/past_quotes/history.csv   # quote history (the repository file, mounted below)
+    QUOTE_LOG_PATH: /app/output/quote_log.csv
+    API_TOKEN: ${API_TOKEN:-}                             # set it to require a token for the API
+    MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
+    ANALYSIS_ANTHROPIC_API_KEY: ${ANALYSIS_ANTHROPIC_API_KEY:-}   # only for reading drawing PDFs
+  volumes:
+    - ./output:/app/output
+    - ./data/past_quotes:/app/data/past_quotes
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *common
+    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  demo:
+    <<: *common
+    command: ["streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.headless", "true"]
+    ports: ["8501:8501"]
