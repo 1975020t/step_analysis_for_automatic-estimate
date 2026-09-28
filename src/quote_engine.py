@@ -66,19 +66,34 @@ class QuoteEngine:
             lines.append(QuoteLine(
                 code=additional.process_code, name=row["display_name"], quantity=round(billable, 4),
                 unit_price=float(row["unit_price"]), amount=billable * float(row["unit_price"]),
-                source="chat", unit=row["unit"],
+                source=additional.source, unit=row["unit"],
+            ))
+
+        if condition.surface_treatment and condition.surface_treatment != "NONE":
+            row = self.masters.surface_treatment(condition.surface_treatment)
+            billable = float(quantity if row["charge_scope"] == "per_part" else 1)
+            lines.append(QuoteLine(
+                code=f"FINISH_{condition.surface_treatment}", name=f"表面処理（{row['display_name']}）",
+                quantity=billable, unit_price=float(row["unit_price"]), amount=billable * float(row["unit_price"]),
+                source="drawing", unit="個",
             ))
 
         subtotal = sum(line.amount for line in lines)
+        if condition.rush:
+            rate = self.masters.policy("rush_surcharge_rate", 0.0)
+            lines.append(QuoteLine(code="RUSH", name=f"特急割増（小計の{rate:.0%}）", quantity=1.0,
+                                   unit_price=None, amount=subtotal * rate, source="master", unit="式"))
+            subtotal += subtotal * rate
         final_price = subtotal * (1 + self.margin_rate)
         estimated = analysis.status == "partial" or bool(analysis.assumptions) or any(
             quality.confidence in {"medium", "low"} for quality in analysis.metric_quality.values()
-        )
+        ) or bool(condition.pending)
+        warnings = list(analysis.warnings) if estimated else []
+        warnings += [f"要確認: {item}" for item in condition.pending]
         return QuoteResult(
             lines=lines, subtotal_cost=subtotal, margin_rate=self.margin_rate,
             final_price=final_price, rounded_final_price=self._round_up(final_price),
-            estimated_minutes=0.0, is_estimate=estimated,
-            warnings=list(analysis.warnings) if estimated else [],
+            estimated_minutes=0.0, is_estimate=estimated, warnings=warnings,
         )
 
     @staticmethod

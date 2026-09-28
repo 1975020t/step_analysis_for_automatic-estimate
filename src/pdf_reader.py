@@ -119,7 +119,8 @@ def _system_prompt(masters: MasterLoader) -> str:
 
 ## 規則
 - いま有効な値だけを答える。改訂表に「数量変更 50→100」などがあれば最新の改訂の値。表題欄の値が古いままのこともある。二重線で消されて書き直された値は、書き直した値。手書きの「M4タップ 2ヶ所追加」は追加の1件として書き写す
-- 書かれていない項目は null。推測しない（図の寸法から板厚を推測しない、空欄は記載なし）。「注記参照」は注記を見る
+- 書かれていない項目は null。推測しない（図の寸法から板厚を推測しない）。欄があっても空欄なら text も code も null。「注記参照」は注記を見る
+- 手書き（色付きの文字・二重線の訂正・追記）と押印（特急印・承認印・受付印など）は、内容にかかわらずすべて annotations に書き写す。手書きや押印の「至急」「特急」は、印刷された「急ぎません」より優先する
 - 数量は今回の製作数量。「月産500個予定（参考）」のような参考値、部品表の員数、FAXの送信ヘッダーの数字は数量ではない
 - 材質は部品そのものの材質。部品表の金具の行（SUS、SS、SWCH）や「相手部品：A5052」は部品の材質ではない
 - 単なる穴（2-φ10、φ4.5キリ（M4用）、M3用キリ穴、□40×20抜き、THRU）は追加加工ではない。タップの下穴を数えない
@@ -178,11 +179,15 @@ def _schema(masters: MasterLoader) -> dict:
             "flags": {"type": "array", "items": {"type": "object", "properties": {
                 "category": {"type": "string", "enum": ["tolerance", "appearance", "inspection"]},
                 "text": {"type": "string"}}, "required": ["category", "text"]}},
+            "annotations": {"type": "array", "items": {"type": "object", "properties": {
+                "text": {"type": "string"}, "kind": {"type": "string", "enum": ["handwriting", "stamp"]}},
+                "required": ["text", "kind"]}},
             "uncertain": {"type": "array", "items": {"type": "string", "enum": [
                 "material", "thickness", "quantity", "surface_treatment", "processes", "rush", "drawing_no", "revision"]}},
         },
         "required": ["drawing_no", "revision", "revision_changes", "material", "thickness", "quantity",
-                     "surface_treatment", "processes", "parts_list_quantity_header", "rush", "flags", "uncertain"],
+                     "surface_treatment", "processes", "parts_list_quantity_header", "rush", "flags", "annotations",
+                     "uncertain"],
     }
 
 
@@ -371,6 +376,9 @@ class PdfConditionReader:
         rush = raw.get("rush") or {}
         rule = terms.rush(rush.get("text"))
         out["rush"] = bool(rush.get("value"))
+        marked = [a.get("text") for a in raw.get("annotations") or [] if terms.rush(a.get("text"))]
+        if marked and not out["rush"]:  # a handwritten / stamped rush overrides the printed text
+            out["rush"], rule = True, True
         if rush.get("text") and rule is not None and rule != out["rush"]:
             review.add("rush", "特急の記載と判定が矛盾")
         if out["rush"] and rule is None:
@@ -404,7 +412,9 @@ class PdfConditionReader:
             same = _canonical(f, a) == _canonical(f, b)
             if not same:
                 reasons.setdefault(f, []).append("2回の読み取りが一致しない")
-                if a in (None, []) and b not in (None, []):
+                if f == "rush":
+                    out[f] = bool(a) or bool(b)  # a rush mark seen by either read is shown (and must be confirmed)
+                elif a in (None, []) and b not in (None, []):
                     out[f] = b  # one read found a value the other missed: show it, but ask for a review
             elif f in second.get("needs_review", []) and f not in reasons:
                 reasons[f] = list(second["review_reasons"].get(f, []))
