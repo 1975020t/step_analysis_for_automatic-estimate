@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 STEP形式の板金部品を解析し、ルールベースで見積を出すシステムのバックエンド（デモUIはStreamlit）。
-現在の主タスクは **仕様書（要件定義書・設計書・画面設計書）と操作マニュアルの作成**。内容と条件は [analysis/handoff_documents.md](analysis/handoff_documents.md) にある。着手前に読むこと。このブランチ（docs/specifications）は main にマージしない。コードは変えない。
+現在の主タスクは **仕様書（要件定義書・設計書・画面設計書）・操作マニュアル・評価報告書の作成（PDF）**。内容と条件は [analysis/handoff_documents.md](analysis/handoff_documents.md) にある。着手前に読むこと。このブランチ（docs/specifications）は main にマージしない。コードは変えない。
 STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）と展開図DXFの解析（[analysis/handoff_dxf.md](analysis/handoff_dxf.md)）は完了済み。壊さないこと。
 進め方・設計は任されている。途中で確認を取らずに、受入条件を満たすまで進めてよい。
 
