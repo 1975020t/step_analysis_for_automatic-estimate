@@ -12,8 +12,8 @@ def test_initial_ui_has_step_input_and_analyze_action():
     app = AppTest.from_file(APP_PATH).run(timeout=20)
 
     assert not app.exception
-    assert len(app.get("file_uploader")) == 1
-    assert app.get("file_uploader")[0].label == "STEP／展開図DXFファイル"
+    assert [u.label for u in app.get("file_uploader")][0] == "STEP／展開図DXFファイル"
+    assert app.get("file_uploader")[1].label.startswith("図面PDF")
     assert [button.label for button in app.button] == ["解析を実行"]
     assert any("チャット解釈モード" in item.value for item in app.info)
 
@@ -97,3 +97,31 @@ def test_dxf_result_shows_values_flat_pattern_and_quote(tmp_path):
     assert [metric.value for metric in app.metric][:5] == [
         "1.6 mm", f"{result.blank_area_mm2:,.1f} mm²", f"{result.cut_length_mm:,.1f} mm", "1", "1"]
     assert any(metric.label.startswith("見積金額") for metric in app.metric)
+
+
+def test_pdf_conditions_panel_shows_statuses_and_keeps_the_quote_estimate_until_confirmed():
+    reading = {"material": "SPCC", "thickness_mm": 2.0, "quantity": 50, "surface_treatment": "UNREGISTERED",
+               "processes": [{"code": "TAP_M4", "count_per_part": 4}], "rush": True, "flags": ["inspection"],
+               "drawing_no": "AB-21-0001", "revision": "B", "needs_review": ["rush"],
+               "review_reasons": {"rush": ["2回の読み取りが一致しない"]}}
+    app = AppTest.from_file(APP_PATH)
+    app.session_state["analysis_result"] = SheetMetalAnalysis(
+        status="success", file_name="p.step", thickness_mm=2.0, blank_area_mm2=4800.0, cut_length_mm=320.0,
+        hole_count=2, bend_count=1)
+    app.session_state["pdf_reading"] = reading
+    app.session_state["pdf_name"] = "drawing.pdf"
+    app.run(timeout=30)
+
+    assert not app.exception
+    text = " ".join(m.value for m in app.markdown)
+    assert "✅ 確定" in text and "⚠️ 要確認" in text and "❌ 未登録" in text
+    assert any("検査・証明書" in w.value for w in app.warning)
+    assert any("概算見積" in w.value for w in app.warning)
+    lines = app.dataframe[-1].value
+    assert "TAP_M4" in set(lines["コード"]) and "RUSH" not in set(lines["コード"])  # rush is 要確認: not priced yet
+
+    app.checkbox(key="pdf_rush_ok").check().run(timeout=30)
+    app.checkbox(key="pdf_surface_treatment_ok").check().run(timeout=30)
+    assert not app.exception
+    assert "RUSH" in set(app.dataframe[-1].value["コード"])
+    assert not any("概算見積" in w.value for w in app.warning)

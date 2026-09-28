@@ -29,3 +29,6 @@ golden_seed*/
 stress_data/
 dxf_data/
 dxf_holdout/
+# development drawing PDFs + STEPs are committed (pdf_data/pdf, pdf_data/step); evaluation output is not
+pdf_data/results.csv
+pdf_holdout/

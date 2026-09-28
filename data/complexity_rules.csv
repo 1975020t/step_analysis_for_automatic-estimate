@@ -1,5 +1,0 @@
-rule_code,min_faces,max_faces,multiplier
-SIMPLE,0,10,1.0
-MEDIUM,11,30,1.2
-COMPLEX,31,999999,1.5
-

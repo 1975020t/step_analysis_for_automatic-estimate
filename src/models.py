@@ -92,6 +92,7 @@ class AdditionalProcess(BaseModel):
     unit: str = "job"
     user_text: str | None = None
     confirmed: bool = True
+    source: Literal["chat", "drawing", "user"] = "chat"
 
 
 class QuoteCondition(BaseModel):
@@ -99,6 +100,9 @@ class QuoteCondition(BaseModel):
     quantity: int = Field(default=1, gt=0)
     additional_processes: list[AdditionalProcess] = Field(default_factory=list)
     notes: list[str] = Field(default_factory=list)
+    surface_treatment: str | None = None   # master code (data/surface_treatments.csv); None / "NONE" = no charge
+    rush: bool = False                     # rush surcharge (data/pricing_policy.csv)
+    pending: list[str] = Field(default_factory=list)  # conditions still to confirm: the quote stays 概算
 
 
 class QuoteLine(BaseModel):
@@ -107,7 +111,7 @@ class QuoteLine(BaseModel):
     quantity: float
     unit_price: float | None
     amount: float
-    source: Literal["cad", "master", "chat", "user"]
+    source: Literal["cad", "master", "chat", "user", "drawing"]
     unit: str = ""
 
 

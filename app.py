@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import io
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 import pandas as pd
 import streamlit as st
@@ -12,13 +14,14 @@ from src.master_loader import MasterLoader
 from src.models import QuoteCondition
 from src.quote_engine import QuoteEngine, QuoteUnavailableError
 from src.dxf_analyzer import DxfAnalyzer
+from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, condition_items, quote_condition
 from src.sheetmetal_analyzer import SheetMetalAnalyzer
 
 
 load_dotenv()
 st.set_page_config(page_title="STEP・DXF板金解析・見積デモ", page_icon="◫", layout="wide")
 st.title("STEP・DXF板金解析・見積デモ")
-st.caption("STEP形状または展開図DXFをローカル解析し、マスター単価でルールベース見積を作成します。")
+st.caption("STEP形状または展開図DXFをローカル解析し、図面PDFの加工条件と合わせて、マスター単価でルールベース見積を作成します。")
 
 masters = MasterLoader("data")
 try:
@@ -33,6 +36,7 @@ except Exception as exc:
 upload_col, setting_col = st.columns([2, 1])
 with upload_col:
     uploaded = st.file_uploader("STEP／展開図DXFファイル", type=["step", "stp", "dxf"])
+    pdf_file = st.file_uploader("図面PDF（任意：材質・数量・表面処理・追加加工・特急を読み取ります）", type=["pdf"])
 is_dxf = uploaded is not None and uploaded.name.lower().endswith(".dxf")
 with setting_col:
     if is_dxf:
@@ -43,11 +47,29 @@ with setting_col:
         confirmed_k = st.checkbox("指定済み加工条件として扱う", value=False)
 
 analyze_clicked = st.button("解析を実行", type="primary",
-                            disabled=uploaded is None or (is_dxf and not thickness > 0))
+                            disabled=uploaded is None or (is_dxf and not thickness > 0 and pdf_file is None))
 if is_dxf and not thickness > 0:
-    st.info("展開図DXFの解析には板厚（mm）の入力が必要です。")
+    st.info("展開図DXFの解析には板厚（mm）の入力が必要です（図面PDFを指定した場合は図面の板厚を使います）。")
 if analyze_clicked and uploaded is not None:
     data = uploaded.getvalue()
+    st.session_state.pop("pdf_reading", None)
+    if pdf_file is not None:
+        with st.spinner("図面PDFから加工条件を読み取っています…（Claude API）"):
+            try:
+                from src.pdf_reader import PdfConditionReader
+
+                with NamedTemporaryFile(suffix=".pdf", delete=False) as handle:
+                    handle.write(pdf_file.getvalue())
+                reading = PdfConditionReader().read(handle.name)
+                reading.pop("evidence", None)
+                st.session_state.pdf_reading = reading
+                st.session_state.pdf_name = pdf_file.name
+            except Exception as exc:
+                st.error(f"図面PDFを読み取れませんでした: {exc}。加工条件は手入力してください。")
+            finally:
+                Path(handle.name).unlink(missing_ok=True)
+    if is_dxf and not thickness > 0:
+        thickness = float((st.session_state.get("pdf_reading") or {}).get("thickness_mm") or 0)
     if is_dxf:
         with st.spinner("展開図DXFを解析しています…"):
             st.session_state.analysis_result = DxfAnalyzer(thickness_mm=thickness).analyze(
@@ -65,6 +87,78 @@ if analyze_clicked and uploaded is not None:
     )
     st.session_state.chat_history = []
     st.session_state.pop("quote_result", None)
+
+BADGE = {CONFIRMED: "✅ 確定", REVIEW: "⚠️ 要確認", UNREG: "❌ 未登録", MISSING: "➖ 記載なし"}
+
+
+def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> QuoteCondition:
+    """Conditions read from the drawing PDF, as editable inputs. Items that are not 確定 are not priced
+    until the user corrects them or ticks 「この値で確定」."""
+    st.markdown(f"**図面から読み取った加工条件**（{st.session_state.get('pdf_name', '図面PDF')}"
+                f"{'、図番 ' + reading['drawing_no'] if reading.get('drawing_no') else ''}"
+                f"{'、改訂 ' + reading['revision'] if reading.get('revision') else ''}）")
+    items = condition_items(reading, masters)
+    counts = {status: sum(item.status == status for item in items) for status in BADGE}
+    st.caption("　".join(f"{BADGE[s]} {n}件" for s, n in counts.items() if n))
+    if reading.get("flags"):
+        labels = {"tolerance": "厳しい公差", "appearance": "外観指定", "inspection": "検査・証明書"}
+        st.warning("特記事項: " + "、".join(labels.get(f, f) for f in reading["flags"]) + "（見積には含めません）")
+    final: list[ConditionItem] = []
+    material_codes, finish_codes = list(masters.materials), list(masters.surface_treatments)
+    for item in items:
+        cols = st.columns([1.1, 2.6, 1.0, 2.6, 1.3])
+        cols[0].markdown(f"**{item.label}**")
+        key = f"pdf_{item.field}"
+        with cols[1]:
+            if item.field == "material":
+                default = item.value if item.value in material_codes else base.material
+                value = st.selectbox(item.label, material_codes, index=material_codes.index(default), key=key,
+                                     format_func=lambda c: masters.materials[c]["display_name"], label_visibility="collapsed")
+            elif item.field == "surface_treatment":
+                default = item.value if item.value in finish_codes else "NONE"
+                value = st.selectbox(item.label, finish_codes, index=finish_codes.index(default), key=key,
+                                     format_func=lambda c: masters.surface_treatments[c]["display_name"], label_visibility="collapsed")
+            elif item.field == "thickness_mm":
+                default = float(item.value or analysis.thickness_mm or 0.0)
+                value = st.number_input(item.label, min_value=0.0, value=default, step=0.1, format="%g", key=key,
+                                        label_visibility="collapsed")
+            elif item.field == "quantity":
+                value = int(st.number_input(item.label, min_value=1, value=int(item.value or 1), step=1, key=key,
+                                            label_visibility="collapsed"))
+            elif item.field == "rush":
+                value = st.checkbox("特急", value=bool(item.value), key=key)
+            else:
+                rows = [{"加工": p["code"], "個数/個": int(p.get("count_per_part") or 0)} for p in item.value or []
+                        if p.get("code") in masters.process_rates]
+                table = st.data_editor(
+                    pd.DataFrame(rows, columns=["加工", "個数/個"]), num_rows="dynamic", key=key, hide_index=True,
+                    column_config={"加工": st.column_config.SelectboxColumn(options=masters.llm_process_codes)})
+                value = [{"code": r["加工"], "count_per_part": int(r["個数/個"])} for r in table.to_dict("records")
+                         if r.get("加工") and r.get("個数/個")]
+        cols[2].markdown(BADGE[item.status])
+        cols[3].caption(item.display if not item.reasons else f"{item.display} ／ " + "、".join(item.reasons))
+        changed = _edited(item, value)
+        confirmed = item.status == CONFIRMED or changed
+        if item.status != CONFIRMED:
+            confirmed = cols[4].checkbox("この値で確定", value=changed, key=f"{key}_ok")
+        final.append(ConditionItem(item.field, item.label, value, item.display,
+                                   CONFIRMED if confirmed else item.status, item.reasons))
+    material_input = next(i.value for i in final if i.field == "material")
+    condition = quote_condition(final, masters, material_input, analysis_thickness=analysis.thickness_mm)
+    chat_extra = [p for p in base.additional_processes if p.source == "chat"]
+    return condition.model_copy(update={"additional_processes": condition.additional_processes + chat_extra})
+
+
+def _edited(item: ConditionItem, value) -> bool:
+    if item.field == "processes":
+        read = sorted((p["code"], p.get("count_per_part")) for p in item.value or [] if p.get("code") != "UNREGISTERED")
+        return read != sorted((p["code"], p["count_per_part"]) for p in value)
+    if item.value is None or item.value == "UNREGISTERED":
+        return False  # a value the user has not looked at is not confirmed by default
+    if item.field == "thickness_mm":
+        return abs(float(item.value) - float(value)) > 1e-9
+    return item.value != value
+
 
 result = st.session_state.get("analysis_result")
 if result is None:
@@ -137,19 +231,22 @@ if result.status in {"success", "partial"}:
     condition = st.session_state.get("quote_condition") or QuoteCondition(
         material=masters.material_names[0], quantity=1
     )
-    quote_col1, quote_col2 = st.columns(2)
-    selected_material = quote_col1.selectbox(
-        "材料", masters.material_names,
-        index=masters.material_names.index(condition.material),
-    )
-    selected_quantity = quote_col2.number_input(
-        "数量", min_value=1, value=condition.quantity, step=1
-    )
-    if selected_material != condition.material or selected_quantity != condition.quantity:
-        condition = condition.model_copy(update={
-            "material": selected_material, "quantity": int(selected_quantity)
-        })
-        st.session_state.quote_condition = condition
+    if st.session_state.get("pdf_reading") is not None:
+        condition = pdf_condition_editor(st.session_state.pdf_reading, condition, result)
+    else:
+        quote_col1, quote_col2 = st.columns(2)
+        selected_material = quote_col1.selectbox(
+            "材料", masters.material_names,
+            index=masters.material_names.index(condition.material),
+        )
+        selected_quantity = quote_col2.number_input(
+            "数量", min_value=1, value=condition.quantity, step=1
+        )
+        if selected_material != condition.material or selected_quantity != condition.quantity:
+            condition = condition.model_copy(update={
+                "material": selected_material, "quantity": int(selected_quantity)
+            })
+            st.session_state.quote_condition = condition
 
     try:
         quote = QuoteEngine(masters).calculate(result, condition)

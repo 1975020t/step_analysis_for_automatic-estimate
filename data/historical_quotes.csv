@@ -1,4 +1,0 @@
-part_id,material,bbox_x_mm,bbox_y_mm,bbox_z_mm,volume_mm3,face_count,hole_count,quantity,final_price
-P001,AL5052,100,80,20,120000,18,4,10,12100
-P002,AL5052,105,75,20,125000,20,4,10,12500
-P003,SUS304,100,80,20,120000,18,4,10,16800

@@ -44,11 +44,14 @@ class Usage:
     input_tokens: int = 0
     output_tokens: int = 0
     seconds: float = 0.0
+    cached_input_tokens: int = 0    # tokens of responses reused from the cache (recorded when first called)
+    cached_output_tokens: int = 0
     models: set = field(default_factory=set)
 
     def as_dict(self) -> dict[str, Any]:
         return {"llm_calls": self.calls, "llm_cache_hits": self.cache_hits, "llm_input_tokens": self.input_tokens,
                 "llm_output_tokens": self.output_tokens, "llm_seconds": round(self.seconds, 2),
+                "llm_cached_input_tokens": self.cached_input_tokens, "llm_cached_output_tokens": self.cached_output_tokens,
                 "llm_model": ",".join(sorted(self.models))}
 
 
@@ -76,9 +79,12 @@ class ClaudeClient:
         self._client = None
 
     # ------------------------------------------------------------ public
-    def complete_json(self, system: str, user: str, schema: dict, tool_name: str = "report",
+    def complete_json(self, system: str, user: str | list, schema: dict, tool_name: str = "report",
                       max_tokens: int = 2048) -> dict:
-        """Ask Claude for a JSON object matching `schema` (forced tool call). Returns the object."""
+        """Ask Claude for a JSON object matching `schema` (forced tool call). Returns the object.
+
+        `user` is a string or a list of content blocks (text / image, see image_block()); images are part
+        of the cache key through their bytes."""
         request = {
             "model": self.model, "max_tokens": max_tokens, "system": system,
             "messages": [{"role": "user", "content": user}],
@@ -102,14 +108,18 @@ class ClaudeClient:
         self.usage.models.add(request["model"])
         if self.mode in {"record", "replay"} and path.exists():
             self.usage.cache_hits += 1
-            return json.loads(path.read_text(encoding="utf-8"))["response"]
+            response = json.loads(path.read_text(encoding="utf-8"))["response"]
+            recorded = response.get("usage") or {}
+            self.usage.cached_input_tokens += int(recorded.get("input_tokens") or 0)
+            self.usage.cached_output_tokens += int(recorded.get("output_tokens") or 0)
+            return response
         if self.mode == "replay":
             raise ClaudeCacheMiss(f"記録済みの応答がありません（replayモード）: {path.name}")
         response = self._live(request)
         if self.mode == "record":
             self.cache_dir.mkdir(parents=True, exist_ok=True)
-            path.write_text(json.dumps({"request": request, "response": response}, ensure_ascii=False, indent=1),
-                            encoding="utf-8")
+            path.write_text(json.dumps({"request": _without_image_data(request), "response": response},
+                                       ensure_ascii=False, indent=1), encoding="utf-8")
         return response
 
     def _live(self, request: dict) -> dict:
@@ -125,3 +135,27 @@ class ClaudeClient:
         self.usage.input_tokens += message.usage.input_tokens
         self.usage.output_tokens += message.usage.output_tokens
         return message.model_dump(mode="json")
+
+
+def image_block(png_or_jpeg: bytes, media_type: str = "image/png") -> dict:
+    """A base64 image content block for complete_json()."""
+    import base64
+
+    return {"type": "image", "source": {"type": "base64", "media_type": media_type,
+                                        "data": base64.standard_b64encode(png_or_jpeg).decode("ascii")}}
+
+
+def _without_image_data(request: dict) -> dict:
+    """Copy of a request for the cache file: image bytes replaced by their hash (the key already covers them)."""
+    def strip(block):
+        if isinstance(block, dict) and block.get("type") == "image":
+            data = block["source"].get("data", "")
+            return {"type": "image", "source": {**block["source"],
+                                                "data": "sha256:" + hashlib.sha256(data.encode()).hexdigest()}}
+        return block
+
+    messages = []
+    for message in request.get("messages", []):
+        content = message["content"]
+        messages.append({**message, "content": [strip(b) for b in content] if isinstance(content, list) else content})
+    return {**request, "messages": messages}

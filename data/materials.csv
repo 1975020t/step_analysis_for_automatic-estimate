@@ -1,4 +1,7 @@
-material,density_kg_m3,price_per_kg,waste_factor,charge_scope
-AL5052,2680,900,1.15,per_part
-SUS304,7930,700,1.20,per_part
-SS400,7850,180,1.15,per_part
+material,display_name,density_kg_m3,price_per_kg,waste_factor,charge_scope,aliases
+AL5052,アルミ A5052P,2680,900,1.15,per_part,A5052P|A5052P-H32|A5052-H32|A5052|AL5052P|アルミ5052|ALUMINUM 5052
+SUS304,ステンレス SUS304,7930,700,1.20,per_part,SUS304-2B|SUS304 2B|ステンレス304|STAINLESS STEEL 304|AISI 304
+SS400,一般構造用圧延鋼材 SS400,7850,180,1.15,per_part,一般構造用圧延鋼材
+SPCC,冷間圧延鋼板 SPCC,7870,160,1.15,per_part,SPCC-SD|SPCC-SB|冷間圧延鋼板|冷延鋼板|COLD ROLLED STEEL|CRS
+SPHC,熱間圧延鋼板 SPHC,7870,140,1.15,per_part,SPHC-P|熱間圧延鋼板|酸洗鋼板|HOT ROLLED STEEL|HRPO
+SECC,電気亜鉛めっき鋼板 SECC,7870,190,1.15,per_part,ボンデ鋼板|電気亜鉛めっき鋼板|ELECTROGALVANIZED STEEL

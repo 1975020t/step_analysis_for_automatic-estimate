@@ -74,6 +74,34 @@ Kファクター未指定（既定0.33）で曲げがある場合は、従来ど
 
 D0〜D2 は全件が「確定で正解」でした。面積・切断長の最大誤差は0.005%です。X は全件が解析不可で、理由コードは実際の問題（開いた外形／2部品）と全件一致しました。画面では `.dxf` をアップロードし、板厚を入力すると、展開図と見積が表示されます（[画面例](analysis/dxf_ui.png)）。
 
+### 図面PDFの加工条件（`src/pdf_reader.py`）
+
+図面PDFから、見積に効く加工条件（材質・板厚・数量・表面処理・追加加工・特急）、補助として図番・改訂、特記事項（厳しい公差・外観・検査の要求）を読み取ります。画面で図面PDFをSTEP／DXFと一緒にアップロードすると、読み取った値が見積条件の入力欄に入ります。
+
+**Claude（画像を読める LLM）は「図面に書いてある文字の書き写し」だけに使い、コード・数値・確定かどうかはルールで決めます。**
+
+1. **ページの準備**（pypdfium2）：ページ全体を長辺1568pxで画像化し、スキャン・FAX・手書きの図面とA3は左右半分を2倍で追加する。CAD出力の図面は文字データ（テキスト層）を位置つきで取り出して一緒に渡す
+2. **書き写し**：決まった形式（ツール呼び出しのJSONスキーマ）で、各項目の原文（`text`）と書かれている場所、改訂履歴、部品表の行、手書き・押印の注記を返させる。空欄は null、マスターにない表記は「未登録」とし、似たコードに寄せない
+3. **ルールで判定**（`src/pdf_terms.py`）：マスターの別名（`aliases`）と表記ゆれの規則で、材質・表面処理・追加加工のコードを決める（例：`2XM4タップ`→`TAP_M4`×2、ただの穴は加工に数えない）。板厚・数量は原文から数値を取り出す。改訂がある場合は最新の改訂の値を使い、部品表の数量は見出し（台分・合計など）で1個あたりに換算する。手書きの「至急」は印字の「通常」より優先する
+4. **確定か要確認か**
+   - CAD図面：原文がテキスト層に実在しない値は要確認。テキスト層にある加工指示・数量表記が結果にないときは、その行をヒントにもう一度読み、それでも欠ければ要確認
+   - スキャン・FAX・手書き：拡大した区画の画像で独立にもう一度読み（2回の呼び出しは並列）、2回の結果が一致した項目だけ確定
+   - ルールとLLMの判断が食い違う、改訂の最新値と本文が異なる、原文を解釈できない場合も要確認
+5. **見積への反映**（`src/pdf_quote.py`、`src/quote_engine.py`）：項目ごとに「確定／要確認／未登録／記載なし」を付け、確定した項目だけを金額に入れる。表面処理は `surface_treatments.csv`、追加加工は `process_rates.csv`、特急割増と粗利率は `pricing_policy.csv` で計算する。1つでも確定でない項目があれば見積は「概算」になり、理由を表示する。画面で値を直し「この値で確定」にチェックすると確定になる
+
+金額はLLMに計算させません。応答はキャッシュ（`.claude_cache/`）に保存して再利用し、テストはAPIを呼びません。
+
+![図面PDFの読み取り結果と見積](analysis/pdf_ui.png)
+
+評価結果（`--gate`）：
+
+| データ | 価格項目がすべて正しい | 自動確定 | 危険誤答を含む図面 | 特記事項 | 判定 |
+|---|---:|---:|---:|---:|---|
+| 開発 pdf_v1（300枚）[レポート](analysis/pdf_eval_latest.md) | 99.3% | 92.7% | 0.0% | 98.3% | 合格 |
+| ホールドアウト pdf_holdout_v1（200枚）[レポート](analysis/pdf_eval_holdout.md) | 73.0% | 67.0% | 0.0% | 73.0% | **未完了**（下記） |
+
+ホールドアウトは、実行中にClaude APIのクレジット残高が尽き、200枚中52枚が読み取れていません（上の値はこの52枚を不正解として数えたもの）。読み取れた148枚では価格項目の正解率95.3〜100%、自動確定90.5%、危険誤答0件、開発用にない様式（28枚）でも92.9〜100%でした。ただしFAX図面の表面処理が76.7%（値はすべて正しく、要確認になったもの）で、種類別の条件（90%以上）を下回っています。クレジット追加後に同じコマンドを再実行すると、残り52枚だけAPIを呼んで判定を完了できます。方式ごとの精度・危険誤答・時間・トークンの比較は [analysis/pdf_llm_comparison.md](analysis/pdf_llm_comparison.md)。1枚あたりの時間は約6〜7秒、トークンは入力約19,000／出力約900です。
+
 ## 対象形状
 
 - 曲げのない一定板厚の平板
@@ -95,7 +123,7 @@ D0〜D2 は全件が「確定で正解」でした。面積・切断長の最大
 
 ## 見積
 
-金額はLLMではなく、`data/materials.csv` と `data/process_rates.csv` の単価だけで計算します。
+金額はLLMではなく、マスター（`data/materials.csv`、`data/process_rates.csv`、`data/surface_treatments.csv`、`data/pricing_policy.csv`）の単価と率だけで計算します。粗利率は `pricing_policy.csv` の `margin_rate` です。各マスター行の `aliases` は図面の表記ゆれ（例：SPCC-SD、ボンデ鋼板、ユニクロ、PEMナット）で、`MasterLoader.resolve_alias` で照合します。マスターにない材質・処理・加工は似たものに寄せず「未登録」として扱います。
 
 - 材料：展開面積 × 板厚 × 密度 × 材料単価 × 歩留まり係数
 - 切断：切断長 × レーザー切断単価
@@ -117,7 +145,7 @@ D0〜D2 は全件が「確定で正解」でした。面積・切断長の最大
 
 OpenAIへ送信するのは、チャット文章、現在の材料・数量・追加工程条件、利用可能な材料コード・工程コードだけです。STEP、3D/2D画像、形状座標、寸法、面積、単価、見積金額は送信しません。3Dメッシュと2D輪郭はローカルで生成します。
 
-ただし、解析ロジックへのLLM活用を検証する Claude API（後述）では、形状由来の解析情報（面・寸法・座標の要約など）を送信することがあります（2026-09-27 承認済み）。チャット機能の送信範囲は上記のまま変わりません。
+ただし、解析ロジックへのLLM活用を検証する Claude API（後述）では、形状由来の解析情報（面・寸法・座標の要約など）を送信することがあります（2026-09-27 承認済み）。チャット機能の送信範囲は上記のまま変わりません。図面PDFをアップロードした場合は、加工条件の読み取りのため、図面の画像と文字データを Claude API へ送信します。
 
 `.env`、`.env.local`、`secrets.toml`、秘密鍵形式はGit除外されています。プッシュ前に次を実行します。
 
@@ -171,6 +199,18 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 ```
 
 設計と生成器の検証は [analysis/dxf_golden_design.md](analysis/dxf_golden_design.md)、解析ロジック開発の受入条件は [analysis/handoff_dxf.md](analysis/handoff_dxf.md)、素朴なベースラインの結果は [analysis/dxf_eval_baseline.md](analysis/dxf_eval_baseline.md)、解析器の方式と結果は上の「解析方式」を参照してください。
+
+## 図面PDFのゴールデンデータ
+
+開発用の図面PDF 300枚と、同じ部品のSTEP 300個は `pdf_data/` にあります（正解は `pdf_data/index.json`）。図面PDFから見積に効く加工条件（材質・板厚・数量・表面処理・追加加工・特急、補助として図番・改訂、特記事項として公差・外観・検査）を読み取るロジックを評価するデータセットです。CAD出力（文字データあり）50%、スキャン20%、FAX20%、手書き・押印入り10%で、書く項目・書く場所・表記ゆれ・改訂・手書きの訂正を変えています。正解は改訂後の最新値、書かれていない項目は「記載なし」、マスターにないものは「未登録」です。
+
+```powershell
+.venv\Scripts\python.exe scripts\generate_pdf_golden.py --per-level 60 --seed 31 --out pdf_data
+.venv\Scripts\python.exe scripts\evaluate_pdf.py --data pdf_data --reader golden.pdf_naive_baseline:NaiveTextReader --verify-frozen --report analysis\pdf_eval_baseline.md
+.venv\Scripts\python.exe scripts\evaluate_pdf.py --data pdf_data --reader src.pdf_reader:PdfConditionReader --verify-frozen --gate --report analysis\pdf_eval_latest.md
+```
+
+設計は [analysis/pdf_golden_design.md](analysis/pdf_golden_design.md)（[例](analysis/pdf_samples.png)）、読み取りロジック開発の受入条件は [analysis/handoff_pdf.md](analysis/handoff_pdf.md)、素朴なベースラインの結果は [analysis/pdf_eval_baseline.md](analysis/pdf_eval_baseline.md)、読み取りロジックの方式と結果は上の「図面PDFの加工条件」を参照してください。
 
 ## 現時点の評価制約
 
