@@ -138,6 +138,9 @@ def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> Quote
                     column_config={"加工": st.column_config.SelectboxColumn(options=masters.llm_process_codes)})
                 value = [{"code": r["加工"], "count_per_part": int(r["個数/個"])} for r in table.to_dict("records")
                          if r.get("加工") and r.get("個数/個")]
+                # the table offers master processes only: keep the unregistered ones read from the drawing, so the
+                # quotation still lists them (別途見積) instead of dropping them silently
+                value += [p for p in item.value or [] if p.get("code") == "UNREGISTERED"]
         cols[2].markdown(BADGE[item.status])
         cols[3].caption(item.display if not item.reasons else f"{item.display} ／ " + "、".join(item.reasons))
         changed = _edited(item, value)
@@ -169,7 +172,7 @@ def drawing_context() -> DrawingContext | None:
 def _edited(item: ConditionItem, value) -> bool:
     if item.field == "processes":
         read = sorted((p["code"], p.get("count_per_part")) for p in item.value or [] if p.get("code") != "UNREGISTERED")
-        return read != sorted((p["code"], p["count_per_part"]) for p in value)
+        return read != sorted((p["code"], p["count_per_part"]) for p in value if p.get("code") != "UNREGISTERED")
     if item.value is None or item.value == "UNREGISTERED":
         return False  # a value the user has not looked at is not confirmed by default
     if item.field == "thickness_mm":

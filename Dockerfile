@@ -16,6 +16,8 @@ RUN pip install -r requirements.txt
 COPY src ./src
 COPY api ./api
 COPY app.py ./
+COPY .streamlit ./.streamlit
+COPY static ./static
 COPY data ./data
 COPY fonts ./fonts
 
