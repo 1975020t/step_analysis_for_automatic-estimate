@@ -1,0 +1,45 @@
+{
+  "name": "Lv4_0017",
+  "level": "Lv4",
+  "note": "ヘム（180°曲げ）",
+  "thickness_mm": 1.0,
+  "k_factor": 0.5,
+  "blank_area_mm2": 3880.0131,
+  "cut_length_mm": 349.1682,
+  "hole_count": 1,
+  "bend_count": 2,
+  "flat_bbox_mm": [
+    129.64,
+    30.445
+  ],
+  "bends": [
+    {
+      "angle_deg": 180.0,
+      "inner_radius_mm": 1.0,
+      "direction": "up",
+      "length_mm": 30.4451,
+      "bend_allowance_mm": 4.7124
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.0,
+      "direction": "up",
+      "length_mm": 30.4451,
+      "bend_allowance_mm": 3.927
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 15,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -2e-06
+  },
+  "seed": [
+    1,
+    17,
+    0
+  ]
+}

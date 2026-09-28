@@ -1,0 +1,60 @@
+{
+  "name": "C3_closed_0011",
+  "level": "C3_closed",
+  "note": "閉じた筒（返し突き合わせ）",
+  "thickness_mm": 2.3,
+  "k_factor": 0.5,
+  "blank_area_mm2": 33568.4374,
+  "cut_length_mm": 912.8616,
+  "hole_count": 2,
+  "bend_count": 4,
+  "flat_bbox_mm": [
+    280.614,
+    121.108
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.3,
+      "direction": "up",
+      "length_mm": 121.1076,
+      "bend_allowance_mm": 5.4192
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.3,
+      "direction": "up",
+      "length_mm": 121.1076,
+      "bend_allowance_mm": 5.4192
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.3,
+      "direction": "up",
+      "length_mm": 121.1076,
+      "bend_allowance_mm": 5.4192
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.3,
+      "direction": "up",
+      "length_mm": 121.1076,
+      "bend_allowance_mm": 5.4192
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 23,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -0.0
+  },
+  "truth_version": "v2",
+  "seed": [
+    21,
+    11,
+    0
+  ]
+}

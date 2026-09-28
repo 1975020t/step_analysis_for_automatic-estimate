@@ -1,0 +1,72 @@
+{
+  "name": "A_Lv1_0010",
+  "level": "A_Lv1",
+  "note": "平行曲げ Z（任意姿勢）",
+  "thickness_mm": 4.5,
+  "k_factor": 0.5,
+  "blank_area_mm2": 23180.1133,
+  "cut_length_mm": 853.7515,
+  "hole_count": 5,
+  "bend_count": 2,
+  "flat_bbox_mm": [
+    130.333,
+    184.291
+  ],
+  "bends": [
+    {
+      "angle_deg": 30.0,
+      "inner_radius_mm": 4.5,
+      "direction": "up",
+      "length_mm": 184.2909,
+      "bend_allowance_mm": 3.5343
+    },
+    {
+      "angle_deg": 30.0,
+      "inner_radius_mm": 4.5,
+      "direction": "down",
+      "length_mm": 184.2909,
+      "bend_allowance_mm": 3.5343
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 22,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": -0.0,
+    "area_solid_vs_layout": -3e-06
+  },
+  "seed": [
+    21,
+    10,
+    0
+  ],
+  "truth_version": "v2",
+  "pose": [
+    [
+      0.868855509,
+      0.384287481,
+      -0.312110935,
+      66.788580533
+    ],
+    [
+      -0.444436659,
+      0.327727349,
+      -0.833709087,
+      -277.791914169
+    ],
+    [
+      -0.218096676,
+      0.863086274,
+      0.455539157,
+      -116.66862809
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "name": "A_Lv1_0033",
+  "level": "A_Lv1",
+  "note": "平行曲げ L（任意姿勢）",
+  "thickness_mm": 1.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 21933.9009,
+  "cut_length_mm": 624.8838,
+  "hole_count": 1,
+  "bend_count": 1,
+  "flat_bbox_mm": [
+    121.879,
+    180.243
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 2.4,
+      "direction": "up",
+      "length_mm": 180.2429,
+      "bend_allowance_mm": 4.7124
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 11,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -0.0
+  },
+  "seed": [
+    21,
+    33,
+    0
+  ],
+  "truth_version": "v2",
+  "pose": [
+    [
+      -0.570358553,
+      -0.117299638,
+      -0.812977192,
+      241.715002299
+    ],
+    [
+      -0.355530389,
+      -0.856978263,
+      0.373076934,
+      144.537542147
+    ],
+    [
+      -0.740465572,
+      0.501825718,
+      0.447081297,
+      -286.442940912
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ]
+}

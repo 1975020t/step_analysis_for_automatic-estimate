@@ -1,0 +1,79 @@
+{
+  "name": "A_Lv2_0032",
+  "level": "A_Lv2",
+  "note": "底面＋1段フランジ（任意姿勢）",
+  "thickness_mm": 3.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 22062.8064,
+  "cut_length_mm": 1056.4636,
+  "hole_count": 7,
+  "bend_count": 3,
+  "flat_bbox_mm": [
+    228.007,
+    142.782
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 6.4,
+      "direction": "up",
+      "length_mm": 105.8318,
+      "bend_allowance_mm": 12.5664
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 3.2,
+      "direction": "up",
+      "length_mm": 62.683,
+      "bend_allowance_mm": 7.5398
+    },
+    {
+      "angle_deg": 120.0,
+      "inner_radius_mm": 3.2,
+      "direction": "up",
+      "length_mm": 62.683,
+      "bend_allowance_mm": 10.0531
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 46,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -3e-06
+  },
+  "seed": [
+    21,
+    32,
+    0
+  ],
+  "truth_version": "v2",
+  "pose": [
+    [
+      -0.435275556,
+      0.006233176,
+      0.900275701,
+      101.093849985
+    ],
+    [
+      -0.660979175,
+      0.676727373,
+      -0.324263155,
+      236.124397241
+    ],
+    [
+      -0.611262399,
+      -0.736207315,
+      -0.290442884,
+      -399.126147606
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ]
+}

@@ -20,21 +20,21 @@ __pycache__/
 samples/nist-pmi-step-files.zip
 samples/nist-source/
 
-# generated golden data (regenerate with scripts/generate_golden.py)
-golden_data/
-golden_holdout/
 # Claude API response cache (may contain part geometry summaries)
 .claude_cache/
 golden_seed*/
-stress_data/
-dxf_data/
-dxf_holdout/
-# development drawing PDFs + STEPs are committed (pdf_data/pdf, pdf_data/step); evaluation output is not
-pdf_data/results.csv
-pdf_holdout/
-pdf_shift_dev/
 pdf_holdout_s33/
 
 # quotation documents and their log (output/quote_log.csv), and the real company details
 output/
 data/company.local.csv
+
+# Development data sets are committed (golden_data, stress_data, dxf_data, pdf_data, pdf_shift_dev);
+# regenerating them gives byte-identical files. Evaluation output is not.
+/*/results.csv
+# Holdout data are never committed (regenerate them for a final judgement only)
+golden_holdout/
+dxf_holdout/
+pdf_holdout/
+golden_seed*/
+dxf_seed*/

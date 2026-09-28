@@ -1,0 +1,102 @@
+{
+  "name": "C7_many_0024",
+  "level": "C7_many",
+  "note": "多フランジ3段",
+  "thickness_mm": 0.8,
+  "k_factor": 0.5,
+  "blank_area_mm2": 33757.6607,
+  "cut_length_mm": 1286.7394,
+  "hole_count": 8,
+  "bend_count": 10,
+  "flat_bbox_mm": [
+    179.082,
+    300.507
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.4,
+      "direction": "up",
+      "length_mm": 93.6876,
+      "bend_allowance_mm": 1.2566
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.8,
+      "direction": "up",
+      "length_mm": 128.2425,
+      "bend_allowance_mm": 1.885
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "up",
+      "length_mm": 92.0876,
+      "bend_allowance_mm": 2.5133
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.4,
+      "direction": "up",
+      "length_mm": 129.0425,
+      "bend_allowance_mm": 1.2566
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "up",
+      "length_mm": 74.95,
+      "bend_allowance_mm": 2.5133
+    },
+    {
+      "angle_deg": 30.0,
+      "inner_radius_mm": 0.8,
+      "direction": "down",
+      "length_mm": 102.594,
+      "bend_allowance_mm": 0.6283
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.6,
+      "direction": "up",
+      "length_mm": 73.67,
+      "bend_allowance_mm": 3.1416
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.8,
+      "direction": "up",
+      "length_mm": 59.96,
+      "bend_allowance_mm": 1.885
+    },
+    {
+      "angle_deg": 135.0,
+      "inner_radius_mm": 0.8,
+      "direction": "up",
+      "length_mm": 82.0752,
+      "bend_allowance_mm": 2.8274
+    },
+    {
+      "angle_deg": 135.0,
+      "inner_radius_mm": 0.8,
+      "direction": "down",
+      "length_mm": 58.936,
+      "bend_allowance_mm": 2.8274
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 106,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -1e-06
+  },
+  "truth_version": "v2",
+  "seed": [
+    21,
+    24,
+    0
+  ]
+}

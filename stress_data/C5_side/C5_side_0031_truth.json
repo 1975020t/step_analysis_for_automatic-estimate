@@ -1,0 +1,46 @@
+{
+  "name": "C5_side_0031",
+  "level": "C5_side",
+  "note": "フランジ側辺のフランジ",
+  "thickness_mm": 1.6,
+  "k_factor": 0.5,
+  "blank_area_mm2": 26626.5971,
+  "cut_length_mm": 960.3545,
+  "hole_count": 6,
+  "bend_count": 2,
+  "flat_bbox_mm": [
+    195.151,
+    154.837
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 0.8,
+      "direction": "up",
+      "length_mm": 157.9017,
+      "bend_allowance_mm": 2.5133
+    },
+    {
+      "angle_deg": 75.0,
+      "inner_radius_mm": 0.8,
+      "direction": "down",
+      "length_mm": 54.8301,
+      "bend_allowance_mm": 2.0944
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 26,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": -0.0,
+    "area_solid_vs_layout": -3e-06
+  },
+  "truth_version": "v2",
+  "seed": [
+    21,
+    31,
+    0
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "Lv1_0016",
+  "level": "Lv1",
+  "note": "平行曲げ chain",
+  "thickness_mm": 1.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 35525.505,
+  "cut_length_mm": 1089.8757,
+  "hole_count": 8,
+  "bend_count": 2,
+  "flat_bbox_mm": [
+    183.809,
+    199.188
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "up",
+      "length_mm": 199.1882,
+      "bend_allowance_mm": 2.8274
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.2,
+      "direction": "up",
+      "length_mm": 199.1882,
+      "bend_allowance_mm": 2.8274
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 34,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -1e-06
+  },
+  "seed": [
+    1,
+    16,
+    0
+  ]
+}

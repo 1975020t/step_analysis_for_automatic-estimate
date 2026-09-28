@@ -1,0 +1,109 @@
+{
+  "name": "C7_many_0036",
+  "level": "C7_many",
+  "note": "多フランジ3段",
+  "thickness_mm": 3.2,
+  "k_factor": 0.5,
+  "blank_area_mm2": 80214.8806,
+  "cut_length_mm": 1787.5375,
+  "hole_count": 4,
+  "bend_count": 11,
+  "flat_bbox_mm": [
+    432.074,
+    298.777
+  ],
+  "bends": [
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 4.8,
+      "direction": "up",
+      "length_mm": 223.1457,
+      "bend_allowance_mm": 10.0531
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 1.6,
+      "direction": "up",
+      "length_mm": 120.4763,
+      "bend_allowance_mm": 5.0265
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 6.4,
+      "direction": "up",
+      "length_mm": 219.9457,
+      "bend_allowance_mm": 12.5664
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 6.4,
+      "direction": "up",
+      "length_mm": 110.8763,
+      "bend_allowance_mm": 12.5664
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 4.8,
+      "direction": "up",
+      "length_mm": 178.5165,
+      "bend_allowance_mm": 10.0531
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 3.2,
+      "direction": "down",
+      "length_mm": 96.381,
+      "bend_allowance_mm": 7.5398
+    },
+    {
+      "angle_deg": 45.0,
+      "inner_radius_mm": 3.2,
+      "direction": "down",
+      "length_mm": 175.9565,
+      "bend_allowance_mm": 3.7699
+    },
+    {
+      "angle_deg": 45.0,
+      "inner_radius_mm": 3.2,
+      "direction": "down",
+      "length_mm": 88.701,
+      "bend_allowance_mm": 3.7699
+    },
+    {
+      "angle_deg": 90.0,
+      "inner_radius_mm": 6.4,
+      "direction": "up",
+      "length_mm": 142.8132,
+      "bend_allowance_mm": 12.5664
+    },
+    {
+      "angle_deg": 45.0,
+      "inner_radius_mm": 3.2,
+      "direction": "down",
+      "length_mm": 77.1048,
+      "bend_allowance_mm": 3.7699
+    },
+    {
+      "angle_deg": 135.0,
+      "inner_radius_mm": 4.8,
+      "direction": "down",
+      "length_mm": 70.9608,
+      "bend_allowance_mm": 15.0796
+    }
+  ],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 104,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": 0.0,
+    "area_solid_vs_layout": -1e-06
+  },
+  "truth_version": "v2",
+  "seed": [
+    21,
+    36,
+    0
+  ]
+}

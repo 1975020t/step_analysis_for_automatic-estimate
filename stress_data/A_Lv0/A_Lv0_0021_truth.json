@@ -1,0 +1,57 @@
+{
+  "name": "A_Lv0_0021",
+  "level": "A_Lv0",
+  "note": "平板（任意姿勢）",
+  "thickness_mm": 2.0,
+  "k_factor": 0.5,
+  "blank_area_mm2": 17406.5027,
+  "cut_length_mm": 796.6919,
+  "hole_count": 4,
+  "bend_count": 0,
+  "flat_bbox_mm": [
+    243.548,
+    73.902
+  ],
+  "bends": [],
+  "_checks": {
+    "folded_valid": true,
+    "folded_solids": 1,
+    "folded_faces": 10,
+    "flat_valid": true,
+    "flat_is_single_polygon": true,
+    "volume_folded_vs_flat": -0.0,
+    "area_solid_vs_layout": -3e-06
+  },
+  "seed": [
+    21,
+    21,
+    0
+  ],
+  "truth_version": "v2",
+  "pose": [
+    [
+      0.736292488,
+      0.486487444,
+      0.47032259,
+      352.86972478
+    ],
+    [
+      0.676293211,
+      -0.506079689,
+      -0.535267075,
+      -337.507804767
+    ],
+    [
+      -0.022380001,
+      0.712189101,
+      -0.701630829,
+      457.968901562
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ]
+}

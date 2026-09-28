@@ -1,0 +1,52 @@
+{
+  "Lv0": {
+    "n": 101,
+    "correct": 1.0,
+    "correct_flagged": 0.0,
+    "wrong_flagged": 0.0,
+    "dangerous": 0.0,
+    "rejected": 0.0,
+    "success": 1.0,
+    "mean_seconds": 0.12465346534653465
+  },
+  "Lv1": {
+    "n": 104,
+    "correct": 1.0,
+    "correct_flagged": 0.0,
+    "wrong_flagged": 0.0,
+    "dangerous": 0.0,
+    "rejected": 0.0,
+    "success": 1.0,
+    "mean_seconds": 0.1491346153846154
+  },
+  "Lv2": {
+    "n": 102,
+    "correct": 1.0,
+    "correct_flagged": 0.0,
+    "wrong_flagged": 0.0,
+    "dangerous": 0.0,
+    "rejected": 0.0,
+    "success": 1.0,
+    "mean_seconds": 0.3333333333333333
+  },
+  "Lv3": {
+    "n": 101,
+    "correct": 1.0,
+    "correct_flagged": 0.0,
+    "wrong_flagged": 0.0,
+    "dangerous": 0.0,
+    "rejected": 0.0,
+    "success": 1.0,
+    "mean_seconds": 0.5123762376237624
+  },
+  "Lv4": {
+    "n": 100,
+    "correct": 1.0,
+    "correct_flagged": 0.0,
+    "wrong_flagged": 0.0,
+    "dangerous": 0.0,
+    "rejected": 0.0,
+    "success": 1.0,
+    "mean_seconds": 0.0887
+  }
+}

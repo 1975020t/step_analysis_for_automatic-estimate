@@ -13,6 +13,12 @@ STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_l
 - Claude APIキーは環境変数 `ANALYSIS_ANTHROPIC_API_KEY`（クラウド環境に設定済み。`ANTHROPIC_API_KEY` や `.env` でも可）
 - 秘密情報は `.env`（Git管理外、雛形は `.env.example`）。プッシュ前に `python scripts/check_secrets.py --history`
 
+## データ
+
+- 開発用のデータはリポジトリにファイルとして置いてある（生成し直す必要はない）：`golden_data`（STEP）、`stress_data`、`dxf_data`、`pdf_data`、`pdf_shift_dev`。生成コマンドで作り直しても同じファイルになる（`golden/file_normalize.py`）。評価の出力 `*/results.csv` はGit管理外
+- **ホールドアウトのデータは置かない**（`golden_holdout`、`dxf_holdout`、`pdf_holdout`、STEP の seed=3・4、DXF の seed=23、図面PDFの seed=33、判定用の語彙ずらし）。最終判定のときだけ生成する
+- 過去見積の種データは `data/past_quotes/`
+
 ## よく使うコマンド
 
 ```
