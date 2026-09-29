@@ -208,9 +208,6 @@ def render_quote(document: QuoteDocument) -> bytes:
     c.drawString(LEFT, top(remarks_top), "備考")
     box_top = remarks_top + 3.5
     entries: list[tuple[str, object, float]] = []  # (text, colour, indent)
-    if document.pending:
-        entries.append(("・本見積は概算です。次の条件が未確定のため、確定後に金額が変わる場合があります。", RED, 0))
-        entries += [(note, RED, 6 * mm) for note in document.pending]
     entries += [(f"・{remark}", colors.black, 0) for remark in document.remarks]
     available = 284 - 8 - box_top  # keep the page number free
     size = 7.2
@@ -285,8 +282,8 @@ def render_internal(document: QuoteDocument) -> bytes:
 
     summary = document.lines[0] if document.lines else None
     story = [Paragraph("【社外秘】", secret), Paragraph(_escape(title), h1),
-             Paragraph(_escape(f"発行日 {_date(document.issued_at)}　宛先 {document.recipient.company}　件名 {document.subject}"
-                               f"　見積の状態 {'概算' if document.is_estimate else '確定'}"), body),
+             Paragraph(_escape(f"発行日 {_date(document.issued_at)}　宛先 {document.recipient.company}　件名 {document.subject}"),
+                       body),
              Paragraph("原価の内訳", h2)]
     rows = [["コード", "項目", "数量", "単位", "単価", "金額（円）"]]
     rows += [[line.code, line.name, _num(line.quantity), line.unit,
@@ -320,8 +317,6 @@ def render_internal(document: QuoteDocument) -> bytes:
         rows = [["項目", "読み取り値", "状態", "理由"]]
         rows += [[i.label, i.display, i.status, "、".join(i.reasons)] for i in basis.items]
         story += [Paragraph("図面から読み取った条件", h2), table(rows, [22, 70, 20, 68])]
-    if document.pending:
-        story += [Paragraph("未確定の条件（見積書の備考に記載）", h2)] + [Paragraph(_escape("・" + n), body) for n in document.pending]
     pdf.build(story)
     return buffer.getvalue()
 

@@ -77,8 +77,8 @@ class QuoteResponse(BaseModel):
     condition: QuoteCondition = Field(description="金額の計算に使った条件（確定した項目だけ）")
     quote: QuoteResult = Field(description="原価の内訳と最終価格（社内用）")
     price: PriceSummaryOut = Field(description="画面・見積書と同じ金額")
-    is_estimate: bool
-    estimate_reasons: list[str] = Field(default_factory=list, description="概算の理由（未確定の項目とその扱い）")
+    is_estimate: bool = Field(description="解析値か条件に確認が必要な点があるか（見積書はつねに確定として出る）")
+    estimate_reasons: list[str] = Field(default_factory=list, description="確認が必要な点とその扱い")
 
 
 class RecipientInput(BaseModel):
@@ -112,9 +112,7 @@ class DocumentResponse(BaseModel):
     quote_no: str
     title: str
     issued_at: str
-    is_estimate: bool
     total: int
-    estimate_reasons: list[str]
     files: list[DocumentFileOut]
 
 

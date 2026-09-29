@@ -345,10 +345,9 @@ def from_document(document, masters: MasterLoader) -> PastQuote:
     basis = document.internal
     analysis, condition = basis.analysis, basis.condition
     line = document.lines[0]
-    finish_pending = any(i.field == "surface_treatment" and i.status != "確定" for i in basis.items)
-    finish_code = "" if finish_pending else (condition.surface_treatment or "NONE")
-    finish_text = "" if finish_pending else (masters.surface_treatments[condition.surface_treatment]["display_name"]
-                                             if condition.surface_treatment else "なし")
+    finish_code = condition.surface_treatment or "NONE"
+    finish_text = (masters.surface_treatments[condition.surface_treatment]["display_name"]
+                   if condition.surface_treatment else "なし")
     processes = [{"code": p.process_code, "count": p.quantity, "text": f"{masters.process_rates[p.process_code]['display_name']}×{p.quantity:g}"}
                  for p in condition.additional_processes if p.confirmed and p.process_code in masters.process_rates]
     return PastQuote(
@@ -358,7 +357,7 @@ def from_document(document, masters: MasterLoader) -> PastQuote:
         thickness=analysis.thickness_mm, quantity=line.quantity, finish_text=finish_text, finish_code=finish_code,
         processes_text="、".join(p["text"] for p in processes), processes=processes, rush=condition.rush,
         unit_price=line.unit_price, amount=line.amount, outcome="未回答", staff=document.company.contact,
-        remarks=("概算：" + "／".join(document.pending)) if document.is_estimate else "",
+        remarks="",
         area=analysis.blank_area_mm2, cut=analysis.cut_length_mm, holes=analysis.hole_count, bends=analysis.bend_count,
         flat_size="", shape_class="", source="app",
         original={"件名": document.subject, "宛先": document.recipient.company, "宛先担当": document.recipient.person,

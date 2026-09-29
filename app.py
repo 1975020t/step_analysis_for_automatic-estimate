@@ -18,11 +18,16 @@ from src.services.estimate import EstimateService, ServiceError
 from src.services.schemas import ConditionInput, DrawingContext, DrawingItem
 from src.services.settings import Settings
 
+# Three pages in one script: the estimate (upload, analysis, conditions, amount), the detail of one similar quote,
+# and the quotation (recipient, part, terms, PDF, outcome). The estimate page only estimates.
+ESTIMATE, SIMILAR, DOCUMENT = "estimate", "similar", "document"
+# widget values that must survive a visit to another page (Streamlit forgets the state of widgets it does not draw)
+ESTIMATE_KEYS = ("pdf_material", "pdf_thickness_mm", "pdf_quantity", "pdf_surface_treatment", "pdf_rush")
+DOCUMENT_KEYS = ("doc_customer", "doc_person", "doc_part", "doc_dwg", "doc_rev", "doc_subject", "doc_place",
+                 "doc_remarks", "doc_internal")
 
 load_dotenv()
 st.set_page_config(page_title="STEP・DXF板金解析・見積デモ", page_icon="◫", layout="wide")
-st.title("STEP・DXF板金解析・見積デモ")
-st.caption("STEP形状または展開図DXFをローカル解析し、図面PDFの加工条件と合わせて、マスター単価でルールベース見積を作成します。")
 
 service = EstimateService(Settings.from_env())  # the same processing layer as the API (api/main.py)
 masters = service.masters
@@ -32,6 +37,366 @@ try:
 except Exception as exc:
     llm = None
     llm_error = str(exc)
+
+page = st.session_state.get("page", ESTIMATE)
+for key in (DOCUMENT_KEYS if page == ESTIMATE else ESTIMATE_KEYS if page == DOCUMENT else ESTIMATE_KEYS + DOCUMENT_KEYS):
+    if key in st.session_state:
+        st.session_state[key] = st.session_state[key]
+
+BADGE = {CONFIRMED: "✅ 読み取り済み", REVIEW: "⚠️ 要確認", UNREG: "❌ 未登録", MISSING: "➖ 記載なし"}
+
+
+# ================================================================== navigation
+def keep_processes(registered: list[dict] | None = None) -> None:
+    """Draw the process table again from its current rows (or `registered` and the current unregistered rows):
+    after a visit to another page, or when the chat changed the processes."""
+    item = next((i for i in st.session_state.get("pdf_items") or [] if i.field == "processes"), None)
+    if item is None:
+        return
+    rows = item.value or []
+    st.session_state.pdf_processes_rows = [p for p in rows if p.get("code") != "UNREGISTERED"] \
+        if registered is None else registered
+    st.session_state.pdf_unregistered_rows = [p.get("text") for p in rows if p.get("code") == "UNREGISTERED"]
+    st.session_state.pdf_processes_version = st.session_state.get("pdf_processes_version", 0) + 1
+
+
+def open_similar(match) -> None:
+    keep_processes()
+    st.session_state.similar_match = match
+    st.session_state.page = SIMILAR
+
+
+def open_document(condition: QuoteCondition, drawing: DrawingContext | None) -> None:
+    keep_processes()
+    st.session_state.doc_basis = (condition, drawing)
+    st.session_state.page = DOCUMENT
+
+
+def back_to_estimate() -> None:
+    st.session_state.page = ESTIMATE
+
+
+# ================================================================== estimate page: drawing conditions and chat
+def pdf_condition_editor(reading: dict, analysis) -> QuoteCondition | None:
+    """Conditions read from the drawing PDF, as editable inputs. The values in the inputs are quoted; the status
+    tells what to check against the drawing. None while the material is not chosen."""
+    st.markdown(f"**図面から読み取った加工条件**（{st.session_state.get('pdf_name', '図面PDF')}"
+                f"{'、図番 ' + reading['drawing_no'] if reading.get('drawing_no') else ''}"
+                f"{'、改訂 ' + reading['revision'] if reading.get('revision') else ''}）")
+    items = condition_items(reading, masters)
+    counts = {status: sum(item.status == status for item in items) for status in BADGE}
+    st.caption("　".join(f"{BADGE[s]} {n}件" for s, n in counts.items() if n)
+               + "　— 入力欄の値で見積を計算します。⚠️・❌・➖ の項目は図面と見比べ、必要なら直してください。")
+    if reading.get("flags"):
+        labels = {"tolerance": "厳しい公差", "appearance": "外観指定", "inspection": "検査・証明書"}
+        st.warning("特記事項: " + "、".join(labels.get(f, f) for f in reading["flags"]) + "（見積には含めません）")
+    final: list[ConditionItem] = []
+    material_codes, finish_codes = list(masters.materials), list(masters.surface_treatments)
+    apply_chat_update()
+    unregistered_rows = unregistered_process_rows(items)
+    for item in items:
+        cols = st.columns([1.1, 2.6, 1.1, 3.8])
+        cols[0].markdown(f"**{item.label}**")
+        key = f"pdf_{item.field}"
+        restored = key in st.session_state  # a value kept from before: no default (it would override it)
+        with cols[1]:
+            if item.field == "material":
+                # a material that is not in the master (or not on the drawing) is chosen by the user: never price
+                # with whichever material happens to be first in the list
+                index = material_codes.index(item.value) if item.value in material_codes else None
+                value = st.selectbox(item.label, material_codes, key=key, placeholder="材質を選んでください",
+                                     format_func=lambda c: masters.materials[c]["display_name"], label_visibility="collapsed",
+                                     **({} if restored else {"index": index}))
+            elif item.field == "surface_treatment":
+                default = item.value if item.value in finish_codes else "NONE"
+                value = st.selectbox(item.label, finish_codes, key=key, label_visibility="collapsed",
+                                     format_func=lambda c: masters.surface_treatments[c]["display_name"],
+                                     **({} if restored else {"index": finish_codes.index(default)}))
+            elif item.field == "thickness_mm":
+                default = float(item.value or analysis.thickness_mm or 0.0)
+                value = st.number_input(item.label, min_value=0.0, step=0.1, format="%g", key=key,
+                                        label_visibility="collapsed", **({} if restored else {"value": default}))
+            elif item.field == "quantity":
+                value = int(st.number_input(item.label, min_value=1, step=1, key=key, label_visibility="collapsed",
+                                            **({} if restored else {"value": int(item.value or 1)})))
+            elif item.field == "rush":
+                value = st.checkbox("特急", key=key, **({} if restored else {"value": bool(item.value)}))
+            else:
+                # the unregistered processes of the drawing are rows too ("未登録: <drawing text>"): they are quoted
+                # separately (a remark on the quotation) unless the user deletes the row
+                source = st.session_state.get("pdf_processes_rows", item.value or [])
+                rows = [{"加工": p["code"], "個数/個": int(p.get("count_per_part") or 0)} for p in source
+                        if p.get("code") in masters.process_rates] + [{"加工": label, "個数/個": None}
+                                                                       for label in unregistered_rows]
+                table = st.data_editor(
+                    pd.DataFrame(rows, columns=["加工", "個数/個"]), num_rows="dynamic", hide_index=True,
+                    key=f"{key}_{st.session_state.get('pdf_processes_version', 0)}",
+                    column_config={"加工": st.column_config.SelectboxColumn(
+                        options=masters.llm_process_codes + list(unregistered_rows))})
+                value = []
+                for r in table.to_dict("records"):
+                    code, count = r.get("加工"), r.get("個数/個")
+                    if code in unregistered_rows:
+                        value.append({"code": "UNREGISTERED", "count_per_part": None, "text": unregistered_rows[code]})
+                    elif code and count == count and count:  # count == count: not NaN
+                        value.append({"code": code, "count_per_part": int(count)})
+        cols[2].markdown(BADGE[item.status])
+        cols[3].caption(item.display if not item.reasons else f"{item.display} ／ " + "、".join(item.reasons))
+        final.append(ConditionItem(item.field, item.label, value, item.display, CONFIRMED, item.reasons))
+    st.session_state.pdf_items = final
+    material_input = next(i.value for i in final if i.field == "material")
+    if material_input is None:
+        return None
+    return service.build_condition(analysis, ConditionInput(material=material_input), drawing_context())
+
+
+def unregistered_process_rows(items: list[ConditionItem]) -> dict[str, str]:
+    """Row label -> drawing text of each unregistered process read from the drawing."""
+    item = next(i for i in items if i.field == "processes")
+    if "pdf_unregistered_rows" in st.session_state:  # the rows the user kept
+        return {f"未登録: {text}": text for text in st.session_state.pdf_unregistered_rows}
+    count = sum(1 for p in item.value or [] if p.get("code") == "UNREGISTERED")
+    texts = list(st.session_state.get("pdf_unregistered") or [])
+    texts = (texts + [f"加工{n + 1}" for n in range(len(texts), count)])[:max(count, 0)]
+    return {f"未登録: {text}": text for text in texts}
+
+
+def chat_changes(before: QuoteCondition, after: QuoteCondition) -> dict:
+    """What the chat changed, to carry into the drawing conditions."""
+    changes = {}
+    if after.material != before.material:
+        changes["material"] = after.material
+    if after.quantity != before.quantity:
+        changes["quantity"] = after.quantity
+    procs = lambda c: sorted((p.process_code, p.quantity) for p in c.additional_processes)  # noqa: E731
+    if procs(after) != procs(before):
+        changes["processes"] = [{"code": p.process_code, "count_per_part": int(p.quantity)}
+                                for p in after.additional_processes if p.process_code in masters.process_rates]
+    return changes
+
+
+def apply_chat_update() -> None:
+    """Put the chat's change into the inputs before they are drawn (a widget's value cannot change afterwards)."""
+    changes = st.session_state.pop("pdf_chat_update", None) or {}
+    if "material" in changes:
+        st.session_state["pdf_material"] = changes["material"]
+    if "quantity" in changes:
+        st.session_state["pdf_quantity"] = changes["quantity"]
+    if "processes" in changes:
+        # the drawing's unregistered processes stay (rows of their own); the table is drawn again from the chat's list
+        keep_processes(changes["processes"])
+
+
+def drawing_context() -> DrawingContext | None:
+    """The drawing conditions as they are on the screen (None without a drawing PDF)."""
+    reading = st.session_state.get("pdf_reading")
+    if reading is None:
+        return None
+    items = [DrawingItem(field=i.field, label=i.label, value=i.value, display=i.display, status=i.status,
+                         reasons=list(i.reasons)) for i in st.session_state.get("pdf_items") or []]
+    return DrawingContext(file_name=st.session_state.get("pdf_name", ""), drawing_no=reading.get("drawing_no"),
+                          revision=reading.get("revision"), items=items, flags=list(reading.get("flags") or []),
+                          unregistered_texts=[p["text"] for i in items if i.field == "processes" for p in i.value or []
+                                              if p.get("code") == "UNREGISTERED" and p.get("text")]
+                          or st.session_state.get("pdf_unregistered") or [])
+
+
+def chat_box(condition: QuoteCondition) -> None:
+    """Change the conditions in words, right under them (the amounts are recomputed by the rules)."""
+    history = st.session_state.get("chat_history", [])
+    if history:
+        st.caption(f"チャット：{history[-2]['content']} → {history[-1]['content']}")
+    with st.container():
+        prompt = st.chat_input("チャットで条件を変更（例: 数量を10個にして、皿もみを2箇所追加）")
+    if not prompt:
+        return
+    try:
+        applied = ChatQuoteService(llm, masters).interpret_and_apply(
+            prompt, condition, chat_history=history,
+            pending_confirmation=st.session_state.get("pending_confirmation"),
+        )
+    except Exception as exc:
+        st.error(f"チャットAPIエラー: {exc}。現在の見積は変更していません。")
+        return
+    st.session_state.quote_condition = applied.condition
+    if st.session_state.get("pdf_reading") is not None:
+        st.session_state.pdf_chat_update = chat_changes(condition, applied.condition)
+    st.session_state.chat_history = (history + [
+        {"role": "user", "content": prompt},
+        {"role": "assistant", "content": applied.message},
+    ])[-8:]
+    st.session_state.pending_confirmation = (
+        applied.message if applied.interpretation.status == "needs_confirmation" else None
+    )
+    st.rerun()
+
+
+def _yen(value) -> str:
+    return "-" if value is None else f"¥{value:,.0f}"
+
+
+def similar_quotes_section(analysis, outcome) -> None:
+    """類似見積（参考）: one button per past quote; its detail opens on its own page. The quote is not changed."""
+    st.divider()
+    st.subheader("類似見積（参考）")
+    summary = outcome.summary
+    reading = st.session_state.get("pdf_reading") or {}
+    # the recipient is entered on the quotation page; once it is, repeats and the same customer are found too
+    customer = st.session_state.get("doc_customer") or ""
+    drawing_no = st.session_state.get("doc_dwg") or reading.get("drawing_no") or ""
+    revision = st.session_state.get("doc_rev") or reading.get("revision") or ""
+    matches, reference, size = service.similar(analysis, outcome, customer, drawing_no, revision, today=date.today())
+    if not size:
+        st.info("見積履歴がありません（data/past_quotes/history.csv）。")
+        return
+    if not matches:
+        st.info("材質の系統と板厚が近い過去の見積はありません。")
+        return
+    note = f"履歴 {size:,}件から、値段を決める要素が近いものを最大5件。参考表示のみで、今回の単価は変えません。"
+    if not customer:
+        note += "見積書の画面で宛先を入れると、同じ顧客・リピートの見積も探します。"
+    if reference:
+        gap = (summary.unit_price - reference.unit) / reference.unit
+        note += f"過去の出し値の水準で見た今回の単価 {_yen(reference.unit)}（今回はこれより {gap:+.1%}）。"
+    st.caption(note)
+    for n, m in enumerate(matches, start=1):
+        q = m.quote
+        diff = f"（今回比 {m.price_diff:+.1%}）" if m.price_diff is not None else ""
+        label = (f"{n}. 【{m.category}】 {q.date:%Y/%m/%d}　{q.customer}　{q.drawing_no or '図番なし'}　{q.part_name}"
+                 f"　単価 {_yen(q.unit_price)}{diff}")
+        st.button(label, key=f"similar_{n}", on_click=open_similar, args=(m,), width="stretch")
+
+
+# ================================================================== similar-quote page
+def similar_page() -> None:
+    st.button("← 見積に戻る", on_click=back_to_estimate)
+    m = st.session_state.get("similar_match")
+    if m is None:
+        st.info("類似見積が選ばれていません。")
+        return
+    q = m.quote
+    drawing = " ".join(x for x in (q.drawing_no, f"Rev.{q.revision}" if q.revision else "") if x) or "図番なし"
+    st.subheader(f"類似見積【{m.category}】 {q.quote_no}")
+    st.markdown(f"{q.date:%Y/%m/%d}　**{q.customer}**　{drawing}　{q.part_name}")
+    procs = q.processes_text or "追加加工なし"
+    st.caption(f"{q.material_text or '-'} t{q.thickness:g}　数量 {q.quantity or '-'}　"
+               f"表面処理 {q.finish_text or '記録なし'}　{procs}　{'特急' if q.rush else ''}　結果 {q.outcome}"
+               if q.thickness is not None else f"{q.material_text}　数量 {q.quantity}　結果 {q.outcome}")
+    cols = st.columns(3)
+    diff = f"（今回比 {m.price_diff:+.1%}）" if m.price_diff is not None else ""
+    cols[0].markdown(f"単価 **{_yen(q.unit_price)}**{diff}")
+    if m.leveled_unit:
+        cols[1].markdown(f"出し値÷今のマスターの標準単価 **{m.ratio:.2f}**（標準 {_yen(m.past_standard)}）")
+        cols[2].markdown(f"この水準で見た今回の単価 **{_yen(m.leveled_unit)}**")
+    else:
+        cols[1].caption(m.standard_note or "標準単価を計算できません")
+    st.markdown("似ている理由：" + "、".join(m.reasons))
+    st.markdown("今回との違い：" + "、".join(m.differences))
+    for warning in m.warnings:
+        st.warning(warning)
+    st.markdown("**この見積の全項目**")
+    st.dataframe(pd.DataFrame([{"項目": k, "値": str(v)} for k, v in (q.original or {}).items()]
+                              + [{"項目": "（取り込み元）", "値": q.source}]), hide_index=True, width="stretch")
+
+
+# ================================================================== quotation page
+def document_page() -> None:
+    """見積書の作成: recipient, part and terms, then the PDF (and the internal basis). Issuing settles the
+    conditions: the quotation is never an estimate. No LLM."""
+    st.button("← 見積に戻る", on_click=back_to_estimate)
+    analysis = st.session_state.get("analysis_result")
+    basis = st.session_state.get("doc_basis")
+    if analysis is None or basis is None:
+        st.info("先に見積の画面で解析と条件の入力をしてください。")
+        return
+    condition, drawing = basis
+    outcome = service.price(analysis, condition, drawing)
+    summary = outcome.summary
+    st.subheader("見積書の作成")
+    cols = st.columns(4)
+    cols[0].metric("単価（1個）", f"¥{summary.unit_price:,}")
+    cols[1].metric(f"小計（税抜、{summary.quantity:,}個）", f"¥{summary.subtotal:,}")
+    cols[2].metric(f"消費税（{summary.tax_rate:.0%}）", f"¥{summary.tax:,}")
+    cols[3].metric("見積金額（税込）", f"¥{summary.total:,}")
+
+    st.markdown("**宛先と部品**")
+    reading = st.session_state.get("pdf_reading") or {}
+    col1, col2 = st.columns(2)
+    customer = col1.text_input("宛先の会社名（必須）", key="doc_customer", placeholder="サンプル電機株式会社")
+    person = col2.text_input("部署・担当者名（任意）", key="doc_person", placeholder="購買部　山田 太郎")
+    col3, col4, col5 = st.columns([2, 1.4, 0.6])
+    defaults = {"doc_part": Path(analysis.file_name).stem, "doc_dwg": reading.get("drawing_no") or "",
+                "doc_rev": reading.get("revision") or ""}
+    for key, value in defaults.items():
+        st.session_state.setdefault(key, value)
+    part = PartInfo(name=col3.text_input("品名", key="doc_part"), drawing_no=col4.text_input("図番", key="doc_dwg"),
+                    revision=col5.text_input("改訂", key="doc_rev"), shape_file=analysis.file_name,
+                    drawing_file=st.session_state.get("pdf_name", "") if reading else "")
+
+    st.markdown("**取引条件と備考**")
+    company = load_company(service.settings.data_dir)
+    st.session_state.setdefault("doc_place", company.delivery_place)
+    col6, col7 = st.columns([2, 1])
+    subject = col6.text_input("件名", key="doc_subject", placeholder=default_subject(part)) or default_subject(part)
+    delivery_place = col7.text_input("受渡場所", key="doc_place")
+    free_remarks = st.text_area("備考（任意、1行に1項目）", key="doc_remarks", height=80)
+    with_internal = st.checkbox("社内用の内訳も出力する（別PDF、社外秘）", key="doc_internal")
+    if outcome.reasons:
+        st.info("見積書は、画面の条件を確定として出力します。次の点を確認してください。\n\n"
+                + "\n".join(f"- {note}" for note in outcome.reasons))
+    if not customer.strip():
+        st.info("宛先の会社名を入力すると、見積書PDFを作成できます。")
+    inputs = repr((condition.model_dump(), outcome.quote.final_price, customer, person, part, subject, delivery_place,
+                   free_remarks, with_internal))
+    if st.button("見積書PDFを作成", type="primary", disabled=not customer.strip()):
+        issued = service.issue_document(analysis, condition, drawing, Recipient(customer, person), part,
+                                        subject=subject, delivery_place=delivery_place, remarks=free_remarks,
+                                        include_internal=with_internal)
+        st.session_state.doc_files = (inputs, dict(issued.files.values()))
+    made_for, files = st.session_state.get("doc_files") or (None, {})
+    if files and made_for != inputs:
+        st.caption("条件か入力が変わったため、作成済みの見積書は表示していません。もう一度作成してください。")
+        files = {}
+    for name, data in files.items():
+        st.download_button(f"ダウンロード: {name}", data=data, file_name=name, mime="application/pdf", key=f"dl_{name}")
+    if files:
+        st.caption("この見積は見積履歴（data/past_quotes/history.csv）に入り、次からの類似見積の検索対象になります。")
+    outcome_section()
+
+
+def outcome_section() -> None:
+    """受注・失注の記録: the outcome of a quote in the history."""
+    with st.expander("受注・失注の記録"):
+        quotes = service.search_index().quotes
+        if not quotes:
+            st.caption("見積履歴がありません。")
+            return
+        mine = st.checkbox("この画面で出力した見積だけ", value=True, key="outcome_app_only")
+        rows = [q for q in quotes if q.source == "app"] if mine else list(quotes)
+        rows = sorted(rows, key=lambda q: (q.date, q.quote_no), reverse=True)[:200]
+        if not rows:
+            st.caption("この画面で出力した見積はまだありません。")
+            return
+        labels = {f"{q.quote_no}｜{q.date:%Y/%m/%d}｜{q.customer}｜{q.drawing_no or q.part_name}｜{q.outcome}": q for q in rows}
+        chosen = labels[st.selectbox("見積", list(labels), key="outcome_quote")]
+        outcome = st.radio("結果", list(OUTCOMES), index=list(OUTCOMES).index(chosen.outcome), horizontal=True,
+                           key=f"outcome_{chosen.quote_no}")
+        if st.button("結果を記録", key="outcome_save"):
+            service.set_outcome(chosen.quote_no, outcome, chosen.customer)
+            st.success(f"{chosen.quote_no} を「{outcome}」にしました。")
+            st.rerun()
+
+
+# ================================================================== pages
+st.title("STEP・DXF板金解析・見積デモ")
+if page == SIMILAR:
+    similar_page()
+    st.stop()
+if page == DOCUMENT:
+    document_page()
+    st.stop()
+
+st.caption("STEP形状または展開図DXFをローカル解析し、図面PDFの加工条件と合わせて、マスター単価でルールベース見積を作成します。")
 upload_col, setting_col = st.columns([2, 1])
 with upload_col:
     uploaded = st.file_uploader("STEP／展開図DXFファイル", type=["step", "stp", "dxf"])
@@ -42,7 +407,7 @@ with setting_col:
         thickness = st.number_input("板厚（mm）", min_value=0.0, value=0.0, step=0.1, format="%g",
                                     help="展開図DXFには板厚が含まれないため入力してください。")
         flat_confirmed = st.checkbox("曲げなし（平板）", value=False,
-                                     help="曲げ線のない展開図は、曲げ線の描き漏れと区別できないため概算になります。"
+                                     help="曲げ線のない展開図は、曲げ線の描き漏れと区別できないため確認が必要になります。"
                                           "曲げのない平板であることを確認したらチェックしてください。")
     else:
         k_factor = st.number_input("Kファクター", min_value=0.0, max_value=1.0, value=0.33, step=0.01)
@@ -54,8 +419,8 @@ if is_dxf and not thickness > 0:
     st.info("展開図DXFの解析には板厚（mm）の入力が必要です（図面PDFを指定した場合は図面の板厚を使います）。")
 if analyze_clicked and uploaded is not None:
     data = uploaded.getvalue()
-    for key in ("pdf_reading", "pdf_items", "pdf_unregistered", "doc_files", "pdf_chat_update", "pdf_processes_chat",
-                "pdf_material", "pdf_quantity"):
+    for key in ("pdf_reading", "pdf_items", "pdf_unregistered", "doc_files", "doc_basis", "pdf_chat_update",
+                "pdf_processes_rows", "pdf_unregistered_rows", "doc_part", "doc_dwg", "doc_rev", "doc_subject") + ESTIMATE_KEYS:
         st.session_state.pop(key, None)
     if pdf_file is not None:
         with st.spinner("図面PDFから加工条件を読み取っています…（Claude API）"):
@@ -92,270 +457,6 @@ if analyze_clicked and uploaded is not None:
     )
     st.session_state.chat_history = []
     st.session_state.pop("quote_result", None)
-
-BADGE = {CONFIRMED: "✅ 確定", REVIEW: "⚠️ 要確認", UNREG: "❌ 未登録", MISSING: "➖ 記載なし"}
-
-
-def pdf_condition_editor(reading: dict, base: QuoteCondition, analysis) -> QuoteCondition:
-    """Conditions read from the drawing PDF, as editable inputs. Items that are not 確定 are not priced
-    until the user corrects them or ticks 「この値で確定」."""
-    st.markdown(f"**図面から読み取った加工条件**（{st.session_state.get('pdf_name', '図面PDF')}"
-                f"{'、図番 ' + reading['drawing_no'] if reading.get('drawing_no') else ''}"
-                f"{'、改訂 ' + reading['revision'] if reading.get('revision') else ''}）")
-    items = condition_items(reading, masters)
-    counts = {status: sum(item.status == status for item in items) for status in BADGE}
-    st.caption("　".join(f"{BADGE[s]} {n}件" for s, n in counts.items() if n))
-    if reading.get("flags"):
-        labels = {"tolerance": "厳しい公差", "appearance": "外観指定", "inspection": "検査・証明書"}
-        st.warning("特記事項: " + "、".join(labels.get(f, f) for f in reading["flags"]) + "（見積には含めません）")
-    final: list[ConditionItem] = []
-    material_codes, finish_codes = list(masters.materials), list(masters.surface_treatments)
-    apply_chat_update(items)
-    unregistered_rows = unregistered_process_rows(items)
-    for item in items:
-        cols = st.columns([1.1, 2.6, 1.0, 2.6, 1.3])
-        cols[0].markdown(f"**{item.label}**")
-        key = f"pdf_{item.field}"
-        with cols[1]:
-            if item.field == "material":
-                # a material that is not in the master (or not on the drawing) is chosen by the user: never price
-                # with whichever material happens to be first in the list
-                index = material_codes.index(item.value) if item.value in material_codes else None
-                value = st.selectbox(item.label, material_codes, index=index, key=key, placeholder="材質を選んでください",
-                                     format_func=lambda c: masters.materials[c]["display_name"], label_visibility="collapsed")
-            elif item.field == "surface_treatment":
-                default = item.value if item.value in finish_codes else "NONE"
-                value = st.selectbox(item.label, finish_codes, index=finish_codes.index(default), key=key,
-                                     format_func=lambda c: masters.surface_treatments[c]["display_name"], label_visibility="collapsed")
-            elif item.field == "thickness_mm":
-                default = float(item.value or analysis.thickness_mm or 0.0)
-                value = st.number_input(item.label, min_value=0.0, value=default, step=0.1, format="%g", key=key,
-                                        label_visibility="collapsed")
-            elif item.field == "quantity":
-                value = int(st.number_input(item.label, min_value=1, value=int(item.value or 1), step=1, key=key,
-                                            label_visibility="collapsed"))
-            elif item.field == "rush":
-                value = st.checkbox("特急", value=bool(item.value), key=key)
-            else:
-                # the unregistered processes of the drawing are rows too ("未登録: <drawing text>"): they stay in
-                # the quote as 別途見積 (and keep it an estimate) until the user deletes the row
-                source = st.session_state.get("pdf_processes_chat") or item.value or []
-                rows = [{"加工": p["code"], "個数/個": int(p.get("count_per_part") or 0)} for p in source
-                        if p.get("code") in masters.process_rates] + [{"加工": label, "個数/個": None}
-                                                                       for label in unregistered_rows]
-                table = st.data_editor(
-                    pd.DataFrame(rows, columns=["加工", "個数/個"]), num_rows="dynamic", hide_index=True,
-                    key=f"{key}_{st.session_state.get('pdf_processes_version', 0)}",
-                    column_config={"加工": st.column_config.SelectboxColumn(
-                        options=masters.llm_process_codes + list(unregistered_rows))})
-                value = []
-                for r in table.to_dict("records"):
-                    code, count = r.get("加工"), r.get("個数/個")
-                    if code in unregistered_rows:
-                        value.append({"code": "UNREGISTERED", "count_per_part": None, "text": unregistered_rows[code]})
-                    elif code and count == count and count:  # count == count: not NaN
-                        value.append({"code": code, "count_per_part": int(count)})
-        cols[2].markdown(BADGE[item.status])
-        cols[3].caption(item.display if not item.reasons else f"{item.display} ／ " + "、".join(item.reasons))
-        changed = _edited(item, value)
-        confirmed = item.status == CONFIRMED or changed
-        if item.status != CONFIRMED:
-            confirmed = cols[4].checkbox("この値で確定", value=changed, key=f"{key}_ok")
-        final.append(ConditionItem(item.field, item.label, value, item.display,
-                                   CONFIRMED if confirmed else item.status, item.reasons))
-    st.session_state.pdf_items = final
-    material_input = next(i.value for i in final if i.field == "material")
-    if material_input is None:
-        return None
-    return service.build_condition(analysis, ConditionInput(material=material_input), drawing_context())
-
-
-def unregistered_process_rows(items: list[ConditionItem]) -> dict[str, str]:
-    """Row label -> drawing text of each unregistered process read from the drawing."""
-    item = next(i for i in items if i.field == "processes")
-    count = sum(1 for p in item.value or [] if p.get("code") == "UNREGISTERED")
-    texts = list(st.session_state.get("pdf_unregistered") or [])
-    texts = (texts + [f"加工{n + 1}" for n in range(len(texts), count)])[:max(count, 0)]
-    return {f"未登録: {text}": text for text in texts}
-
-
-def chat_changes(before: QuoteCondition, after: QuoteCondition) -> dict:
-    """What the chat changed, to carry into the drawing conditions (the edited items become 確定)."""
-    changes = {}
-    if after.material != before.material:
-        changes["material"] = after.material
-    if after.quantity != before.quantity:
-        changes["quantity"] = after.quantity
-    procs = lambda c: sorted((p.process_code, p.quantity) for p in c.additional_processes)  # noqa: E731
-    if procs(after) != procs(before):
-        changes["processes"] = [{"code": p.process_code, "count_per_part": int(p.quantity)}
-                                for p in after.additional_processes if p.process_code in masters.process_rates]
-    return changes
-
-
-def apply_chat_update(items: list[ConditionItem]) -> None:
-    """Put the chat's change into the inputs before they are drawn (a widget's value cannot change afterwards)."""
-    changes = st.session_state.pop("pdf_chat_update", None) or {}
-    if "material" in changes:
-        st.session_state["pdf_material"] = changes["material"]
-    if "quantity" in changes:
-        st.session_state["pdf_quantity"] = changes["quantity"]
-    if "processes" in changes:
-        # the drawing's unregistered processes stay (rows of their own); the table is drawn again from the chat's list
-        st.session_state.pdf_processes_chat = changes["processes"]
-        st.session_state.pdf_processes_version = st.session_state.get("pdf_processes_version", 0) + 1
-
-
-def drawing_context() -> DrawingContext | None:
-    """The drawing conditions as the user confirmed them (None without a drawing PDF)."""
-    reading = st.session_state.get("pdf_reading")
-    if reading is None:
-        return None
-    items = [DrawingItem(field=i.field, label=i.label, value=i.value, display=i.display, status=i.status,
-                         reasons=list(i.reasons)) for i in st.session_state.get("pdf_items") or []]
-    return DrawingContext(file_name=st.session_state.get("pdf_name", ""), drawing_no=reading.get("drawing_no"),
-                          revision=reading.get("revision"), items=items, flags=list(reading.get("flags") or []),
-                          unregistered_texts=[p["text"] for i in items if i.field == "processes" for p in i.value or []
-                                              if p.get("code") == "UNREGISTERED" and p.get("text")]
-                          or st.session_state.get("pdf_unregistered") or [])
-
-
-def _edited(item: ConditionItem, value) -> bool:
-    if item.field == "processes":  # the registered processes and how many unregistered ones remain
-        def key(procs):
-            return (sorted((p["code"], p.get("count_per_part")) for p in procs if p.get("code") != "UNREGISTERED"),
-                    sum(1 for p in procs if p.get("code") == "UNREGISTERED"))
-        return key(item.value or []) != key(value)
-    if item.value is None or item.value == "UNREGISTERED":
-        return False  # a value the user has not looked at is not confirmed by default
-    if item.field == "thickness_mm":
-        return abs(float(item.value) - float(value)) > 1e-9
-    return item.value != value
-
-
-def case_inputs(analysis):
-    """Recipient and part: used by the similar-quote search and printed on the quotation."""
-    st.divider()
-    st.subheader("顧客と部品")
-    reading = st.session_state.get("pdf_reading") or {}
-    col1, col2 = st.columns(2)
-    customer = col1.text_input("宛先の会社名（必須）", key="doc_customer", placeholder="サンプル電機株式会社")
-    person = col2.text_input("部署・担当者名（任意）", key="doc_person", placeholder="購買部　山田 太郎")
-    col3, col4, col5 = st.columns([2, 1.4, 0.6])
-    part = PartInfo(
-        name=col3.text_input("品名", value=Path(analysis.file_name).stem, key=f"doc_part_{analysis.file_name}"),
-        drawing_no=col4.text_input("図番", value=reading.get("drawing_no") or "", key=f"doc_dwg_{analysis.file_name}"),
-        revision=col5.text_input("改訂", value=reading.get("revision") or "", key=f"doc_rev_{analysis.file_name}"),
-        shape_file=analysis.file_name, drawing_file=st.session_state.get("pdf_name", "") if reading else "")
-    return customer, person, part
-
-
-def _yen(value) -> str:
-    return "-" if value is None else f"¥{value:,.0f}"
-
-
-def similar_quotes_section(analysis, outcome, customer: str, part: PartInfo) -> None:
-    """類似見積（参考）: up to 5 past quotes with reasons, differences and prices. The quote is not changed."""
-    st.divider()
-    st.subheader("類似見積（参考）")
-    summary = outcome.summary
-    matches, reference, size = service.similar(analysis, outcome, customer, part.drawing_no, part.revision,
-                                               today=date.today())
-    if not size:
-        st.info("見積履歴がありません（data/past_quotes/history.csv）。")
-        return
-    st.caption(f"履歴 {size:,}件から、値段を決める要素（材質の系統・板厚・数量帯・大きさ・加工）が近いものを最大5件。"
-               "リピート（同じ顧客・同じ図番）は必ず先頭に出します。参考表示のみで、今回の単価は変えません。")
-    if not matches:
-        st.info("材質の系統と板厚が近い過去の見積はありません。")
-        return
-    if reference:
-        gap = (summary.unit_price - reference.unit) / reference.unit
-        st.info(f"参考：過去の出し値の水準で見た今回の単価 **{_yen(reference.unit)}**（{reference.basis}）。"
-                f"今回の単価 {_yen(summary.unit_price)} はこれより {gap:+.1%}。")
-    for n, m in enumerate(matches, start=1):
-        q = m.quote
-        with st.container(border=True):
-            drawing = " ".join(x for x in (q.drawing_no, f"Rev.{q.revision}" if q.revision else "") if x) or "図番なし"
-            st.markdown(f"**{n}. 【{m.category}】** {q.date:%Y/%m/%d}　{q.customer}　{drawing}　{q.part_name}")
-            procs = q.processes_text or "追加加工なし"
-            st.caption(f"{q.material_text or '-'} t{q.thickness:g}　数量 {q.quantity or '-'}　"
-                       f"表面処理 {q.finish_text or '記録なし'}　{procs}　{'特急' if q.rush else ''}　結果 {q.outcome}"
-                       if q.thickness is not None else f"{q.material_text}　数量 {q.quantity}　結果 {q.outcome}")
-            cols = st.columns(3)
-            diff = f"（今回比 {m.price_diff:+.1%}）" if m.price_diff is not None else ""
-            cols[0].markdown(f"単価 **{_yen(q.unit_price)}**{diff}")
-            if m.leveled_unit:
-                cols[1].markdown(f"出し値÷今のマスターの標準単価 **{m.ratio:.2f}**（標準 {_yen(m.past_standard)}）")
-                cols[2].markdown(f"この水準で見た今回の単価 **{_yen(m.leveled_unit)}**")
-            else:
-                cols[1].caption(m.standard_note or "標準単価を計算できません")
-            st.markdown("似ている理由：" + "、".join(m.reasons))
-            st.markdown("今回との違い：" + "、".join(m.differences))
-            for warning in m.warnings:
-                st.warning(warning)
-            with st.expander("この見積の全項目"):
-                detail = {k: v for k, v in q.original.items()} or {}
-                st.dataframe(pd.DataFrame([{"項目": k, "値": str(v)} for k, v in detail.items()]
-                                          + [{"項目": "（取り込み元）", "値": q.source}]),
-                             hide_index=True, width="stretch")
-
-
-def quote_document_section(analysis, outcome, customer: str, person: str, part: PartInfo) -> None:
-    """見積書を出力: terms, then a PDF (and the internal basis) to download; the quote enters the history. No LLM."""
-    st.divider()
-    st.subheader("見積書を出力")
-    company = load_company(service.settings.data_dir)
-    col6, col7 = st.columns([2, 1])
-    subject = col6.text_input("件名", value=default_subject(part))
-    delivery_place = col7.text_input("受渡場所", value=company.delivery_place)
-    free_remarks = st.text_area("備考（任意、1行に1項目）", key="doc_remarks", height=80)
-    with_internal = st.checkbox("社内用の内訳も出力する（別PDF、社外秘）", key="doc_internal")
-    if outcome.is_estimate:
-        st.warning("未確定の条件があるため概算見積書として出力されます。\n\n"
-                   + "\n".join(f"- {note}" for note in outcome.reasons))
-    if not customer.strip():
-        st.info("宛先の会社名を入力すると、見積書PDFを作成できます。")
-    condition = outcome.condition
-    inputs = repr((condition.model_dump(), outcome.quote.final_price, customer, person, part, subject, delivery_place,
-                   free_remarks, with_internal))
-    if st.button("見積書PDFを作成", type="primary", disabled=not customer.strip()):
-        issued = service.issue_document(analysis, condition, drawing_context(), Recipient(customer, person), part,
-                                        subject=subject, delivery_place=delivery_place, remarks=free_remarks,
-                                        include_internal=with_internal)
-        st.session_state.doc_files = (inputs, dict(issued.files.values()))
-    made_for, files = st.session_state.get("doc_files") or (None, {})
-    if files and made_for != inputs:
-        st.caption("条件か入力が変わったため、作成済みの見積書は表示していません。もう一度作成してください。")
-        files = {}
-    for name, data in files.items():
-        st.download_button(f"ダウンロード: {name}", data=data, file_name=name, mime="application/pdf", key=f"dl_{name}")
-    if files:
-        st.caption("この見積は見積履歴（data/past_quotes/history.csv）に入り、次からの類似見積の検索対象になります。")
-
-
-def outcome_section() -> None:
-    """受注・失注の記録: the outcome of a quote in the history."""
-    with st.expander("受注・失注の記録"):
-        quotes = service.search_index().quotes
-        if not quotes:
-            st.caption("見積履歴がありません。")
-            return
-        mine = st.checkbox("この画面で出力した見積だけ", value=True, key="outcome_app_only")
-        rows = [q for q in quotes if q.source == "app"] if mine else list(quotes)
-        rows = sorted(rows, key=lambda q: (q.date, q.quote_no), reverse=True)[:200]
-        if not rows:
-            st.caption("この画面で出力した見積はまだありません。")
-            return
-        labels = {f"{q.quote_no}｜{q.date:%Y/%m/%d}｜{q.customer}｜{q.drawing_no or q.part_name}｜{q.outcome}": q for q in rows}
-        chosen = labels[st.selectbox("見積", list(labels), key="outcome_quote")]
-        outcome = st.radio("結果", list(OUTCOMES), index=list(OUTCOMES).index(chosen.outcome), horizontal=True,
-                           key=f"outcome_{chosen.quote_no}")
-        if st.button("結果を記録", key="outcome_save"):
-            service.set_outcome(chosen.quote_no, outcome, chosen.customer)
-            st.success(f"{chosen.quote_no} を「{outcome}」にしました。")
-            st.rerun()
-
 
 result = st.session_state.get("analysis_result")
 if result is None:
@@ -429,7 +530,7 @@ if result.status in {"success", "partial"}:
         material=masters.material_names[0], quantity=1
     )
     if st.session_state.get("pdf_reading") is not None:
-        condition = pdf_condition_editor(st.session_state.pdf_reading, condition, result)
+        condition = pdf_condition_editor(st.session_state.pdf_reading, result)
     else:
         quote_col1, quote_col2, quote_col3, quote_col4 = st.columns([2, 1, 2, 1])
         selected_material = quote_col1.selectbox(
@@ -454,14 +555,20 @@ if result.status in {"success", "partial"}:
             })
             st.session_state.quote_condition = condition
 
+    if llm is not None and condition is not None:
+        chat_box(condition)
+    elif llm is None:
+        st.error(f"チャット設定エラー: {llm_error}。ルールベース見積はそのまま利用できます。")
+
     try:
         if condition is None:
             raise ServiceError("図面の材質がマスターにない（または記載がない）ため、材質を選ぶと金額を出します。")
         outcome = service.price(result, condition, drawing_context())  # the same call as POST /api/quotes
         quote, summary = outcome.quote, outcome.summary
         st.session_state.quote_result = quote
-        if quote.is_estimate:
-            st.warning("概算見積: 加工条件または解析値に概算を含みます。")
+        if outcome.reasons:
+            st.warning("確認してください（見積書は、画面の条件を確定として出力します）。\n\n"
+                       + "\n".join(f"- {note}" for note in outcome.reasons))
         amount_cols = st.columns(4)
         amount_cols[0].metric("単価（1個）", f"¥{summary.unit_price:,}")
         amount_cols[1].metric(f"小計（税抜、{summary.quantity:,}個）", f"¥{summary.subtotal:,}")
@@ -476,35 +583,8 @@ if result.status in {"success", "partial"}:
     except ServiceError as exc:
         st.error(str(exc))
     else:
-        customer, person, part = case_inputs(result)
-        similar_quotes_section(result, outcome, customer, part)
-        quote_document_section(result, outcome, customer, person, part)
-        outcome_section()
-
-    if llm is not None and condition is not None:
-        prompt = st.chat_input("例: 数量を10個にして、皿もみを2箇所追加")
-        if prompt:
-            history = st.session_state.get("chat_history", [])
-            try:
-                applied = ChatQuoteService(llm, masters).interpret_and_apply(
-                    prompt, condition, chat_history=history,
-                    pending_confirmation=st.session_state.get("pending_confirmation"),
-                )
-                st.session_state.quote_condition = applied.condition
-                if st.session_state.get("pdf_reading") is not None:
-                    st.session_state.pdf_chat_update = chat_changes(condition, applied.condition)
-                st.session_state.chat_history = (history + [
-                    {"role": "user", "content": prompt},
-                    {"role": "assistant", "content": applied.message},
-                ])[-8:]
-                st.session_state.pending_confirmation = (
-                    applied.message if applied.interpretation.status == "needs_confirmation" else None
-                )
-                st.rerun()
-            except Exception as exc:
-                st.error(f"チャットAPIエラー: {exc}。現在の見積は変更していません。")
-    elif llm is None:
-        st.error(f"チャット設定エラー: {llm_error}。ルールベース見積はそのまま利用できます。")
+        st.button("見積書を作成する →", type="primary", on_click=open_document, args=(condition, drawing_context()))
+        similar_quotes_section(result, outcome)
 
 with st.expander("解析結果 JSON"):
     st.json(result.model_dump(mode="json"))

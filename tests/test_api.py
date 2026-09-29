@@ -214,6 +214,7 @@ def test_api_screen_and_document_show_the_same_amounts(client):
     assert metrics["単価（1個）"] == f"¥{api['unit_price']:,}" and metrics["小計（税抜、100個）"] == f"¥{api['subtotal']:,}"
     assert metrics["消費税（10%）"] == f"¥{api['tax']:,}" and metrics["見積金額（税込）"] == f"¥{api['total']:,}"
 
+    next(b for b in app.button if b.label.startswith("見積書を作成する")).click().run(timeout=30)  # the quotation page
     app.text_input(key="doc_customer").input("株式会社テスト").run(timeout=30)
     next(b for b in app.button if b.label == "見積書PDFを作成").click().run(timeout=30)
     assert not app.exception
@@ -256,10 +257,20 @@ def test_drawing_reading_with_a_fake_reader_feeds_the_quote_and_the_document(cli
     assert any(line["code"] == "RUSH" for line in confirmed["quote"]["lines"])
 
     doc = client.post("/api/documents", json={**body, "recipient": {"company": "サンプル電機株式会社"}}).json()
-    assert doc["title"] == "概算御見積書" and doc["estimate_reasons"] == confirmed["estimate_reasons"]
+    assert doc["title"] == "御見積書" and "is_estimate" not in doc  # issuing settles the conditions: never 概算
     text = re.sub(r"\s+", "", pdfium.PdfDocument(client.get(doc["files"][0]["url"]).content)[0].get_textpage().get_text_range())
-    assert "概算御見積書" in text and "バーリングタップM42ヶ所" in text and "検査成績書" in text
+    assert "概算" not in text and "検査成績書" in text
+    assert "追加加工「バーリングタップM42ヶ所」はマスター未登録のため、本見積に含めず別途見積とします。" in text
     assert f"¥{confirmed['price']['total']:,}" in text
+
+    # a quotation settles every item as it is: the rush 要確認 is quoted; a quantity must be known
+    as_read = client.get(f"/api/jobs/{job.json()['job_id']}").json()["result"]["drawing"]
+    unsettled = {"analysis_job_id": shape, "condition": {"material": "SPCC"}, "drawing": as_read}
+    refused = client.post("/api/documents", json={**unsettled, "recipient": {"company": "サンプル電機株式会社"}})
+    assert refused.status_code == 400 and refused.json()["error"]["code"] == "QUANTITY_REQUIRED"
+    unsettled["condition"]["quantity"] = 50
+    doc = client.post("/api/documents", json={**unsettled, "recipient": {"company": "サンプル電機株式会社"}}).json()
+    assert doc["total"] == confirmed["price"]["total"]
 
 
 def test_drawing_reading_is_refused_clearly_without_an_api_key(tmp_path, monkeypatch):
