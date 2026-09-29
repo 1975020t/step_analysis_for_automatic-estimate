@@ -301,3 +301,32 @@ def test_similar_quotes_are_buttons_that_open_a_page_then_history_and_outcome(_h
     click(app, "← 見積に戻る")
     first = next(b.label for b in app.button if b.label.startswith("1. "))
     assert issued[0].date.strftime("%Y/%m/%d") in first  # the new quote is found next time
+
+
+def _thickness_row(app):
+    return next(n for n in app.number_input if n.label == "板厚")
+
+
+def test_thickness_row_shows_the_shape_thickness_when_the_drawing_has_none():
+    app = _drawing_app(thickness_mm=None)
+    app.run(timeout=30)
+    assert not app.exception
+    row = _thickness_row(app)
+    assert row.value == 2.0 and row.disabled  # the priced thickness, not 0 and not editable
+    text = " ".join(m.value for m in app.markdown)
+    assert "📐 形状から" in text and "➖ 記載なし" not in text
+    assert any("STEPの形状から測った板厚で計算します（図面：記載なし）" in c.value for c in app.caption)
+    assert not any(w.value.startswith("確認してください") and "板厚" in w.value for w in app.warning)
+
+
+def test_thickness_row_warns_when_the_drawing_differs_from_the_shape():
+    app = _drawing_app(thickness_mm=3.2)
+    app.run(timeout=30)
+    assert not app.exception
+    row = _thickness_row(app)
+    assert row.value == 2.0 and row.disabled
+    text = " ".join(m.value for m in app.markdown)
+    assert "図面は 3.2 mm" in text and "（2 mm）で計算します" in text
+    notice = [w.value for w in app.warning if w.value.startswith("確認してください")]
+    assert notice and "板厚：図面 3.2 mm と形状 2 mm が異なる" in notice[0]
+    assert "MATERIAL" in set(cost_lines(app)["コード"])

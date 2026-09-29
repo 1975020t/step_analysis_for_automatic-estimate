@@ -22,7 +22,7 @@ from src.services.settings import Settings
 # and the quotation (recipient, part, terms, PDF, outcome). The estimate page only estimates.
 ESTIMATE, SIMILAR, DOCUMENT = "estimate", "similar", "document"
 # widget values that must survive a visit to another page (Streamlit forgets the state of widgets it does not draw)
-ESTIMATE_KEYS = ("pdf_material", "pdf_thickness_mm", "pdf_quantity", "pdf_surface_treatment", "pdf_rush")
+ESTIMATE_KEYS = ("pdf_material", "pdf_quantity", "pdf_surface_treatment", "pdf_rush")
 DOCUMENT_KEYS = ("doc_customer", "doc_person", "doc_part", "doc_dwg", "doc_rev", "doc_subject", "doc_place",
                  "doc_remarks", "doc_internal")
 
@@ -39,11 +39,14 @@ except Exception as exc:
     llm_error = str(exc)
 
 page = st.session_state.get("page", ESTIMATE)
-for key in (DOCUMENT_KEYS if page == ESTIMATE else ESTIMATE_KEYS if page == DOCUMENT else ESTIMATE_KEYS + DOCUMENT_KEYS):
+# on every run, not only while the page is away: the run that draws a widget again must set its value, or the browser
+# shows the widget's default (0, 1, the first material) while the server keeps the value
+for key in ESTIMATE_KEYS + DOCUMENT_KEYS:
     if key in st.session_state:
         st.session_state[key] = st.session_state[key]
 
 BADGE = {CONFIRMED: "✅ 読み取り済み", REVIEW: "⚠️ 要確認", UNREG: "❌ 未登録", MISSING: "➖ 記載なし"}
+SHAPE = "📐 形状から"  # the thickness comes from the analysed shape (STEP), or from what the DXF was analysed with
 
 
 # ================================================================== navigation
@@ -84,8 +87,12 @@ def pdf_condition_editor(reading: dict, analysis) -> QuoteCondition | None:
                 f"{'、図番 ' + reading['drawing_no'] if reading.get('drawing_no') else ''}"
                 f"{'、改訂 ' + reading['revision'] if reading.get('revision') else ''}）")
     items = condition_items(reading, masters)
-    counts = {status: sum(item.status == status for item in items) for status in BADGE}
-    st.caption("　".join(f"{BADGE[s]} {n}件" for s, n in counts.items() if n)
+    # the analysed thickness is priced (QuoteEngine), so the row shows it instead of the drawing's: the drawing's
+    # value is only compared with it
+    shape_thickness = analysis.thickness_mm if analysis.thickness_mm else None
+    badges = [SHAPE if item.field == "thickness_mm" and shape_thickness else BADGE[item.status] for item in items]
+    counts = {badge: badges.count(badge) for badge in [*BADGE.values(), SHAPE]}
+    st.caption("　".join(f"{b} {n}件" for b, n in counts.items() if n)
                + "　— 入力欄の値で見積を計算します。⚠️・❌・➖ の項目は図面と見比べ、必要なら直してください。")
     if reading.get("flags"):
         labels = {"tolerance": "厳しい公差", "appearance": "外観指定", "inspection": "検査・証明書"}
@@ -112,10 +119,13 @@ def pdf_condition_editor(reading: dict, analysis) -> QuoteCondition | None:
                 value = st.selectbox(item.label, finish_codes, key=key, label_visibility="collapsed",
                                      format_func=lambda c: masters.surface_treatments[c]["display_name"],
                                      **({} if restored else {"index": finish_codes.index(default)}))
+            elif item.field == "thickness_mm" and shape_thickness:
+                st.number_input(item.label, value=float(shape_thickness), format="%g", disabled=True,
+                                label_visibility="collapsed")
+                value = item.value  # the drawing's value, compared with the shape's (a difference is a point to check)
             elif item.field == "thickness_mm":
-                default = float(item.value or analysis.thickness_mm or 0.0)
                 value = st.number_input(item.label, min_value=0.0, step=0.1, format="%g", key=key,
-                                        label_visibility="collapsed", **({} if restored else {"value": default}))
+                                        label_visibility="collapsed", **({} if restored else {"value": float(item.value or 0)}))
             elif item.field == "quantity":
                 value = int(st.number_input(item.label, min_value=1, step=1, key=key, label_visibility="collapsed",
                                             **({} if restored else {"value": int(item.value or 1)})))
@@ -140,8 +150,19 @@ def pdf_condition_editor(reading: dict, analysis) -> QuoteCondition | None:
                         value.append({"code": "UNREGISTERED", "count_per_part": None, "text": unregistered_rows[code]})
                     elif code and count == count and count:  # count == count: not NaN
                         value.append({"code": code, "count_per_part": int(count)})
-        cols[2].markdown(BADGE[item.status])
-        cols[3].caption(item.display if not item.reasons else f"{item.display} ／ " + "、".join(item.reasons))
+        if item.field == "thickness_mm" and shape_thickness:
+            cols[2].markdown(SHAPE)
+            source = "展開図DXFの解析に使った板厚" if analysis.file_name.lower().endswith(".dxf") else "STEPの形状から測った板厚"
+            if item.value is None:
+                cols[3].caption(f"{source}で計算します（図面：記載なし）")
+            elif abs(float(item.value) - float(shape_thickness)) > 1e-6:
+                cols[3].markdown(f":orange[⚠️ 図面は {float(item.value):g} mm。{source}（{float(shape_thickness):g} mm）"
+                                 "で計算します。図面と形状のどちらが正しいか確認してください]")
+            else:
+                cols[3].caption(f"{source}で計算します（図面の {float(item.value):g} mm と一致）")
+        else:
+            cols[2].markdown(BADGE[item.status])
+            cols[3].caption(item.display if not item.reasons else f"{item.display} ／ " + "、".join(item.reasons))
         final.append(ConditionItem(item.field, item.label, value, item.display, CONFIRMED, item.reasons))
     st.session_state.pdf_items = final
     material_input = next(i.value for i in final if i.field == "material")
