@@ -28,7 +28,7 @@ docker compose down              # 停止
 
 ## 解析方式
 
-CadQuery/OpenCASCADEを使用し、FreeCADへの実行時依存はありません。LLMは使いません（比較結果は [analysis/llm_comparison.md](analysis/llm_comparison.md)）。
+CadQuery/OpenCASCADEを使用し、FreeCADへの実行時依存はありません。STEPの解析にLLMは使いません。
 
 1. STEPを読み込み、単一の閉じたSolid、有効体積、B-Rep妥当性を確認
 2. モデル対角寸法から線形公差を設定し、共有EdgeからFace隣接グラフを構築
@@ -277,20 +277,17 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 .venv\Scripts\python.exe scripts\check_secrets.py --history
 ```
 
-## Claude API（解析へのLLM活用の検証）
+## Claude API
 
-`.env` に `ANTHROPIC_API_KEY` を書くだけで使えます（雛形は `.env.example`）。疎通確認とLLM版解析器の評価：
+キーは環境変数 `ANALYSIS_ANTHROPIC_API_KEY`（または `ANTHROPIC_API_KEY`、`.env` でも可。雛形は `.env.example`）。疎通確認：
 
 ```powershell
 .venv\Scripts\python.exe scripts\check_claude_api.py
-.venv\Scripts\python.exe scripts\evaluate_golden.py --data golden_data --tolerance 0.10 --analyzer src.llm_only_analyzer:LLMOnlyAnalyzer --limit 20 --workers 4
 ```
 
-`LLMOnlyAnalyzer`（`src/llm_only_analyzer.py`）は、ルールベースとの比較用の「LLM単独」解析器です。STEPから読んだソリッドの体積・表面積・外寸とB-Rep面の一覧（種類、面積、法線・軸、半径、角度範囲、隣接面）だけをClaudeに渡し、板厚・展開面積・切断長・穴数・曲げ（角度・内R）をすべてClaudeに求めさせます。ルールベースの解析器は呼びません。
-
-幾何計算で検算していない値なので、結果は常に `partial`（見積は「概算」、reason code `LLM_ONLY_UNVERIFIED`、信頼度 low）です。金額は従来どおりマスターとルールで計算します。既定の解析器には採用していません。比較の数値は [analysis/llm_comparison.md](analysis/llm_comparison.md)。
-
 同じ問い合わせの応答は `.claude_cache/` に保存して再利用します（`CLAUDE_CACHE_MODE`）。テストはAPIを呼びません。
+
+STEP解析へのLLM活用の実験（LLM単独の解析器 `LLMOnlyAnalyzer` と比較の記録）は、本流の解析ロジックではないため `archive/llm-step-analysis` ブランチに分けています。
 
 ## テスト
 
