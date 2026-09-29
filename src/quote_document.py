@@ -145,15 +145,11 @@ class QuoteDocument:
     company: Company
     lines: list[DocumentLine]
     tax_rate: float
-    is_estimate: bool
-    pending: list[str]   # 概算: every unsettled condition and how the amount treats it
     remarks: list[str]
     part: PartInfo
     internal: InternalBasis | None = None
 
-    @property
-    def title(self) -> str:
-        return "概算御見積書" if self.is_estimate else "御見積書"
+    title = "御見積書"  # issuing the quotation settles its conditions: there is no 概算 quotation
 
     @property
     def subtotal(self) -> int:
@@ -173,15 +169,12 @@ def default_subject(part: PartInfo) -> str:
     return f"{head or Path(part.shape_file).stem or '板金部品'} 製作"
 
 
-def spec_lines(analysis: SheetMetalAnalysis, condition: QuoteCondition, masters: MasterLoader,
-               finish_pending: bool) -> list[str]:
+def spec_lines(analysis: SheetMetalAnalysis, condition: QuoteCondition, masters: MasterLoader) -> list[str]:
     first = [condition.material]
     if analysis.thickness_mm is not None:
         first.append(f"t{analysis.thickness_mm:g}")
     line1 = " ".join(first)
-    if finish_pending:
-        line1 += "　表面処理：未定"
-    elif condition.surface_treatment and condition.surface_treatment != "NONE":
+    if condition.surface_treatment and condition.surface_treatment != "NONE":
         line1 += "　" + masters.surface_treatment(condition.surface_treatment)["display_name"]
     work = ["レーザー切断"]
     if analysis.bend_count:
@@ -249,6 +242,21 @@ def _item_notes(item: ConditionItem, analysis: SheetMetalAnalysis, condition: Qu
     return [f"{label}：{item.display}は読み取り値の確認が必要（{handling}）"]
 
 
+def separately_quoted(items: list[ConditionItem] | None, unregistered_texts: list[str] | None) -> list[str]:
+    """Processes on the drawing that are not in the master: not priced, so the quotation says they are quoted
+    separately."""
+    remarks = []
+    for item in items or []:
+        if not _has_unregistered(item):
+            continue
+        texts = _unregistered_texts(item, unregistered_texts or [])
+        remarks += [f"追加加工「{text}」はマスター未登録のため、本見積に含めず別途見積とします。" for text in texts]
+        rest = sum(1 for p in item.value or [] if p.get("code") == UNREGISTERED) - len(texts)
+        if rest > 0:
+            remarks.append(f"マスター未登録の追加加工 {rest}件は、本見積に含めず別途見積とします。")
+    return remarks
+
+
 def _has_unregistered(item: ConditionItem) -> bool:
     return item.field == "processes" and any(p.get("code") == UNREGISTERED for p in item.value or [])
 
@@ -287,13 +295,12 @@ def build_document(*, analysis: SheetMetalAnalysis, condition: QuoteCondition, q
     validity = int(masters.policy("quote_validity_days", 30))
     lead = int(masters.policy("lead_time_days_rush" if condition.rush else "lead_time_days_normal", 10))
     summary = price_summary(quote, condition.quantity, tax_rate)
-    finish_pending = any(i.field == "surface_treatment" and i.status != CONFIRMED for i in items or [])
     line = DocumentLine(
         name=part.name or Path(part.shape_file).stem, drawing_no=part.drawing_no, revision=part.revision,
-        spec=spec_lines(analysis, condition, masters, finish_pending), quantity=condition.quantity, unit="個",
+        spec=spec_lines(analysis, condition, masters), quantity=condition.quantity, unit="個",
         unit_price=summary.unit_price, amount=summary.amount)
-    pending = pending_notes(analysis, condition, quote, items, unregistered_texts) if quote.is_estimate else []
     remarks = [r for r in [basis_remark(part)] if r] + list(company.remarks)
+    remarks += separately_quoted(items, unregistered_texts)
     if condition.rush:
         remarks.append("特急対応（特急割増を含みます）。")
     remarks += [FLAG_REMARKS[f] for f in flags or [] if f in FLAG_REMARKS]
@@ -303,12 +310,12 @@ def build_document(*, analysis: SheetMetalAnalysis, condition: QuoteCondition, q
         validity_days=validity, recipient=Recipient(recipient.company.strip(), recipient.person.strip()),
         subject=subject.strip() or default_subject(part), lead_time_days=lead,
         delivery_place=delivery_place.strip() or company.delivery_place, payment_terms=company.payment_terms,
-        company=company, lines=[line], tax_rate=tax_rate, is_estimate=quote.is_estimate, pending=pending,
-        remarks=remarks, part=part, internal=InternalBasis(quote, analysis, condition, list(items or [])))
+        company=company, lines=[line], tax_rate=tax_rate, remarks=remarks, part=part,
+        internal=InternalBasis(quote, analysis, condition, list(items or [])))
 
 
 def unregistered_process_texts(evidence: list[dict] | None, masters: MasterLoader) -> list[str]:
-    """Source text of the process callouts the rules could not map to the master (for the 概算 remarks)."""
+    """Source text of the process callouts the rules could not map to the master (quoted separately)."""
     if not evidence:
         return []
     from src.pdf_terms import Terms
@@ -330,4 +337,4 @@ def log_row(document: QuoteDocument) -> dict[str, object]:
     files = [f for f in (document.part.shape_file, document.part.drawing_file) if f]
     return {"customer": document.recipient.company, "subject": document.subject,
             "drawing_no": document.part.drawing_no, "quantity": sum(line.quantity for line in document.lines),
-            "total": document.total, "is_estimate": int(document.is_estimate), "input_files": " | ".join(files)}
+            "total": document.total, "is_estimate": 0, "input_files": " | ".join(files)}  # column kept for old logs

@@ -99,12 +99,16 @@ def quote_condition(items: list[ConditionItem], masters: MasterLoader, material_
     thickness = by["thickness_mm"]
     if thickness.status != CONFIRMED:
         note(thickness)
+    elif thickness.value is None:
+        pass  # confirmed without a drawing value: the shape's thickness is used
     elif analysis_thickness is not None and abs(float(thickness.value) - float(analysis_thickness)) > 1e-6:
         pending.append(f"板厚：図面 {thickness.value:g} mm と形状 {analysis_thickness:g} mm が異なる")
     finish = by["surface_treatment"]
     surface = None
     if finish.status == CONFIRMED and finish.value in masters.surface_treatments:
         surface = finish.value
+    elif finish.status == CONFIRMED and finish.value is None:
+        surface = None  # confirmed as "no treatment"
     else:
         note(finish, "→ 金額に含めない")
     processes: list[AdditionalProcess] = []
@@ -116,10 +120,7 @@ def quote_condition(items: list[ConditionItem], masters: MasterLoader, material_
                 confirmed=proc.status in (CONFIRMED, UNREG), source="drawing"))
     if proc.status != CONFIRMED:
         note(proc, "→ 未確認の加工は金額に含めない")
-    elif any(p.get("code") == UNREGISTERED for p in proc.value or []):
-        # confirmed, but a process that is not in the master is still on the drawing: it is not priced, so the
-        # quote stays an estimate (別途見積) until the user removes it from the processes
-        pending.append(f"{proc.label}：{UNREG}（マスター未登録の加工は別途見積）")
+    # a confirmed process that is not in the master is not priced: the quotation says it is quoted separately
     rush = by["rush"]
     if rush.status != CONFIRMED:
         note(rush, "→ 特急割増を含めない")

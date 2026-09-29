@@ -38,7 +38,7 @@ React の画面（段階2）       Streamlit のデモ（app.py）
 | アップロード | `POST /api/files`（multipart） | STEP・DXF・図面PDF。返り値の `file_id` を以降で使う |
 | 形状の解析 | `POST /api/analyses` → `GET /api/jobs/{job_id}` | 受付番号をすぐ返す（202）。状態は queued / running / done / failed、結果は `SheetMetalAnalysis` |
 | 図面PDFの読み取り | `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` | 同じく受付番号方式。結果の `drawing`（項目ごとの状態つき）を見積の入力に戻す。APIキーがなければ 503 `DRAWING_READER_UNAVAILABLE` |
-| 見積 | `POST /api/quotes` | 解析（受付番号か結果そのもの）と条件から、原価の内訳・単価・小計・税・合計・概算かどうかと理由 |
+| 見積 | `POST /api/quotes` | 解析（受付番号か結果そのもの）と条件から、原価の内訳・単価・小計・税・合計・確認が必要な点 |
 | 見積書 | `POST /api/documents` → `GET /api/documents/{quote_no}/{quote,internal}.pdf` | 見積番号の採番、PDFの作成と保存、履歴への記録 |
 | 類似見積 | `POST /api/similar-quotes` | 最大5件（理由・違い・価格の比較）と参考単価 |
 | 過去見積の履歴 | `POST /api/history/import`（multipart、`mapping` はJSON）、`GET /api/history`、`GET /api/history/{quote_no}`、`PUT /api/history/{quote_no}/outcome` | 取り込み・一覧（顧客・図番・取り込み元で絞り込み、ページ送り）・詳細（元の行の全項目）・受注／失注 |
@@ -74,9 +74,10 @@ GET  /api/jobs/{job_id}                 → {result: {reading, drawing: {items[{
    画面で items を確認・修正し、確定にした項目は status を「確定」にする
 POST /api/quotes {analysis_job_id, condition: {material（仮の材質）, quantity・surface_treatment・rush（指定したものだけ図面の値に代わり確定）,
                   additional_processes（手で足す加工。図面と同じ加工は手入力の個数で置き換え、二重に数えない）}, drawing}
-   → 「確定」の項目だけが金額に入り、残りは estimate_reasons に理由として並ぶ（概算）
-   マスターにない加工が drawing の追加加工に残っていれば、確定でも概算（別途見積）
-POST /api/documents {..., drawing}      → 概算なら「概算御見積書」、備考の先頭に未確定の項目
+   → 「確定」の項目だけが金額に入り、確認が必要な点は estimate_reasons に並ぶ
+   マスターにない加工は金額に入れず、estimate_reasons と見積書の備考に「別途見積」
+POST /api/documents {..., drawing}      → 作成する時点で drawing の項目をすべて確定として扱い、つねに「御見積書」
+   （数量が決まっていなければ 400 QUANTITY_REQUIRED。マスター未登録の加工は備考に「別途見積」）
 ```
 
 ### 過去見積の取り込み

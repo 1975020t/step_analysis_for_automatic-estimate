@@ -1,10 +1,10 @@
-"""Write example quotation PDFs (confirmed, estimate, internal basis) to analysis/. No LLM API.
+"""Write example quotation PDFs (plain, with a process quoted separately, internal basis) to analysis/. No LLM API.
 
     python scripts/make_quote_examples.py
 
 The part is pdf_data/step/Lv2_0013.step, analysed by the rule-based analyzer. The conditions are entered by
-hand (the estimate example simulates a drawing where the finish is not written and one process is not in the
-master). Recipient and company are placeholders. The issue time is fixed, so the output is reproducible.
+hand (the second example simulates a drawing where the finish is not written and one process is not in the
+master: issuing settles the conditions, the finish is none and the process is quoted separately). Recipient and company are placeholders. The issue time is fixed, so the output is reproducible.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ import pypdfium2 as pdfium  # noqa: E402
 
 from src.master_loader import MasterLoader  # noqa: E402
 from src.models import AdditionalProcess, QuoteCondition  # noqa: E402
-from src.pdf_quote import CONFIRMED, MISSING, UNREG, ConditionItem  # noqa: E402
+from src.pdf_quote import CONFIRMED, ConditionItem  # noqa: E402
 from src.quote_document import PartInfo, Recipient, build_document, load_company  # noqa: E402
 from src.quote_engine import QuoteEngine  # noqa: E402
 from src.quote_pdf import render_internal, render_quote  # noqa: E402
@@ -50,21 +50,20 @@ def main() -> None:
     items = [ConditionItem("material", "材質", "AL5052", "アルミ A5052P", CONFIRMED),
              ConditionItem("thickness_mm", "板厚", analysis.thickness_mm, f"{analysis.thickness_mm:g} mm", CONFIRMED),
              ConditionItem("quantity", "数量", 100, "100 個", CONFIRMED),
-             ConditionItem("surface_treatment", "表面処理", None, "-", MISSING),
+             ConditionItem("surface_treatment", "表面処理", None, "-", CONFIRMED),
              ConditionItem("processes", "追加加工", [{"code": p.process_code, "count_per_part": p.quantity} for p in processes]
-                           + [{"code": "UNREGISTERED", "count_per_part": None}], "M4タップ ×6 ほか", UNREG),
+                           + [{"code": "UNREGISTERED", "count_per_part": None}], "M4タップ ×6 ほか", CONFIRMED),
              ConditionItem("rush", "特急", False, "なし", CONFIRMED)]
-    estimate = confirmed.model_copy(update={"surface_treatment": None,
-                                            "pending": ["表面処理：記載なし", "追加加工：未登録"]})
-    documents["quote_document_example_estimate.pdf"] = build_document(
-        analysis=analysis, condition=estimate, quote=QuoteEngine(masters).calculate(analysis, estimate),
+    separate = confirmed.model_copy(update={"surface_treatment": None})
+    documents["quote_document_example_separate.pdf"] = build_document(
+        analysis=analysis, condition=separate, quote=QuoteEngine(masters).calculate(analysis, separate),
         masters=masters, company=company, recipient=recipient, part=part, issued_at=ISSUED, number="Q20260928-002",
         items=items, unregistered_texts=["バーリングタップ M4"])
 
     for name, document in documents.items():
         (OUT / name).write_bytes(render_quote(document))
         print(f"{name}: {document.title} 合計 {document.total:,} 円")
-    (OUT / "quote_document_example_internal.pdf").write_bytes(render_internal(documents["quote_document_example_estimate.pdf"]))
+    (OUT / "quote_document_example_internal.pdf").write_bytes(render_internal(documents["quote_document_example_separate.pdf"]))
     images = [pdfium.PdfDocument(OUT / name)[0].render(scale=1.4).to_pil() for name in documents]
     from PIL import Image
 

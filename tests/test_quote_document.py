@@ -1,4 +1,4 @@
-"""Quotation PDF: amounts and rounding, printed items, 概算, confidentiality, numbering, fonts, layout, reproducibility."""
+"""Quotation PDF: amounts and rounding, printed items, never 概算, confidentiality, numbering, fonts, layout, reproducibility."""
 from __future__ import annotations
 
 import re
@@ -12,9 +12,9 @@ import pytest
 
 from src.master_loader import MasterLoader
 from src.models import AdditionalProcess, QuoteCondition, QuoteLine, QuoteResult, SheetMetalAnalysis
-from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem, quote_condition
+from src.pdf_quote import CONFIRMED, MISSING, REVIEW, UNREG, ConditionItem
 from src.quote_document import (DocumentLine, PartInfo, Recipient, build_document, load_company, log_row,
-                                price_summary, tax_amount, unit_price, unregistered_process_texts)
+                                pending_notes, price_summary, tax_amount, unit_price, unregistered_process_texts)
 from src.quote_engine import QuoteEngine
 from src.quote_log import QuoteLog
 from src.quote_pdf import render_internal, render_quote
@@ -50,7 +50,7 @@ def document(a=None, c=None, **kwargs):
     return build_document(**{**values, **kwargs})
 
 
-def estimate_document():
+def unsettled_document():
     items = [ConditionItem("material", "材質", "SPCC", "冷間圧延鋼板 SPCC", CONFIRMED),
              ConditionItem("thickness_mm", "板厚", 1.2, "1.2 mm", CONFIRMED),
              ConditionItem("quantity", "数量", 100, "100 個", CONFIRMED),
@@ -133,7 +133,7 @@ def test_confirmed_quote_prints_every_item_and_no_estimate_wording():
     missing = [item for item in expected if item not in text]
     assert not missing
     assert "概算" not in text
-    assert doc.title == "御見積書" and not doc.pending
+    assert doc.title == "御見積書"
 
 
 def test_rush_changes_lead_time_and_is_noted():
@@ -143,54 +143,42 @@ def test_rush_changes_lead_time_and_is_noted():
     assert "特急割増" in [line.name[:4] for line in doc.internal.quote.lines if line.code == "RUSH"][0]
 
 
-def test_estimate_title_and_every_unsettled_condition_in_the_remarks():
-    doc = estimate_document()
-    assert doc.is_estimate and doc.title == "概算御見積書"
+def test_quotation_is_never_an_estimate():
+    # conditions still marked 要確認 / 記載なし / 未登録 and a partial shape analysis: issuing settles them
+    doc = unsettled_document()
+    assert doc.title == "御見積書"
     text = flat(text_of(render_quote(doc)))
-    assert "概算御見積書" in text and "本見積は概算です" in text
-    for note in ("表面処理：図面に記載なし（金額に含めていません）",
-                 "追加加工：バーリングタップM4（マスター未登録のため別途見積）",
-                 "特急：ありは読み取り値の確認が必要（特急割増を含めていません）"):
-        assert note in text
-    assert len(doc.pending) == 3
-    assert "SPCCt1.2表面処理：未定" in text
-    assert text.index("本見積は概算です") < text.index("本見積は図面")  # the estimate block comes first
+    assert "概算" not in text and "御見積書" in text
+    assert "追加加工「バーリングタップM4」はマスター未登録のため、本見積に含めず別途見積とします。" in text
+    internal = flat(text_of(render_internal(doc)))
+    assert "概算御見積" not in internal and "未確定の条件" not in internal
+    partial = document(a=analysis(status="partial", assumptions=["Kファクター未指定のため既定値0.33で展開"]))
+    assert partial.title == "御見積書" and "概算" not in flat(text_of(render_quote(partial)))
 
 
-def test_unregistered_process_is_never_dropped_from_the_estimate_notes():
-    # the screen's process table keeps master codes only: even without the UNREGISTERED entries in the value,
-    # an item still marked unregistered must be listed
-    items = [ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4}], "M4タップ ×4", UNREG)]
-    doc = document(c=condition(pending=["追加加工：未登録"]), items=items)
-    assert doc.is_estimate
-    assert "追加加工：マスター未登録の加工あり（別途見積）" in doc.pending
-
-
-def test_confirmed_processes_with_an_unregistered_one_keep_the_quote_an_estimate():
-    items = [ConditionItem("material", "材質", "SPCC", "SPCC", CONFIRMED),
-             ConditionItem("thickness_mm", "板厚", 1.2, "1.2 mm", CONFIRMED),
-             ConditionItem("quantity", "数量", 100, "100 個", CONFIRMED),
-             ConditionItem("surface_treatment", "表面処理", "ZINC_CLEAR", "三価クロメート", CONFIRMED),
-             ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4},
+def test_unregistered_process_is_quoted_separately_on_the_quotation():
+    items = [ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4},
                                                   {"code": "UNREGISTERED", "count_per_part": None, "text": "M10タップ 6ヶ所"}],
-                           "M4タップ ×4", CONFIRMED),
-             ConditionItem("rush", "特急", False, "なし", CONFIRMED)]
-    c = quote_condition(items, MASTERS, "SPCC", analysis_thickness=1.2)
-    assert c.pending and [p.process_code for p in c.additional_processes] == ["TAP_M4"]
-    doc = document(c=c, items=items)
-    assert doc.is_estimate and doc.title == "概算御見積書"
-    assert "追加加工：M10タップ 6ヶ所（マスター未登録のため別途見積）" in doc.pending
-    # the user deleted the unregistered row: a confirmed quotation
-    items[4] = ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4}], "M4タップ ×4", CONFIRMED)
-    c = quote_condition(items, MASTERS, "SPCC", analysis_thickness=1.2)
-    assert not c.pending and not document(c=c, items=items).is_estimate
+                           "M4タップ ×4", CONFIRMED)]
+    doc = document(items=items)
+    assert "追加加工「M10タップ 6ヶ所」はマスター未登録のため、本見積に含めず別途見積とします。" in doc.remarks
+    without_text = document(items=[ConditionItem("processes", "追加加工", [{"code": "UNREGISTERED", "count_per_part": None}],
+                                                 "-", UNREG)])
+    assert "マスター未登録の追加加工 1件は、本見積に含めず別途見積とします。" in without_text.remarks
+    # the user deleted the unregistered row: nothing is quoted separately
+    assert not any("別途見積" in r for r in document(items=[ConditionItem(
+        "processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4}], "M4タップ ×4", CONFIRMED)]).remarks)
 
 
-def test_estimate_from_the_shape_analysis_is_listed():
-    doc = document(a=analysis(status="partial", assumptions=["Kファクター未指定のため既定値0.33で展開"]))
-    assert doc.is_estimate
-    assert any(note.startswith("形状解析：Kファクター未指定") for note in doc.pending)
-    assert "形状解析" in flat(text_of(render_quote(doc)))
+def test_points_to_check_on_the_screen():
+    """pending_notes: what the screen asks the user to check (the quotation itself is never an estimate)."""
+    items = [ConditionItem("processes", "追加加工", [{"code": "TAP_M4", "count_per_part": 4},
+                                                  {"code": "UNREGISTERED", "count_per_part": None, "text": "M10タップ 6ヶ所"}],
+                           "M4タップ ×4", CONFIRMED)]
+    a, c = analysis(status="partial", assumptions=["Kファクター未指定のため既定値0.33で展開"]), condition()
+    notes = pending_notes(a, c, QuoteEngine(MASTERS).calculate(a, c), items)
+    assert "追加加工：M10タップ 6ヶ所（マスター未登録のため別途見積）" in notes
+    assert any(n.startswith("形状解析：Kファクター未指定") for n in notes)
 
 
 def test_manual_condition_without_a_drawing():
@@ -209,7 +197,7 @@ def test_recipient_is_required():
 
 # ---------------------------------------------------------------- confidentiality
 def test_external_quote_has_no_cost_breakdown_or_margin_and_the_internal_one_does():
-    doc = estimate_document()
+    doc = unsettled_document()
     quote = doc.internal.quote
     external = flat(text_of(render_quote(doc)))
     for word in ("材料費", "ピアス加工", "段取り", "粗利", "原価", "社外秘", "25%", "margin", "MATERIAL", "SETUP"):
@@ -289,8 +277,8 @@ def test_long_texts_stay_inside_their_boxes():
 
 
 def test_same_input_and_issue_time_give_the_same_pdf():
-    assert render_quote(estimate_document()) == render_quote(estimate_document())
-    assert render_internal(estimate_document()) == render_internal(estimate_document())
+    assert render_quote(unsettled_document()) == render_quote(unsettled_document())
+    assert render_internal(unsettled_document()) == render_internal(unsettled_document())
     later = document(issued_at=datetime(2026, 9, 29, 10, 30))
     assert render_quote(later) != render_quote(document())
 
@@ -305,7 +293,7 @@ def test_no_llm_api_and_no_network(monkeypatch, tmp_path):
         raise AssertionError("network access")
 
     monkeypatch.setattr(socket.socket, "connect", no_network)
-    doc = estimate_document()
+    doc = unsettled_document()
     doc.number = QuoteLog(tmp_path / "log.csv").issue(ISSUED, log_row(doc))
     assert render_quote(doc).startswith(b"%PDF") and render_internal(doc).startswith(b"%PDF")
 

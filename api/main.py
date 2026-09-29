@@ -158,17 +158,17 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     def document(body: DocumentRequest) -> DocumentResponse:
         """見積書PDFを作る（見積番号の採番、履歴への記録を含む）。PDFは files[].url から取得する。"""
         analysis = analysis_of(body)
-        condition = service.build_condition(analysis, body.condition, body.drawing)
+        drawing = service.settled(service.with_manual_input(body.drawing, body.condition))  # issuing settles them
+        condition = service.build_condition(analysis, body.condition, drawing)
         issued = service.issue_document(
-            analysis, condition, service.with_manual_input(body.drawing, body.condition), Recipient(body.recipient.company, body.recipient.person),
+            analysis, condition, drawing, Recipient(body.recipient.company, body.recipient.person),
             PartInfo(name=body.part.name, drawing_no=body.part.drawing_no, revision=body.part.revision,
                      revision_date=body.part.revision_date),
             subject=body.subject, delivery_place=body.delivery_place, remarks=body.remarks,
             include_internal=body.include_internal)
         doc = issued.document
         return DocumentResponse(
-            quote_no=doc.number, title=doc.title, issued_at=doc.issued_at.isoformat(), is_estimate=doc.is_estimate,
-            total=doc.total, estimate_reasons=doc.pending,
+            quote_no=doc.number, title=doc.title, issued_at=doc.issued_at.isoformat(), total=doc.total,
             files=[DocumentFileOut(kind=kind, filename=name, url=f"/api/documents/{doc.number}/{kind}.pdf")
                    for kind, (name, _) in issued.files.items()])
 

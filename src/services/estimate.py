@@ -213,6 +213,18 @@ class EstimateService:
 
     MANUAL_FIELDS = ("quantity", "surface_treatment", "rush")
 
+    @staticmethod
+    def settled(drawing: DrawingContext | None) -> DrawingContext | None:
+        """The drawing items as the quotation takes them: issuing a quotation settles its conditions, so every item
+        is confirmed with the value it has (a quantity must be known; the rest falls back to the input / shape)."""
+        if drawing is None or not drawing.items:
+            return drawing
+        quantity = next((i for i in drawing.items if i.field == "quantity"), None)
+        if quantity is not None and not quantity.value:
+            raise ServiceError("数量が決まっていません。図面に数量がないときは condition.quantity で指定してください。",
+                               code="QUANTITY_REQUIRED")
+        return drawing.model_copy(update={"items": [i.model_copy(update={"status": "確定"}) for i in drawing.items]})
+
     def with_manual_input(self, drawing: DrawingContext | None, condition: ConditionInput) -> DrawingContext | None:
         """The drawing items with what the user entered by hand: an explicitly given quantity, surface treatment or
         rush replaces the drawing's item and counts as confirmed (as an edit on the screen does). Nothing entered
@@ -254,7 +266,7 @@ class EstimateService:
             raise ServiceError(str(exc), 422, "QUOTE_UNAVAILABLE") from None
         summary = price_summary(quote, condition.quantity, self.masters.policy("tax_rate", 0.10))
         reasons = pending_notes(analysis, condition, quote, self.condition_items(drawing),
-                                drawing.unregistered_texts if drawing else None) if quote.is_estimate else []
+                                drawing.unregistered_texts if drawing else None)
         return QuoteOutcome(condition, quote, summary, reasons)
 
     def quote(self, analysis: SheetMetalAnalysis, condition: ConditionInput,
@@ -267,9 +279,11 @@ class EstimateService:
                        recipient: Recipient, part: PartInfo, subject: str = "", delivery_place: str = "",
                        remarks: str = "", include_internal: bool = False, shape_file: str = "",
                        issued_at: datetime | None = None) -> IssuedDocument:
-        """Number the quotation, render it (and the internal basis), keep the files and add it to the history."""
+        """Number the quotation, render it (and the internal basis), keep the files and add it to the history.
+        The quotation is never an estimate: the drawing items are taken as confirmed (see settled)."""
         if not recipient.company.strip():
             raise ServiceError("宛先の会社名を入力してください。")
+        drawing = self.settled(drawing)
         outcome = self.price(analysis, condition, drawing)
         issued_at = (issued_at or datetime.now()).replace(microsecond=0)
         part = PartInfo(name=part.name, drawing_no=part.drawing_no, revision=part.revision,
