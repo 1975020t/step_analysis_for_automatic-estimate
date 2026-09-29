@@ -1,9 +1,9 @@
 """Photograph the real demo screens for the documents (docs/images/screens/). No LLM API.
 
-    python docs/scripts/capture_screens.py [--app-ref origin/main] [--api-only]
+    python docs/scripts/capture_screens.py [--app-ref HEAD] [--api-only]
 
-The app is photographed from a checkout of --app-ref (default origin/main; a temporary git worktree), because this
-documents branch carries no code. The input data and the outputs are those of this branch.
+The app is photographed from a checkout of --app-ref (default HEAD, the committed code; a temporary git worktree),
+so that uncommitted edits do not leak into the photographs. The input data and the outputs are those of this tree.
 Starts the Streamlit demo (docs/scripts/demo_app.py: app.py with a recorded drawing reading) and the API on
 temporary storage and a temporary copy of the quote history (the committed history is not changed), drives
 them with Playwright (Chromium) using the development data (pdf_data, dxf_data) and a fictional recipient,
@@ -31,7 +31,7 @@ STEP = ROOT / "pdf_data" / "step" / "Lv1_0047.step"          # a part quoted bef
 DRAWING_STEP = ROOT / "pdf_data" / "step" / "Lv3_0043.step"  # the part of the recorded drawing
 DRAWING_PDF = ROOT / "pdf_data" / "pdf" / "Lv3_0043.pdf"
 DXF = ROOT / "dxf_data" / "D1" / "Lv2_0013_D1.dxf"
-MAIN_X = (340, 1360)  # the main column of the 1400 px wide page (the sidebar is left of it)
+MAIN_X = (40, 1360)  # the main column of the 1400 px wide page (no sidebar)
 
 
 def free_port() -> int:
@@ -71,6 +71,15 @@ class Shots:
         self.page.screenshot(path=str(OUT / name), clip={"x": x0, "y": top, "width": x1 - x0, "height": bottom - top})
         print("saved", name)
 
+    def down_to(self, name: str, start: str, selector: str, pad_top: int = 24, start_exact: bool = True) -> None:
+        """From the text `start` down to the bottom of the last element matching `selector`."""
+        a = self.box(start, start_exact)
+        b = self.page.locator(selector).last.bounding_box()
+        top = max(0, a["y"] - pad_top)
+        self.page.screenshot(path=str(OUT / name), clip={"x": MAIN_X[0], "y": top, "width": MAIN_X[1] - MAIN_X[0],
+                                                          "height": b["y"] + b["height"] + 16 - top})
+        print("saved", name)
+
     def wait_text(self, text: str, timeout: float = 120_000, exact: bool = False) -> None:
         self.page.get_by_text(text, exact=exact).first.wait_for(timeout=timeout)
         self.page.wait_for_timeout(1500)
@@ -97,6 +106,7 @@ class Shots:
 
 
 def run_demo(browser, port: int) -> None:
+    """The three pages of the demo: the estimate, the detail of a similar quote, and the quotation."""
     page = browser.new_page(viewport={"width": 1400, "height": 900})
     s = Shots(page)
     url = f"http://127.0.0.1:{port}/"
@@ -107,7 +117,7 @@ def run_demo(browser, port: int) -> None:
     page.screenshot(path=str(OUT / "01_start.png"))
     print("saved 01_start.png")
 
-    # 2. STEP: analysis, quote, customer, similar quotes, quotation, outcome
+    # 2. STEP: analysis and the estimate (conditions, chat, amounts)
     page.set_viewport_size({"width": 1400, "height": 7000})
     page.locator("input[type=file]").nth(0).set_input_files(str(STEP))
     page.wait_for_timeout(1500)
@@ -126,30 +136,41 @@ def run_demo(browser, port: int) -> None:
     s.pick(0, "SPCC")
     s.number("数量", "100")
     s.pick(1, "三価クロメート（有色）")
-    s.between("05_quote.png", "ルールベース見積", "顧客と部品")
+    s.between("05_quote.png", "ルールベース見積", "見積書を作成する →", extra=50)
+
+    # 3. the quotation page: recipient and part (they also let the similar quotes find the repeat)
+    page.get_by_role("button", name="見積書を作成する →").click()
+    s.wait_text("見積書の作成")
     s.fill("宛先の会社名（必須）", "サンプル電機株式会社")
     s.fill("部署・担当者名（任意）", "購買部　山田 太郎")
     s.fill("品名", "取付板")
     s.fill("図番", "CS649-3372")
+    s.between("06_customer.png", "← 見積に戻る", "取引条件と備考", pad_top=10)
+
+    # 4. back to the estimate: the similar quotes are buttons; one opens its own page
+    page.get_by_role("button", name="← 見積に戻る").click()
+    s.wait_text("類似見積（参考）")
     page.wait_for_timeout(2000)
-    s.between("06_customer.png", "顧客と部品", "類似見積（参考）")
-    s.between("07_similar.png", "類似見積（参考）", "見積書を出力")
-    s.between("07b_similar_top.png", "類似見積（参考）", "2. 【リピート】", start_exact=True, end_exact=False)
-    page.get_by_text("この見積の全項目").first.click()
-    page.wait_for_timeout(1500)
-    s.between("08_similar_detail.png", "1. 【リピート】", "2. 【リピート】", start_exact=False, end_exact=False)
-    page.get_by_text("この見積の全項目").first.click()
-    page.wait_for_timeout(1000)
+    s.between("07_similar.png", "類似見積（参考）", "解析結果 JSON", pad_top=10)
+    page.locator("button").filter(has_text="1. 【").first.click()
+    s.wait_text("似ている理由：")
+    s.down_to("08_similar_detail.png", "← 見積に戻る", '[data-testid="stDataFrame"]')
+    page.get_by_role("button", name="← 見積に戻る").click()
+    s.wait_text("ルールベース見積")
+
+    # 5. the quotation: PDF and the outcome record
+    page.get_by_role("button", name="見積書を作成する →").click()
+    s.wait_text("見積書の作成")
     page.get_by_text("社内用の内訳も出力する（別PDF、社外秘）").click()
     page.wait_for_timeout(1500)
     page.get_by_role("button", name="見積書PDFを作成").click()
     s.wait_text("ダウンロード:")
-    s.between("09_export.png", "見積書を出力", "受注・失注の記録", extra=10)
+    s.between("09_export.png", "取引条件と備考", "受注・失注の記録", pad_top=10, extra=10)
     page.get_by_text("受注・失注の記録").click()
     page.wait_for_timeout(1500)
-    s.between("10_outcome.png", "受注・失注の記録", "解析結果 JSON", pad_top=10)
+    s.down_to("10_outcome.png", "受注・失注の記録", '[data-testid="stExpander"]', pad_top=10)
 
-    # 3. DXF (thickness)
+    # 6. DXF (thickness, flat plate)
     page.goto(url)
     s.wait_text("解析を実行")
     page.locator("input[type=file]").nth(0).set_input_files(str(DXF))
@@ -161,7 +182,7 @@ def run_demo(browser, port: int) -> None:
     page.wait_for_timeout(3000)
     s.between("12_dxf_result.png", "ファイル:", "解析根拠と処理段階", start_exact=False, pad_top=6)
 
-    # 4. drawing PDF (recorded reading) + STEP, and the estimate (概算) notice
+    # 7. drawing PDF (recorded reading) + STEP: the conditions and the points to check
     page.goto(url)
     s.wait_text("解析を実行")
     page.locator("input[type=file]").nth(0).set_input_files(str(DRAWING_STEP))
@@ -174,12 +195,7 @@ def run_demo(browser, port: int) -> None:
     s.wait_text("図面から読み取った加工条件")
     page.wait_for_timeout(5000)
     s.between("14_pdf_conditions.png", "ルールベース見積", "原価の内訳（社内用。見積書には出ません）", end_exact=False, extra=10)
-    s.fill("宛先の会社名（必須）", "サンプル電機株式会社")
-    s.between("15_estimate_notice.png", "見積書を出力", "見積書PDFを作成", extra=50)
-    # the user confirms the surface treatment: the item becomes 確定
-    page.get_by_text("この値で確定").nth(1).click()
-    page.wait_for_timeout(3000)
-    s.between("16_pdf_confirmed.png", "ルールベース見積", "原価の内訳（社内用。見積書には出ません）", end_exact=False, extra=10)
+    s.between("15_check_notice.png", "確認してください", "単価（1個）", start_exact=False, pad_top=16)
     page.close()
 
 
@@ -235,7 +251,7 @@ def run_api_docs(browser, port: int, app_root: Path) -> None:
 
 def render_documents() -> None:
     for name, src in (("30_quote_confirmed.png", "quote_document_example.pdf"),
-                      ("31_quote_estimate.png", "quote_document_example_estimate.pdf"),
+                      ("31_quote_separate.png", "quote_document_example_separate.pdf"),
                       ("32_quote_internal.png", "quote_document_example_internal.pdf")):
         image = pdfium.PdfDocument(ROOT / "analysis" / src)[0].render(scale=1.6).to_pil()
         image.save(OUT / name, optimize=True)
@@ -258,7 +274,7 @@ def app_checkout(ref: str, work: Path) -> Path:
 
 
 def main() -> int:
-    ref = sys.argv[sys.argv.index("--app-ref") + 1] if "--app-ref" in sys.argv else "origin/main"
+    ref = sys.argv[sys.argv.index("--app-ref") + 1] if "--app-ref" in sys.argv else "HEAD"
     OUT.mkdir(parents=True, exist_ok=True)
     work = Path(tempfile.mkdtemp(prefix="docshots_"))
     app_root = app_checkout(ref, work)
