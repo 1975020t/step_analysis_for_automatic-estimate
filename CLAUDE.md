@@ -1,6 +1,7 @@
 # CLAUDE.md
 
 STEP形式の板金部品を解析し、ルールベースで見積を出すシステムのバックエンド（デモUIはStreamlit）。
+現在の主タスクは **本番の画面（React）とデータベース**：図面管理・見積・案件・帳票。最終ゴールと受入条件は [analysis/handoff_ui.md](analysis/handoff_ui.md) にある。着手前に読むこと。
 本番に向けたサーバー（API）の切り出し（段階1。FastAPI、[analysis/handoff_api.md](analysis/handoff_api.md)）、見積書PDFの出力、過去の類似見積の参照は実装済み。図面PDF読み取りの懸念点への対応は [analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)（語彙をずらしたデータでの安全性の判定などが残っている）。
 仕様書・操作マニュアル・評価報告書などの資料は `docs/`（PDF は `docs/pdf/`、作り直し方は [docs/README.md](docs/README.md)）。コードの振る舞いを変えたら、資料の該当箇所も直して作り直す。
 STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）と展開図DXFの解析（[analysis/handoff_dxf.md](analysis/handoff_dxf.md)）は完了済み。壊さないこと。
