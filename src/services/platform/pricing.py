@@ -272,12 +272,37 @@ def compute(inputs: QuoteInputs, masters: MasterLoader, analysis: dict | None, r
     summary = price_summary(quote, condition.quantity, masters.policy("tax_rate", 0.10))
     out.update({
         "condition": condition.model_dump(mode="json"),
-        "lines": [line.model_dump() for line in quote.lines],
+        "lines": [{**line.model_dump(), "group": line_group(line.code)} for line in quote.lines],
+        "groups": groups(quote),
         "subtotal_cost": quote.subtotal_cost, "margin_rate": quote.margin_rate, "final_price": quote.final_price,
         "margin": quote.final_price - quote.subtotal_cost,
         "price": {"unit_price": summary.unit_price, "quantity": summary.quantity, "amount": summary.amount,
                   "subtotal": summary.subtotal, "tax_rate": summary.tax_rate, "tax": summary.tax, "total": summary.total},
     })
+    return out
+
+
+GROUPS = {"MATERIAL": "材料費", "LASER_CUT": "加工費", "PIERCE": "加工費", "BEND": "加工費", "SETUP": "段取り", "RUSH": "特急割増"}
+
+
+def line_group(code: str) -> str:
+    if code.startswith("FINISH_"):
+        return "表面処理"
+    return GROUPS.get(code, "追加加工")
+
+
+def groups(quote) -> list[dict]:
+    """The cost lines summed by group (材料費・加工費・段取り・追加加工・表面処理・特急割増) and the margin, in the
+    order the screen shows them."""
+    order = ["材料費", "加工費", "段取り", "追加加工", "表面処理", "特急割増"]
+    sums = {name: 0.0 for name in order}
+    present = set()
+    for line in quote.lines:
+        g = line_group(line.code)
+        sums[g] += line.amount
+        present.add(g)
+    out = [{"name": g, "amount": sums[g]} for g in order if g in present or g in ("材料費", "加工費")]
+    out.append({"name": "粗利", "amount": quote.final_price - quote.subtotal_cost, "rate": quote.margin_rate})
     return out
 
 

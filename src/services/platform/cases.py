@@ -225,11 +225,13 @@ def review(pf: Platform, months: int = 6, ref: date | None = None) -> dict:
         return sorted(out, key=lambda x: -x["count"])
 
     lost = [r for r in now_rows if r.outcome == "失注"]
+    recorded = [r for r in lost if r.lost_reason]
     reasons: dict[str, int] = {}
-    for r in lost:
-        reasons[r.lost_reason or "記録なし"] = reasons.get(r.lost_reason or "記録なし", 0) + 1
+    for r in recorded:
+        reasons[r.lost_reason] = reasons.get(r.lost_reason, 0) + 1
     return {"months": months, "from": iso(start + timedelta(days=1)), "to": iso(ref), "current": figures(now_rows),
             "previous": figures(old_rows), "customers": by("customer")[:8], "staff": by("staff"),
-            "lost_reasons": [{"reason": k, "count": v, "share": v / len(lost)} for k, v in
+            "lost_reasons": [{"reason": k, "count": v, "share": v / len(recorded)} for k, v in
                              sorted(reasons.items(), key=lambda kv: -kv[1])],
+            "lost_unrecorded": len(lost) - len(recorded),
             "lost_count": len(lost)}

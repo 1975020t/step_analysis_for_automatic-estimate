@@ -238,10 +238,23 @@ def detail(pf: Platform, quote_id: int) -> dict:
             "job": {"job_id": job["job_id"], "status": job["status"], "error": job.get("error"),
                     "progress": job.get("progress")} if job else None,
             "result": result, "edit_log": log, "documents": docs, "chat": quote.chat or [],
+            "blockers": blockers(result, case, docs),
             "similar": similar(pf, inputs.material, _metric(result, "bend_count"), _metric(result, "hole_count"),
                                quote.drawing_id),
         }
     return out
+
+
+def blockers(result: dict, case: Case, docs: list[dict]) -> dict:
+    """Why each document cannot be issued now (empty list: it can). The same rules refuse the issue in
+    src/services/platform/documents.py."""
+    quote = [m["message"] for m in result["missing"]]
+    trade = []
+    if case.outcome != "受注":
+        trade.append(f"受注した見積から作ります（今の状態：{case.status.name}）")
+    if not any(d["kind"] == "quote" for d in docs):
+        trade.append("先に見積書を発行してください（同じ金額で作ります）")
+    return {"quote": quote, "delivery": list(trade), "invoice": list(trade)}
 
 
 def document_out(d: IssuedDocument) -> dict:
