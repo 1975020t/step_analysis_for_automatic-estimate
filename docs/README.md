@@ -1,6 +1,6 @@
 # 資料一覧（板金見積システム）
 
-STEP・展開図DXF・図面PDFから板金部品の見積を作り、見積書を出し、過去の類似見積を参照するデモについての資料です。完成品は **PDF**（`docs/pdf/`）で、元の原稿（Markdown）と画像もこのフォルダにあります。内容は main のコードに合わせてあり、コードを変えたら資料も直して作り直します。
+図面を登録し、STEP・展開図DXF・図面PDFから板金部品の見積を作り、案件の進捗を追い、見積書・納品書・請求書を発行し、受注・失注を振り返るシステム（画面は React、データはデータベース）についての資料です。完成品は **PDF**（`docs/pdf/`）で、元の原稿（Markdown）と画像もこのフォルダにあります。内容は main のコードに合わせてあり、コードを変えたら資料も直して作り直します。
 
 | 資料 | PDF | 読む人 | 中身 |
 |---|---|---|---|
@@ -27,12 +27,12 @@ STEP・展開図DXF・図面PDFから板金部品の見積を作り、見積書�
 
 ```
 pip install -r docs/requirements.txt                 # markdown
-python docs/scripts/capture_screens.py               # 画面の写真（デモを起動して撮影。LLM は呼ばない）
+cd web && npm ci && npm run build && cd ..           # 画面を作る（写真の撮影に必要）
+python docs/scripts/capture_screens.py               # 画面の写真（お試しデータで起動して撮影。LLM は呼ばない）
 python docs/scripts/make_charts.py                   # 評価のグラフ（数字は analysis/ のレポートの表から読む）
 python docs/scripts/build_pdf.py                     # PDF（docs/pdf/）
 ```
 
 - 図（構成図・流れ図・シーケンス図・状態遷移図）は原稿の中に Mermaid で書き、`build_pdf.py` が SVG にして PDF に描き込む。描いた図は `docs/images/diagrams/` に保存され、図を変えないかぎり Node.js なしで作り直せる。図を変えたときは一度 `cd docs/scripts && npm install` を行う（mermaid と、API 仕様書の撮影用の swagger-ui-dist）
-- 画面の写真は、コミット済みのコード（既定は HEAD。`--app-ref` で変えられる）を一時的な git worktree に取り出して撮る（コミットしていない変更は写らない）。見積・類似見積の詳細・見積書の作成の3つの画面を順にたどる。API 仕様書（Swagger UI）の写真には画面と同じ日本語フォント（Noto Sans JP）を当てる
-- 画面の写真は、`docs/scripts/demo_app.py`（本物の画面に、記録済みの図面の読み取り結果 `recorded_reading.json` を渡すもの）と API を一時的な保存先で起動して撮る。コミットされた見積履歴は変わらない
+- 画面の写真は、`scripts/seed_demo.py` のお試しデータ（架空の顧客、`pdf_data`・`dxf_data` の図面と形状、記録済みの図面の読み取り結果 `recorded_reading.json`）を一時的な保存先に入れ、API（`web/dist` の画面を配信）を起動して Playwright で撮る。コミットされた見積履歴とマスターの CSV は変わらない。帳票（見積書・納品書・請求書）の見本も、そのとき発行したPDFから作る
 - Playwright と Chromium、pypdfium2 が必要（開発環境に入っているもの）。日本語フォントはリポジトリの IPAゴシック（`fonts/ipag.ttf`）を埋め込む

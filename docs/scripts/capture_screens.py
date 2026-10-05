@@ -90,7 +90,7 @@ def run_screens(browser, port: int) -> None:
     page.wait_for_timeout(700)
     page.screenshot(path=str(OUT / "04_progress.png"))
     print("saved 04_progress.png")
-    page.wait_for_url(lambda url: url.rstrip("/").split("/")[-1].isdigit(), timeout=120_000)
+    page.wait_for_function("/^\\/estimates\\/\\d+$/.test(location.pathname)", timeout=120_000)
 
     for name, path, height in (
             ("05_estimate.png", f"/estimates/{main['id']}", 2100),

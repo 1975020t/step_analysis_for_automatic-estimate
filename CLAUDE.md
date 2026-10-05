@@ -1,7 +1,7 @@
 # CLAUDE.md
 
-STEP形式の板金部品を解析し、ルールベースで見積を出すシステムのバックエンド（デモUIはStreamlit）。
-現在の主タスクは **本番の画面（React）とデータベース**：図面管理・見積・案件・帳票。最終ゴールと受入条件は [analysis/handoff_ui.md](analysis/handoff_ui.md) にある。着手前に読むこと。
+STEP形式の板金部品を解析し、ルールベースで見積を出すシステム。画面は React（`web/`）、サーバーは FastAPI（`api/`）、データはデータベース（PostgreSQL、テストは SQLite）。
+本番の画面（React）とデータベース（図面管理・見積・案件・帳票）は実装済み（[analysis/handoff_ui.md](analysis/handoff_ui.md)）。画面は API だけを呼び、金額・発行の可否・類似の判定は API が決める（画面で計算し直さない）。
 本番に向けたサーバー（API）の切り出し（段階1。FastAPI、[analysis/handoff_api.md](analysis/handoff_api.md)）、見積書PDFの出力、過去の類似見積の参照は実装済み。図面PDF読み取りの懸念点への対応は [analysis/handoff_pdf_followup.md](analysis/handoff_pdf_followup.md)（語彙をずらしたデータでの安全性の判定などが残っている）。
 仕様書・操作マニュアル・評価報告書などの資料は `docs/`（PDF は `docs/pdf/`、作り直し方は [docs/README.md](docs/README.md)）。コードの振る舞いを変えたら、資料の該当箇所も直して作り直す。
 STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_logic.md)）と展開図DXFの解析（[analysis/handoff_dxf.md](analysis/handoff_dxf.md)）は完了済み。壊さないこと。
@@ -23,7 +23,11 @@ STEPの解析（[analysis/handoff_analysis_logic.md](analysis/handoff_analysis_l
 ## よく使うコマンド
 
 ```
-python -m pytest -q                                                      # 全テスト（全件パスが前提）
+python -m pytest -q                                                      # 全テスト（全件パスが前提。e2e は web/dist が必要）
+cd web && npm ci && npm run build                                        # 画面を作る（web/dist）
+uvicorn api.main:app --port 8000                                         # API と画面 http://localhost:8000
+python scripts/seed_demo.py --storage output/demo --fresh                # お試しデータ（LLMを呼ばない）
+python docs/scripts/capture_screens.py                                   # 資料の画面写真を撮り直す
 python scripts/generate_golden.py --per-level 100 --seed 1 --out golden_data     # 開発用データ508件（約1分）
 python scripts/evaluate_golden.py --data golden_data --verify-frozen --tolerance 0.10 --gate \
     --report analysis/golden_eval_latest.md                              # 評価（約2分）。--gate で合否
@@ -64,7 +68,12 @@ python scripts/evaluate_pdf.py --data pdf_shift_dev --reader src.pdf_reader:PdfC
 - `data/` マスター：材料・工程（追加加工を含む）・表面処理・価格方針（粗利率、特急割増）。各行の `aliases` が表記ゆれ。照合は `MasterLoader.resolve_alias`
 - `src/quote_document.py`・`src/quote_pdf.py`・`src/quote_log.py` 見積書PDF（中身と金額の端数処理、reportlab での描画、見積番号と `output/quote_log.csv`）。自社情報は `data/company.csv`（`data/company.local.csv` を優先）、フォントは `fonts/ipag.ttf`。例は `python scripts/make_quote_examples.py`
 - `src/past_quotes.py`・`src/similar_quotes.py` 見積履歴（`data/past_quotes/history.csv`、コミットする）と類似見積の検索。取り込みは `scripts/import_past_quotes.py`、効果の評価は `scripts/evaluate_similar_quotes.py`（`analysis/similar_quotes_eval.md`）。テストは履歴の一時コピーを使う（`tests/conftest.py`）
-- `src/services/` 処理の層（API と Streamlit が共通で呼ぶ。`EstimateService`、受付 `jobs.py`、入出力の型 `schemas.py`、設定 `settings.py`）。`api/main.py` が FastAPI（`create_app`）。設計は `analysis/api_design.md`。`Dockerfile`・`docker-compose.yml` で API とデモを起動
+- `src/services/` 処理の層（`EstimateService`、受付 `jobs.py`、入出力の型 `schemas.py`、設定 `settings.py`、pdfium の排他 `pdfium_lock.py`）。`api/main.py` が FastAPI（`create_app`）、`api/platform_routes.py` が画面用の API、`api/security.py` が合言葉と操作者（ログインを足すときはここ）。設計は `analysis/api_design.md`
+- `src/services/platform/` 画面の業務：`pricing.py`（見積の条件・未入力の項目・金額。発行できる条件はここ）、`masters.py`（DBのマスター → `MasterLoader`、見積だけの単価の重ね合わせ）、`drawings.py`・`quotes.py`・`cases.py`・`documents.py`（帳票）・`similar.py`（類似の対象）・`library.py`（書類と検索）・`admin.py`（設定・マスター編集・見積ロジック表示）
+- `src/db/` データベース（`models.py`、`session.py`、初期データ `seed.py`）。`migrations/` が Alembic のマイグレーション（モデルを変えたら `alembic revision --autogenerate`）。初期データは `data/*.csv` と `data/past_quotes/history.csv`。**評価ハーネスと既存のテストは今までどおり `data/` の CSV を読む**（画面でのマスター編集は評価に影響しない）
+- `src/trade_pdf.py` 納品書・請求書（適格請求書）。`src/similar_quotes.py` の `is_similar` が類似の規則（材料が同じ・曲げ数の差1以内・穴数の差2以内、差の小さい順）
+- `web/` 画面（Vite + React + TypeScript、`npm run build` で `web/dist`。API が配信する）。`scripts/seed_demo.py` がお試しデータ、`tests/test_e2e_flow.py` がブラウザでの通しの操作（`web/dist` が必要）
+- `Dockerfile`（API）・`web/Dockerfile`（画面、nginx）・`docker-compose.yml`（db・api・web）
 - `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること

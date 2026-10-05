@@ -95,7 +95,7 @@ def test_register_estimate_issue_progress_accept_documents_review(server):
 
         # 3. the analysis stages, then the result: the unregistered M10 tap has no unit price yet
         page.wait_for_url("**/progress**")
-        page.wait_for_url(lambda url: url.rstrip("/").split("/")[-1].isdigit())
+        page.wait_for_function("/^\\/estimates\\/\\d+$/.test(location.pathname)", timeout=120_000)
         expect(page.get_by_test_id("missing")).to_contain_text("M10タップ")
         expect(page.get_by_role("button", name="見積書を発行")).to_be_disabled()
         page.get_by_label("未登録の加工の単価").fill("120")
