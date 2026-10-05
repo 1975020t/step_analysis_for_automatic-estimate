@@ -197,34 +197,6 @@ def test_failed_job_reports_a_safe_message(client):
     assert str(client.app.state.settings.storage_dir) not in text and "Traceback" not in text
 
 
-def test_api_screen_and_document_show_the_same_amounts(client):
-    from streamlit.testing.v1 import AppTest
-
-    analysis = EstimateService.analyze_bytes(STEP.read_bytes(), STEP.name, k_factor_confirmed=True)
-    condition = {"material": "SPCC", "quantity": 100, "surface_treatment": "ZINC_CLEAR"}
-    api = client.post("/api/quotes", json={"analysis": analysis.model_dump(mode="json"), "condition": condition}).json()["price"]
-
-    app = AppTest.from_file(str(ROOT / "app.py"))
-    app.session_state["analysis_result"] = analysis
-    app.run(timeout=30)
-    app.selectbox[0].select("SPCC").run(timeout=30)
-    next(n for n in app.number_input if n.label == "数量").set_value(100).run(timeout=30)
-    next(s for s in app.selectbox if s.label == "表面処理").select("ZINC_CLEAR").run(timeout=30)
-    metrics = {m.label: m.value for m in app.metric}
-    assert metrics["単価（1個）"] == f"¥{api['unit_price']:,}" and metrics["小計（税抜、100個）"] == f"¥{api['subtotal']:,}"
-    assert metrics["消費税（10%）"] == f"¥{api['tax']:,}" and metrics["見積金額（税込）"] == f"¥{api['total']:,}"
-
-    next(b for b in app.button if b.label.startswith("見積書を作成する")).click().run(timeout=30)  # the quotation page
-    app.text_input(key="doc_customer").input("株式会社テスト").run(timeout=30)
-    next(b for b in app.button if b.label == "見積書PDFを作成").click().run(timeout=30)
-    assert not app.exception
-    documents = sorted((client.app.state.settings.documents_dir).glob("*/quote.pdf"))
-    assert len(documents) == 1  # the screen issued it through the same service (same storage)
-    text = re.sub(r"\s+", "", pdfium.PdfDocument(documents[0].read_bytes())[0].get_textpage().get_text_range())
-    for value in (f"¥{api['total']:,}", f"{api['unit_price']:,}", f"{api['subtotal']:,}", f"{api['tax']:,}"):
-        assert value in text
-
-
 # ---------------------------------------------------------------- drawing PDF
 def test_drawing_reading_with_a_fake_reader_feeds_the_quote_and_the_document(client):
     FakeReader.calls.clear()

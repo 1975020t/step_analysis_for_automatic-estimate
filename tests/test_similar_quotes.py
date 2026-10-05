@@ -82,71 +82,45 @@ def test_import_with_other_column_names_and_missing_columns(tmp_path):
 
 
 # ---------------------------------------------------------------- search rules
-def test_every_earlier_repeat_is_in_the_results(seed):
+def test_only_the_same_material_with_bends_within_1_and_holes_within_2_smallest_difference_first(seed):
     quotes, search = seed
-    groups: dict[tuple[str, str], list[PastQuote]] = {}
-    for q in quotes:
-        groups.setdefault((norm_customer(q.customer), norm_drawing(q.drawing_no)), []).append(q)
     checked = 0
-    for i, q in enumerate(quotes):
-        earlier = [x for x in groups[(norm_customer(q.customer), norm_drawing(q.drawing_no))] if x.date < q.date]
-        if not earlier:
+    for q in quotes[::9]:
+        query = replace(query_of(q, None), date=None, exclude=q.quote_no)
+        results = search.search(query, limit=len(quotes))
+        if query.holes is None or query.bends is None or not q.material_code or q.material_code == UNREGISTERED:
+            assert results == []  # a part whose holes / bends are unknown is never similar to anything
             continue
-        results = search.search(query_of(q, None))
-        got = {r.quote.quote_no: r for r in results}
-        assert all(e.quote_no in got and got[e.quote_no].category == REPEAT for e in earlier), q.quote_no
-        assert [r.category for r in results[:len(earlier)]] == [REPEAT] * len(earlier)  # repeats come first
-        checked += 1
-    assert checked >= 500
+        expected = [x for x in quotes if x.quote_no != q.quote_no and x.material_code == q.material_code
+                    and x.bends is not None and x.holes is not None
+                    and abs(x.bends - q.bends) <= 1 and abs(x.holes - q.holes) <= 2]
+        assert len(results) == len(expected), q.quote_no
+        keys = [(abs(r.quote.bends - q.bends) + abs(r.quote.holes - q.holes), abs(r.quote.bends - q.bends)) for r in results]
+        assert keys == sorted(keys)
+        assert all(r.quote.material_code == q.material_code and r.reasons and r.differences for r in results)
+        checked += bool(results)
+    assert checked > 100
 
 
-def test_same_drawing_number_of_another_customer_is_not_a_repeat(seed):
+def test_the_rule_itself():
+    from src.similar_quotes import difference, is_similar
+
+    assert is_similar("SPCC", 2, 4, "SPCC", 3, 6) and is_similar("SPCC", 2, 4, "spcc", 1, 2)
+    assert not is_similar("SPCC", 2, 4, "SPCC", 4, 4)       # bends differ by 2
+    assert not is_similar("SPCC", 2, 4, "SPCC", 2, 7)       # holes differ by 3
+    assert not is_similar("SPCC", 2, 4, "SECC", 2, 4)       # another material
+    assert not is_similar("SPCC", 2, 4, "SPCC", None, 4)    # unknown bends (no shape file)
+    assert not is_similar(UNREGISTERED, 2, 4, UNREGISTERED, 2, 4)
+    assert difference(2, 4, 3, 4) < difference(2, 4, 2, 6)  # smaller total difference first
+
+
+def test_quotes_without_cad_values_are_left_out(seed):
     quotes, search = seed
-    q = next(q for q in quotes if q.drawing_no)
-    query = replace(query_of(q, None), customer="別の株式会社", date=None, exclude="")
-    assert all(r.category != REPEAT for r in search.search(query))
-
-
-def test_similar_results_keep_the_material_family_and_the_thickness_rule(seed):
-    quotes, search = seed
-    for q in quotes[::7]:
-        if not q.material_family or q.thickness not in SEED_THICKNESS:
-            continue
-        k = SEED_THICKNESS.index(q.thickness)
-        allowed = set(SEED_THICKNESS[max(0, k - 1):k + 2])
-        for r in search.search(query_of(q, None)):
-            if r.category == REPEAT:
-                continue
-            assert r.quote.material_family == q.material_family, (q.quote_no, r.quote.quote_no)
-            assert r.quote.thickness in allowed, (q.quote_no, r.quote.thickness, q.thickness)
-
-
-def test_at_most_five_results_each_with_reasons_and_differences(seed):
-    quotes, search = seed
-    counts = []
-    for q in quotes[::5]:
-        results = search.search(query_of(q, None))
-        assert len(results) <= 5
-        counts.append(len(results))
-        for r in results:
-            assert r.reasons and r.differences
-        order = [{REPEAT: 0, SAME_CUSTOMER: 1, OTHER_CUSTOMER: 2}[r.category] for r in results]
-        assert order == sorted(order)
-    assert max(counts) == 5
-
-
-def test_quotes_without_cad_values_are_found(seed):
-    quotes, search = seed
-    legacy_found = 0
-    for q in quotes[::3]:
-        results = search.search(replace(query_of(q, None), area=None, holes=None, bends=None))
-        legacy_found += sum(not r.quote.has_shape for r in results)
-    assert legacy_found > 100
-    legacy = next(q for q in quotes if not q.has_shape and q.drawing_no)
-    later = replace(query_of(legacy, None), date=date(2030, 1, 1), exclude="")
-    hit = next(r for r in search.search(later) if r.quote.quote_no == legacy.quote_no)
-    assert hit.category == REPEAT and hit.leveled_unit is None and "形状の数値がない" in hit.standard_note
-    assert "過去の見積に形状の数値なし" in hit.differences
+    for q in quotes[::11]:
+        assert all(r.quote.has_shape or (r.quote.bends is not None and r.quote.holes is not None)
+                   for r in search.search(replace(query_of(q, None), date=None, exclude="")))
+    legacy = next(q for q in quotes if q.bends is None and q.material_code)
+    assert search.search(replace(query_of(legacy, None), date=None, exclude="")) == []
 
 
 def test_explanations_name_the_differences():
@@ -172,12 +146,12 @@ def test_explanations_name_the_differences():
 
 def test_repeat_warning_when_the_price_moved_more_than_20_percent(seed):
     quotes, search = seed
-    q = next(q for i, q in enumerate(quotes) if q.drawing_no and search.standard_unit(i)[0])
+    q = next(q for i, q in enumerate(quotes) if q.drawing_no and q.has_shape and search.standard_unit(i)[0])
     base = replace(query_of(q, search.standard_unit(quotes.index(q))[0]), date=date(2030, 1, 1), exclude="")
-    hit = next(r for r in search.search(replace(base, unit_price=q.unit_price)) if r.quote.quote_no == q.quote_no)
+    hit = next(r for r in search.search(replace(base, unit_price=q.unit_price), limit=10_000) if r.quote.quote_no == q.quote_no)
     level = hit.leveled_unit
-    near = next(r for r in search.search(replace(base, unit_price=round(level * 1.1))) if r.quote.quote_no == q.quote_no)
-    far = next(r for r in search.search(replace(base, unit_price=round(level * 1.3))) if r.quote.quote_no == q.quote_no)
+    near = next(r for r in search.search(replace(base, unit_price=round(level * 1.1)), limit=10_000) if r.quote.quote_no == q.quote_no)
+    far = next(r for r in search.search(replace(base, unit_price=round(level * 1.3)), limit=10_000) if r.quote.quote_no == q.quote_no)
     assert not any("リピートで" in w for w in near.warnings)
     assert any("リピートで" in w and "+30%" in w for w in far.warnings)
     assert any("2年以上前" in w for w in far.warnings)  # 2030 vs a seed quote from 2023-2026

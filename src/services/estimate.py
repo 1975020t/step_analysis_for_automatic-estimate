@@ -1,4 +1,4 @@
-"""Operations of the estimating system, shared by the API and the Streamlit demo (no web framework here).
+"""Operations of the estimating system, shared by the API and the screens (no web framework here).
 
     service = EstimateService(Settings.from_env())
     analysis = service.analyze_bytes(data, "part.step")
