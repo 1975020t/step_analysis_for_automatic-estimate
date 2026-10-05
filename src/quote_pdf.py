@@ -81,8 +81,15 @@ def yen(value: int) -> str:
     return f"{value:,}"
 
 
-def render_quote(document: QuoteDocument) -> bytes:
-    """The external quotation (見積書). No cost lines and no margin."""
+TEMPLATE_DEFAULTS = {"breakdown": False, "unit_and_quantity": True, "drawing_no": True, "validity": True,
+                     "remarks": True, "seal": True}
+
+
+def render_quote(document: QuoteDocument, options: dict | None = None, breakdown: list[tuple[str, str]] | None = None) -> bytes:
+    """The external quotation (見積書). No cost lines and no margin, whatever the template says.
+    options (document templates): breakdown (the work items under the part, names and quantities only),
+    unit_and_quantity, drawing_no, validity, remarks, seal. Without options the layout is the standard one."""
+    opts = {**TEMPLATE_DEFAULTS, **(options or {})}
     register_font()
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4, invariant=1, initialFontName=FONT, lang="ja")
@@ -107,7 +114,7 @@ def render_quote(document: QuoteDocument) -> bytes:
     c.setFont(FONT, 7.5)
     for i, (label, value) in enumerate((("見積番号", document.number),
                                         ("発行日", _date(document.issued_at)),
-                                        ("有効期限", _date(document.valid_until)))):
+                                        ("有効期限", _date(document.valid_until)))[:3 if opts["validity"] else 2]):
         y = top(36 + i * 4.8)
         c.drawString(149 * mm, y, label)
         c.drawRightString(RIGHT, y, value)
@@ -124,7 +131,7 @@ def render_quote(document: QuoteDocument) -> bytes:
     # terms
     terms = (("件名", document.subject), ("納期", f"受注後 {document.lead_time_days}営業日"),
              ("受渡場所", document.delivery_place), ("取引条件", document.payment_terms),
-             ("有効期限", f"発行日より{document.validity_days}日"))
+             ("有効期限", f"発行日より{document.validity_days}日"))[:5 if opts["validity"] else 4]
     c.setLineWidth(0.5)
     for i, (label, value) in enumerate(terms):
         y0 = 67.5 + i * 6
@@ -144,7 +151,7 @@ def render_quote(document: QuoteDocument) -> bytes:
         text_in_box(c, row, 122.5 * mm, top(61.5 + i * 5.1), 72 * mm, 5 * mm, 7.2)
     # stamp boxes (frames only)
     c.setFont(FONT, 6)
-    for i, label in enumerate(("承認", "担当")):
+    for i, label in enumerate(("承認", "担当") if opts["seal"] else ()):
         x = 168.5 * mm + i * 13.25 * mm
         c.drawCentredString(x + 6.6 * mm, top(89.8), label)
         c.rect(x, top(106), 13.25 * mm, 15 * mm)
@@ -161,7 +168,8 @@ def render_quote(document: QuoteDocument) -> bytes:
     columns = [15, 23.8, 73.4, 133, 143, 156.8, 175.6, 195]
     xs = [v * mm for v in columns]
     header_top, header_h = 124.0, 6.7
-    rows_n = max(8, len(document.lines))
+    sub_rows = list(breakdown or []) if opts["breakdown"] else []
+    rows_n = max(8, len(document.lines) + len(sub_rows))
     row_h = min(10.0, 79.5 / rows_n)
     c.setFillColor(GREY)
     c.rect(xs[0], top(header_top + header_h), xs[-1] - xs[0], header_h * mm, fill=1, stroke=0)
@@ -184,12 +192,17 @@ def render_quote(document: QuoteDocument) -> bytes:
         cell = lambda i: (xs[i], top(y0), xs[i + 1] - xs[i], row_h * mm)  # noqa: E731
         text_in_box(c, str(r + 1), *cell(0), 7, align="center")
         drawing = " ".join(x for x in (line.drawing_no, f"Rev.{line.revision}" if line.revision else "") if x)
-        _two_lines(c, line.name, drawing, *cell(1), 7.2, 6.3)
+        _two_lines(c, line.name, drawing if opts["drawing_no"] else "", *cell(1), 7.2, 6.3)
         _two_lines(c, *(line.spec + ["", ""])[:2], *cell(2), 6.6, 6.6)
-        text_in_box(c, f"{line.quantity:,}", *cell(3), 7.2, align="right")
-        text_in_box(c, line.unit, *cell(4), 7.2, align="center")
-        text_in_box(c, yen(line.unit_price), *cell(5), 7.2, align="right")
+        if opts["unit_and_quantity"]:
+            text_in_box(c, f"{line.quantity:,}", *cell(3), 7.2, align="right")
+            text_in_box(c, line.unit, *cell(4), 7.2, align="center")
+            text_in_box(c, yen(line.unit_price), *cell(5), 7.2, align="right")
         text_in_box(c, yen(line.amount), *cell(6), 7.2, align="right")
+    for r, (name, amount_text) in enumerate(sub_rows, start=len(document.lines)):
+        y0 = header_top + header_h + r * row_h
+        text_in_box(c, f"内訳 {name}", xs[1], top(y0), xs[3] - xs[1], row_h * mm, 6.6)
+        text_in_box(c, amount_text, xs[3], top(y0), xs[5] - xs[3], row_h * mm, 6.6, align="right")
 
     # totals
     tx = [142.3 * mm, 167 * mm, RIGHT]
@@ -208,7 +221,7 @@ def render_quote(document: QuoteDocument) -> bytes:
     c.drawString(LEFT, top(remarks_top), "備考")
     box_top = remarks_top + 3.5
     entries: list[tuple[str, object, float]] = []  # (text, colour, indent)
-    entries += [(f"・{remark}", colors.black, 0) for remark in document.remarks]
+    entries += [(f"・{remark}", colors.black, 0) for remark in (document.remarks if opts["remarks"] else [])]
     available = 284 - 8 - box_top  # keep the page number free
     size = 7.2
     while True:

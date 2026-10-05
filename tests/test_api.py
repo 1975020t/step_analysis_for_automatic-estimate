@@ -139,7 +139,7 @@ def test_step_analysis_quote_document_and_similar_quotes(client):
     similar = client.post("/api/similar-quotes", json={"analysis_job_id": job_id, "condition": CONDITION,
                                                        "customer": "株式会社テスト", "drawing_no": "API-001",
                                                        "revision": "C"}).json()
-    assert similar["price"] == price and 1 <= len(similar["matches"]) <= 5
+    assert similar["price"] == price and 1 <= len(similar["matches"]) <= 10
     first = similar["matches"][0]
     assert first["category"] == "リピート" and first["quote"]["quote_no"] in (doc["quote_no"], again["quote_no"])
     assert first["reasons"] and first["differences"] and first["leveled_unit"] == pytest.approx(price["unit_price"], rel=1e-3)

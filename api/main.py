@@ -1,14 +1,14 @@
-"""HTTP API of the estimating system (FastAPI). The work is done by src/services (shared with the Streamlit demo).
+"""HTTP API of the estimating system (FastAPI) and the screens (React, built into web/dist, served at /).
 
     uvicorn api.main:app --host 0.0.0.0 --port 8000        # docs at http://localhost:8000/docs
 
-Flow: POST /api/files -> POST /api/analyses (job) -> GET /api/jobs/{id} -> POST /api/quotes -> POST /api/documents.
-See analysis/api_design.md.
+The work is done by src/services (EstimateService: analysis, reading, quote) and src/services/platform (the
+database: drawings, estimates, cases, documents, settings). The guard (API token) and the actor are in
+api/security.py. See analysis/api_design.md.
 """
 from __future__ import annotations
 
 import json
-import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -16,11 +16,15 @@ from urllib.parse import quote as urlquote
 
 from fastapi import Depends, FastAPI, File, Form, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, Response
 
 from src.models import SheetMetalAnalysis
 from src.quote_document import PartInfo, Recipient
+from api.platform_routes import build_router
+from api.security import token_guard
 from src.services.estimate import EstimateService, ReaderFactory, ServiceError
+from src.services.platform.core import Platform
+from src.services.platform.documents import NotIssuable
 from src.services.jobs import JobQueue
 from src.services.schemas import (AnalysisJobRequest, AnalysisSource, DocumentFileOut, DocumentRequest,
                                   DocumentResponse, DrawingJobRequest, FileOut, HistoryImportResponse, HistoryPage,
@@ -37,11 +41,18 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     """The API. `reader_factory` replaces the drawing-PDF reader (tests use a fake one; no LLM call).
     `start_jobs=False` accepts jobs without running them (for tests of the queue state)."""
     settings = settings or Settings.from_env()
-    service = EstimateService(settings, reader_factory=reader_factory)
+    platform = Platform(settings, reader_factory=reader_factory)
+    service: EstimateService = platform.service
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
+        from src.services.platform.drawings import run_register_job
+        from src.services.platform.quotes import run_estimate_job
+
         app.state.queue = service.job_queue(autostart=start_jobs)
+        app.state.queue.add_handlers({"register": lambda p: run_register_job(platform, p),
+                                      "estimate": lambda p: run_estimate_job(platform, p)})
+        platform.queue = app.state.queue
         app.state.queue.resume()  # jobs a previous run left queued or running
         yield
         app.state.queue.shutdown(wait=False)
@@ -50,12 +61,16 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
                   description="STEP・DXFの解析、図面PDFの読み取り、見積、見積書、類似見積、過去見積の履歴。"
                               "金額はマスターとルールだけで決まります（LLMは計算しません）。")
     app.state.service = service
+    app.state.platform = platform
     app.state.settings = settings
 
     # ------------------------------------------------------------ errors (no internal paths or secrets)
     @app.exception_handler(ServiceError)
     async def service_error(_: Request, exc: ServiceError):
-        return JSONResponse(status_code=exc.status, content={"error": {"code": exc.code, "message": str(exc)}})
+        error = {"code": exc.code, "message": str(exc)}
+        if isinstance(exc, NotIssuable):
+            error["details"] = exc.missing
+        return JSONResponse(status_code=exc.status, content={"error": error})
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_: Request, exc: RequestValidationError):
@@ -67,15 +82,7 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     async def unexpected(_: Request, exc: Exception):
         return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": "サーバーでエラーが発生しました。"}})
 
-    def require_token(request: Request) -> None:
-        if not settings.api_token:
-            return
-        header = request.headers.get("authorization", "")
-        given = header[7:].strip() if header.lower().startswith("bearer ") else request.headers.get("x-api-token", "")
-        if not secrets.compare_digest(given.encode(), settings.api_token.encode()):
-            raise ServiceError("APIトークンが必要です。", 401, "UNAUTHORIZED")
-
-    guarded = [Depends(require_token)]
+    guarded = [Depends(token_guard(settings.api_token))]
 
     def queue() -> JobQueue:
         return app.state.queue
@@ -235,7 +242,26 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
         """アップロードした STEP を、ブラウザで表示できる glTF（GLB、単位 mm）にして返す。"""
         return Response(service.glb(file_id), media_type="model/gltf-binary")
 
+    app.include_router(build_router(platform, guarded))
+    mount_screens(app, settings)
     return app
+
+
+def mount_screens(app: FastAPI, settings: Settings) -> None:
+    """Serve the built React screens (web/dist) at /, with index.html for every screen path."""
+    dist = settings.web_dist or Path(__file__).resolve().parents[1] / "web" / "dist"
+    if not (dist / "index.html").exists():
+        return
+    root = dist.resolve()
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def screens(path: str):
+        if path.startswith("api/"):
+            raise ServiceError("見つかりません。", 404, "NOT_FOUND")
+        target = (root / path).resolve()
+        if path and target.is_file() and root in target.parents:
+            return FileResponse(target)
+        return FileResponse(root / "index.html", headers={"Cache-Control": "no-store"})
 
 
 def _file_meta(service: EstimateService, file_id: str) -> dict:

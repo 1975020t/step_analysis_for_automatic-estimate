@@ -141,6 +141,14 @@ class EstimateService:
                                "条件は手入力してください。", status=503, code="DRAWING_READER_UNAVAILABLE")
         reading = dict(self.reader_factory().read(str(path)))
         evidence = reading.pop("evidence", None)
+        texts = {}
+        for raw in evidence or []:  # the drawing's wording of the material and finish (names of unregistered ones)
+            for key in ("material", "surface_treatment"):
+                text = ((raw or {}).get(key) or {}).get("text") if isinstance((raw or {}).get(key), dict) else None
+                if text and key not in texts:
+                    texts[key] = str(text).strip()
+        if texts:
+            reading["source_texts"] = texts
         return reading, self.drawing_context(reading, file_name, unregistered_process_texts(evidence, self.masters))
 
     def drawing_context(self, reading: dict, file_name: str = "", unregistered: list[str] | None = None) -> DrawingContext:

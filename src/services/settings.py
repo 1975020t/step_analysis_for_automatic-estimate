@@ -7,6 +7,11 @@
   API_TOKEN              when set, every API call needs it (Authorization: Bearer ... or X-API-Token)
   MAX_UPLOAD_MB          largest accepted upload                                              default: 50
   JOB_WORKERS            background workers for analyses and drawing readings                 default: 2
+  DATABASE_URL           the database (PostgreSQL: postgresql+psycopg://user:pass@host/db)
+                                                                         default: SQLite <storage>/app.db
+  DRAWING_READER         "recorded:<file.json>" replays recorded drawing readings (demo / screenshots,
+                         no Claude API call)                              default: the Claude API reader
+  WEB_DIST               the built screens (web/dist) served by the API at /   default: web/dist when present
 """
 from __future__ import annotations
 
@@ -24,6 +29,9 @@ class Settings:
     api_token: str = ""
     max_upload_bytes: int = 50 * 1024 * 1024
     job_workers: int = 2
+    database_url: str = ""
+    drawing_reader: str = ""
+    web_dist: Path | None = None
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -38,7 +46,17 @@ class Settings:
             api_token=env.get("API_TOKEN", "").strip(),
             max_upload_bytes=int(float(env.get("MAX_UPLOAD_MB") or 50) * 1024 * 1024),
             job_workers=max(1, int(env.get("JOB_WORKERS") or 2)),
+            database_url=env.get("DATABASE_URL", "").strip(),
+            drawing_reader=env.get("DRAWING_READER", "").strip(),
+            web_dist=Path(env["WEB_DIST"]) if env.get("WEB_DIST") else None,
         )
+
+    @property
+    def db_url(self) -> str:
+        if self.database_url:
+            return self.database_url
+        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        return f"sqlite:///{self.storage_dir.resolve() / 'app.db'}"
 
     @property
     def uploads_dir(self) -> Path:

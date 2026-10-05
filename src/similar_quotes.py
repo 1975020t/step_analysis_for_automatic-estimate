@@ -1,17 +1,17 @@
-"""Similar past quotes: up to 5 references with why they are similar, what differs and how they were priced.
+"""Similar past quotes (類似実績) and similar drawings: one rule for every screen (rules only, no LLM).
 
-Rules only (no LLM). Order of the results:
-  1. リピート       same customer and same drawing number (any revision): always shown first, newest first
-  2. 同じ顧客       same customer, a part made the same way
-  3. 他の顧客       any customer, a part made the same way
-"Made the same way" requires the same material family (steel / stainless / aluminum / copper) and the same or
-the adjacent sheet thickness; the rest (exact material, quantity band, size, bends, holes, finish, processes)
-only ranks. A past quote without CAD values is still found by drawing number, material, thickness, quantity.
+Similar means all three:
+  * the same material (master code; an unknown or unregistered material is never similar to anything)
+  * the number of bends differs by at most 1 (MAX_BEND_DIFF)
+  * the number of holes differs by at most 2 (MAX_HOLE_DIFF)
+A part whose bends or holes are unknown (no shape file / no CAD values) is left out. Results are ordered by the
+difference, smallest first: bends + holes, then bends, then holes, then the newest. `is_similar` / `difference`
+are the rule itself; the drawing list and the estimate screen both use them (src/services/platform/similar.py).
 
-Price comparison: the past unit price against today's; when the past quote has CAD values and conditions the
-current master can price, its standard unit price is recomputed with today's master, and the ratio actual /
-standard is applied to today's standard ("the past pricing level applied to this quote"). Nothing here
-changes the quote: it is shown for the estimator to judge.
+Each past quote found comes with why it is similar, what differs and how it was priced: the past unit price
+against today's; when the past quote has CAD values and conditions the current master can price, its standard
+unit price is recomputed with today's master, and the ratio actual / standard is applied to today's standard
+("the past pricing level applied to this quote"). Nothing here changes the quote: it is shown for the estimator.
 """
 from __future__ import annotations
 
@@ -26,7 +26,9 @@ from src.models import AdditionalProcess, QuoteCondition, SheetMetalAnalysis
 from src.past_quotes import FAMILY_LABEL, PastQuote
 from src.quote_engine import QuoteEngine
 
-MAX_RESULTS = 5
+MAX_RESULTS = 10
+MAX_BEND_DIFF = 1
+MAX_HOLE_DIFF = 2
 REPEAT, SAME_CUSTOMER, OTHER_CUSTOMER = "リピート", "同じ顧客", "他の顧客"
 CATEGORY_ORDER = {REPEAT: 0, SAME_CUSTOMER: 1, OTHER_CUSTOMER: 2}
 # sheet thickness series used for "adjacent" (a value between two steps is adjacent to both)
@@ -82,6 +84,25 @@ def band_label(band: int) -> str:
     return f"{low}〜{high}" if high else f"{low}〜"
 
 
+def same_material(a: str | None, b: str | None) -> bool:
+    a, b = (a or "").strip().upper(), (b or "").strip().upper()
+    return bool(a) and a == b and a != UNREGISTERED
+
+
+def is_similar(material: str | None, bends: int | None, holes: int | None,
+               other_material: str | None, other_bends: int | None, other_holes: int | None) -> bool:
+    """The similarity rule: same material, bends within 1, holes within 2 (unknown counts are never similar)."""
+    if None in (bends, holes, other_bends, other_holes) or not same_material(material, other_material):
+        return False
+    return abs(bends - other_bends) <= MAX_BEND_DIFF and abs(holes - other_holes) <= MAX_HOLE_DIFF
+
+
+def difference(bends: int, holes: int, other_bends: int, other_holes: int) -> tuple[int, int, int]:
+    """Sort key of a similar part, smallest first: (bends + holes, bends, holes) differences."""
+    db, dh = abs(bends - other_bends), abs(holes - other_holes)
+    return db + dh, db, dh
+
+
 # ---------------------------------------------------------------- query and result
 @dataclass
 class Query:
@@ -132,47 +153,40 @@ class SimilarQuoteSearch:
         self.quotes = quotes
         self.masters = masters
         self.engine = QuoteEngine(masters)
-        self._by_drawing: dict[tuple[str, str], list[int]] = {}
-        self._by_family: dict[str, list[int]] = {}
+        self._by_material: dict[str, list[int]] = {}
         self._customer = [norm_customer(q.customer) for q in quotes]
         for i, q in enumerate(quotes):
-            if q.drawing_no:
-                self._by_drawing.setdefault((self._customer[i], norm_drawing(q.drawing_no)), []).append(i)
-            if q.material_family:
-                self._by_family.setdefault(q.material_family, []).append(i)
+            if same_material(q.material_code, q.material_code):
+                self._by_material.setdefault(q.material_code.strip().upper(), []).append(i)
         self._standard: dict[int, tuple[float | None, str]] = {}
 
     # ------------------------------------------------------------ public
     def search(self, query: Query, limit: int = MAX_RESULTS) -> list[Match]:
+        """Past quotes similar to the query (see the module rule), the smallest difference first."""
         customer = norm_customer(query.customer)
-        usable = lambda i: ((query.date is None or self.quotes[i].date < query.date)  # noqa: E731
-                            and (not query.exclude or self.quotes[i].quote_no != query.exclude))
-        repeat_ids = [i for i in self._by_drawing.get((customer, norm_drawing(query.drawing_no)), []) if usable(i)] \
-            if query.drawing_no else []
-        repeat_ids.sort(key=lambda i: self.quotes[i].date, reverse=True)
-        chosen = [(REPEAT, i, self._score(query, self.quotes[i])) for i in repeat_ids[:limit]]
-        taken = set(repeat_ids)
-
-        same, other = [], []
-        for i in self._by_family.get(query.material_family, []) if query.material_family else []:
-            if i in taken or not usable(i):
-                continue
+        if query.bends is None or query.holes is None or not same_material(query.material_code, query.material_code):
+            return []
+        found = []
+        for i in self._by_material.get(query.material_code.strip().upper(), []):
             q = self.quotes[i]
-            if thickness_relation(query.thickness, q.thickness) is None:
+            if (query.date is not None and q.date >= query.date) or (query.exclude and q.quote_no == query.exclude):
                 continue
-            score = self._score(query, q)
-            (same if customer and self._customer[i] == customer else other).append((score, q.date, i))
-        same.sort(reverse=True)
-        other.sort(reverse=True)
-        room = limit - len(chosen)
-        if room > 0:
-            n_same = min(len(same), max(room - min(len(other), room // 2), math.ceil(room / 2)))
-            picks = [(SAME_CUSTOMER, i, s) for s, _, i in same[:n_same]]
-            picks += [(OTHER_CUSTOMER, i, s) for s, _, i in other[:room - len(picks)]]
-            if len(picks) < room:  # not enough from other customers: more from the same customer
-                picks += [(SAME_CUSTOMER, i, s) for s, _, i in same[n_same:n_same + room - len(picks)]]
-            chosen += sorted(picks, key=lambda c: (CATEGORY_ORDER[c[0]], -c[2]))
-        return [self._match(query, category, i, score) for category, i, score in chosen]
+            if not is_similar(query.material_code, query.bends, query.holes, q.material_code, q.bends, q.holes):
+                continue
+            found.append((difference(query.bends, query.holes, q.bends, q.holes), -q.date.toordinal(), i))
+        found.sort()
+        matches = []
+        for _, _, i in found[:limit]:
+            q = self.quotes[i]
+            if customer and self._customer[i] == customer and query.drawing_no and \
+                    norm_drawing(q.drawing_no) == norm_drawing(query.drawing_no):
+                category = REPEAT
+            elif customer and self._customer[i] == customer:
+                category = SAME_CUSTOMER
+            else:
+                category = OTHER_CUSTOMER
+            matches.append(self._match(query, category, i, self._score(query, q)))
+        return matches
 
     def reference(self, matches: list[Match]) -> Reference | None:
         """A reference unit price from the past pricing level: the latest repeat, else the median of the same
