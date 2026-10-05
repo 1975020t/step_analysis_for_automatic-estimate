@@ -67,6 +67,9 @@ class IssuedDocument:
 
 def default_reader_factory():
     from src.pdf_reader import PdfConditionReader
+    from src.services.pdfium_lock import guard_reader
+
+    guard_reader()  # readings run in parallel jobs; pdfium must not
 
     return PdfConditionReader()
 

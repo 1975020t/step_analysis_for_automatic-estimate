@@ -216,7 +216,7 @@ def issued_file(pf: Platform, doc_id: int) -> tuple[bytes, str]:
 def to_png(pdf: bytes, width: int = 1100) -> bytes:
     import pypdfium2 as pdfium
 
-    from src.services.platform.drawings import PDFIUM_LOCK
+    from src.services.pdfium_lock import PDFIUM_LOCK
 
     with PDFIUM_LOCK:
         doc = pdfium.PdfDocument(pdf)

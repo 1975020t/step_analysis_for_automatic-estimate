@@ -37,10 +37,16 @@ export function Model3D({ fileId, height = 320 }: { fileId: string; height?: num
       .then((gltf) => {
         if (disposed) return;
         const model = gltf.scene;
-        model.traverse((o: any) => {
-          if (o.isMesh) o.material = new THREE.MeshStandardMaterial({ color: 0x9fb4cc, metalness: 0.35, roughness: 0.5, side: THREE.DoubleSide });
-        });
         scene.add(model);
+        model.updateMatrixWorld(true);
+        model.traverse((o: any) => {
+          if (!o.isMesh) return;
+          o.geometry.computeVertexNormals(); // the GLB carries positions and triangles only
+          o.material = new THREE.MeshStandardMaterial({ color: 0x9fb4cc, metalness: 0.25, roughness: 0.55, side: THREE.DoubleSide });
+          const edges = new THREE.LineSegments(new THREE.EdgesGeometry(o.geometry, 25), new THREE.LineBasicMaterial({ color: 0x33475e }));
+          edges.applyMatrix4(o.matrixWorld);
+          scene.add(edges);
+        });
         const bounds = new THREE.Box3().setFromObject(model);
         const center = bounds.getCenter(new THREE.Vector3());
         const size = bounds.getSize(new THREE.Vector3()).length();
@@ -49,14 +55,6 @@ export function Model3D({ fileId, height = 320 }: { fileId: string; height?: num
         camera.near = size / 100;
         camera.far = size * 20;
         camera.updateProjectionMatrix();
-        const edges = new THREE.LineSegments(
-          new THREE.EdgesGeometry((model.children[0] as any)?.geometry || new THREE.BufferGeometry(), 25),
-          new THREE.LineBasicMaterial({ color: 0x33475e }),
-        );
-        if ((model.children[0] as any)?.geometry) {
-          edges.applyMatrix4(model.children[0].matrixWorld);
-          scene.add(edges);
-        }
         setState("");
         loop();
       })
@@ -71,7 +69,7 @@ export function Model3D({ fileId, height = 320 }: { fileId: string; height?: num
   }, [fileId, height]);
   return (
     <div className="viewer" ref={box} style={{ height }} data-testid="model3d">
-      {state && <div className="empty" style={{ position: "absolute", inset: 0 }}>{state}</div>}
+      {state ? <div className="empty" style={{ position: "absolute", inset: 0 }}>{state}</div> : null}
     </div>
   );
 }

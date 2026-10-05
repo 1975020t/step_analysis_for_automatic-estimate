@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
+from src.models import SheetMetalAnalysis
 from src.db.models import (Case, CaseStatus, CaseStatusLog, Drawing, DrawingRevision, IssuedDocument, Quote,
                            QuoteEditLog, now)
 from src.services.estimate import ServiceError
@@ -234,7 +235,8 @@ def detail(pf: Platform, quote_id: int) -> dict:
                         "pdf_name": revision.pdf_name if revision else ""} if drawing else None,
             "analysis": {k: a.get(k) for k in ("status", "file_name", "thickness_mm", "blank_area_mm2", "cut_length_mm",
                                                "hole_count", "bend_count", "reason_code", "reason_codes", "message",
-                                               "warnings", "assumptions", "flat_pattern")} if a else None,
+                                               "warnings", "assumptions", "flat_pattern")}
+                         | {"state": shape_state(a)} if a else None,
             "job": {"job_id": job["job_id"], "status": job["status"], "error": job.get("error"),
                     "progress": job.get("progress")} if job else None,
             "result": result, "edit_log": log, "documents": docs, "chat": quote.chat or [],
@@ -243,6 +245,17 @@ def detail(pf: Platform, quote_id: int) -> dict:
                                quote.drawing_id),
         }
     return out
+
+
+def shape_state(a: dict) -> str:
+    """確定 / 概算 / 解析不可 of an analysis, by the rule of QuoteEngine.is_estimate (partial, assumptions, a value
+    of medium or low confidence)."""
+    if a.get("status") not in ("success", "partial"):
+        return "解析不可"
+    analysis = SheetMetalAnalysis.model_validate(a)
+    estimated = analysis.status == "partial" or bool(analysis.assumptions) or any(
+        q.confidence in {"medium", "low"} for q in analysis.metric_quality.values())
+    return "概算" if estimated else "確定"
 
 
 def blockers(result: dict, case: Case, docs: list[dict]) -> dict:

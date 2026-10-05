@@ -256,10 +256,10 @@ function SimilarList({ items, unitPrice }: { items: any[]; unitPrice?: number })
 function ShapePanel({ q }: { q: any }) {
   const a = q.analysis;
   const shape = q.result.shape;
-  const statusText = !a ? "形状ファイルなし" : a.status === "success" ? "確定" : a.status === "partial" ? "概算" : "解析不可";
+  const statusText = !a ? "形状ファイルなし" : a.state;
   return (
     <div className="stack">
-      <div className="row"><b>形状解析：</b><span className={a?.status === "success" ? "tag soft" : "tag solid"}>{statusText}</span>
+      <div className="row"><b>形状解析：</b><span className={a?.state === "確定" ? "tag soft" : "tag solid"}>{statusText}</span>
         <span className="small muted">{q.drawing?.shape_name}</span></div>
       {a?.message && <div className="small">{a.message}</div>}
       {(a?.assumptions || []).length > 0 && <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{a.assumptions.map((x: string, i: number) => <li key={i}>{x}</li>)}</ul>}

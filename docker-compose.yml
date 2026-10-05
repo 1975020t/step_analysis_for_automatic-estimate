@@ -1,36 +1,59 @@
-# docker compose up --build   ->  API http://localhost:8000/docs , demo http://localhost:8501
+# docker compose up --build   ->  screens http://localhost:8080 , API http://localhost:8000/docs
 # Works on any Docker host (in-house server or a cloud VM); no cloud-specific service is used.
-x-common: &common
-  build:
-    context: .
-    args:
-      BASE_IMAGE: ${BASE_IMAGE:-python:3.11-slim}
-  image: sheetmetal-estimate:latest
-  environment:
-    ESTIMATE_DATA_DIR: /app/data
-    ESTIMATE_STORAGE_DIR: /app/output                     # uploads, jobs, documents, 3D view files
-    PAST_QUOTES_PATH: /app/data/past_quotes/history.csv   # quote history (the repository file, mounted below)
-    QUOTE_LOG_PATH: /app/output/quote_log.csv
-    API_TOKEN: ${API_TOKEN:-}                             # set it to require a token for the API
-    MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
-    ANALYSIS_ANTHROPIC_API_KEY: ${ANALYSIS_ANTHROPIC_API_KEY:-}   # only for reading drawing PDFs
-  volumes:
-    - ./output:/app/output
-    - ./data/past_quotes:/app/data/past_quotes
-  restart: unless-stopped
-
+# The database is PostgreSQL (volume "dbdata"); files (drawings, shapes, documents) are in ./output.
 services:
+  db:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-estimate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-estimate}
+      POSTGRES_DB: ${POSTGRES_DB:-estimate}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-estimate} -d ${POSTGRES_DB:-estimate}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
   api:
-    <<: *common
-    command: ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    build:
+      context: .
+      args:
+        BASE_IMAGE: ${BASE_IMAGE:-python:3.11-slim}
+    image: sheetmetal-estimate-api:latest
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-estimate}:${POSTGRES_PASSWORD:-estimate}@db:5432/${POSTGRES_DB:-estimate}
+      ESTIMATE_DATA_DIR: /app/data                          # initial masters and history (loaded once into the database)
+      ESTIMATE_STORAGE_DIR: /app/output                     # uploaded drawings, shape files, documents, job state
+      QUOTE_LOG_PATH: /app/output/quote_log.csv
+      API_TOKEN: ${API_TOKEN:-}                             # set it to require a token for the API
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-50}
+      ANALYSIS_ANTHROPIC_API_KEY: ${ANALYSIS_ANTHROPIC_API_KEY:-}   # only for reading drawing PDFs
+    volumes:
+      - ./output:/app/output
+    depends_on:
+      db:
+        condition: service_healthy
     ports: ["8000:8000"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
+    restart: unless-stopped
 
-  demo:
-    <<: *common
-    command: ["streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.headless", "true"]
-    ports: ["8501:8501"]
+  web:
+    build:
+      context: ./web
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-alpine}
+        NGINX_IMAGE: ${NGINX_IMAGE:-nginx:1.27-alpine}
+    image: sheetmetal-estimate-web:latest
+    depends_on: [api]
+    ports: ["${WEB_PORT:-8080}:80"]
+    restart: unless-stopped
+
+volumes:
+  dbdata:

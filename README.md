@@ -1,34 +1,68 @@
-# STEP板金解析・見積デモ
+# 図面管理・板金見積システム
 
-STEP/STP形式の一定板厚板金（と展開図DXF・図面PDF）をローカル解析し、形状根拠、3D形状、展開後2D輪郭、ルールベース見積を表示するデモです。対象外形状に推定値を強制せず、項目別の方式・信頼度・警告・理由コードを返します。
-
-デモ画面は3つです。**見積**（アップロード・解析・条件・チャット・金額・類似見積のボタン）、**類似見積の詳細**（ボタンで選んだ過去の見積）、**見積書の作成**（宛先・品名・件名などの入力、見積書PDF、受注・失注の記録）。どの画面からも「← 見積に戻る」で戻れ、入力は残ります。
+STEP/STP形式の一定板厚板金（と展開図DXF・図面PDF）を解析し、ルールベースで見積を出すシステムです。図面を登録し、登録した図面から見積を作り、案件として進捗を追い、見積書・納品書・請求書を発行し、受注・失注を振り返るまでを、ブラウザの画面（React）でつなげて使えます。データはデータベース（PostgreSQL。テストと簡易起動は SQLite）に保管します。対象外形状に推定値を強制せず、項目別の方式・信頼度・警告・理由コードを返します。
 
 要件定義書・設計書・画面設計書・操作マニュアル・評価報告書・解説資料は [docs/](docs/README.md)（PDFは `docs/pdf/`）にあります。
 
 ## 起動
 
+### Docker で起動する（データベース・API・画面）
+
+Docker（Windows なら Docker Desktop）があれば、社内サーバーでもクラウドの仮想マシンでも同じ手順で起動できます。PowerShell で：
+
+```powershell
+cd step_analysis_for_automatic-estimate
+docker compose up --build -d      # 初回はイメージの作成に10分ほど
+start http://localhost:8080       # 画面。API の仕様書は http://localhost:8000/docs
+docker compose logs -f api        # 動作の記録を見る
+docker compose down               # 停止（データは残る）
+```
+
+- 起動するのは3つです：`db`（PostgreSQL 16、データはボリューム `dbdata`）、`api`（FastAPI、`http://localhost:8000`）、`web`（画面。nginx、`http://localhost:8080`。`/api` は API に中継）
+- API は起動時にデータベースの構造を最新にし（マイグレーション、`alembic upgrade head`）、空の表にだけ初期データ（`data/*.csv` のマスターと自社情報、`data/past_quotes/history.csv` の過去見積、案件ステータス14個など）を入れます。2回目以降の起動では、画面で変えた内容を上書きしません
+- 図面PDF・形状ファイル・帳票PDF・書類は `output/`（ホストのフォルダ）に保管します。置き場所は `ESTIMATE_STORAGE_DIR` で変えられます
+- データベースのユーザー・パスワードは `POSTGRES_USER`・`POSTGRES_PASSWORD`（既定はどちらも `estimate`。本番では変えてください）。例：`$env:POSTGRES_PASSWORD="..."` のあと `docker compose up -d`
+- API に合言葉をかけるときは `$env:API_TOKEN="..."`。画面では「設定 ＞ 担当者」で同じ合言葉を入れます。図面PDFの読み取りを使うときは `$env:ANALYSIS_ANTHROPIC_API_KEY="..."`
+- 画面のポートは `WEB_PORT`（既定 8080）。Docker Hub に届かない社内ネットワークでは、`BASE_IMAGE`（Python）・`NODE_IMAGE`・`NGINX_IMAGE`・`POSTGRES_IMAGE` に社内レジストリのイメージを指定します（例 `$env:BASE_IMAGE="registry.example.local/python:3.11-slim"`）
+
+### Docker なしで起動する（開発・お試し）
+
+Python 3.11 と Node.js 20 以上が必要です。データベースは指定しなければ SQLite（`output/app.db`）を使います。
+
 ```powershell
 python -m venv .venv
 .venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m streamlit run app.py                         # デモ画面 http://localhost:8501
-.venv\Scripts\python.exe -m uvicorn api.main:app --port 8000             # API http://localhost:8000/docs
+cd web; npm ci; npm run build; cd ..                                     # 画面を作る（web/dist）
+.venv\Scripts\python.exe -m uvicorn api.main:app --port 8000             # 画面 http://localhost:8000 、仕様書 /docs
 ```
 
-ブラウザでSTEPを選び、必要ならKファクターを変更して「解析を実行」を押します。既定値0.33のまま曲げ形状を解析した場合、加工条件未確認の概算として表示されます。
+API は `web/dist` があれば画面も配信します。PostgreSQL を使うときは `$env:DATABASE_URL="postgresql+psycopg://user:pass@localhost/estimate"`。画面を直しながら動かすときは `cd web; npm run dev`（http://localhost:5173、API は 8000 に中継）。
 
-### Docker で起動する（API とデモ画面）
-
-Docker（Windows なら Docker Desktop）があれば、社内サーバーでもクラウドの仮想マシンでも同じ手順で起動できます。
+お試し用のデータ（架空の顧客、`pdf_data`・`dxf_data` の図面と形状、受注・失注・帳票まで）を入れるときは：
 
 ```powershell
-docker compose up --build        # API http://localhost:8000/docs 、デモ画面 http://localhost:8501
-docker compose down              # 停止
+.venv\Scripts\python.exe scripts\seed_demo.py --storage output\demo --fresh
+$env:ESTIMATE_STORAGE_DIR="output\demo"; $env:PAST_QUOTES_PATH="output\demo\history.csv"; $env:DRAWING_READER="recorded:output\demo\readings.json"
+.venv\Scripts\python.exe -m uvicorn api.main:app --port 8000
 ```
 
-- `output/`（アップロード・受付・見積書）と `data/past_quotes/`（見積履歴）はホストのフォルダをそのまま使うので、止めても消えません。見積履歴は今までどおりコミットします
-- APIに合言葉をかけるときは `API_TOKEN=... docker compose up`（PowerShell なら `$env:API_TOKEN="..."` のあと `docker compose up`）。図面PDFの読み取りを使うときは `ANALYSIS_ANTHROPIC_API_KEY` も同じように渡します
-- Docker Hub に届かない社内ネットワークでは、`BASE_IMAGE` に社内レジストリの Python 3.11 イメージを指定します（例 `$env:BASE_IMAGE="registry.example.local/python:3.11-slim"`）
+## 画面
+
+左のメニュー（図面を登録／図面一覧／案件・進捗／見積、その下に 図面・見積作業・書類・取引先・設定、最近の見積）と、上の検索欄（図番・品名・書類）、「用語・計算式」のヘルプからなります。詳しくは [docs/03_画面設計書.md](docs/03_画面設計書.md)、使い方は [docs/04_操作マニュアル.md](docs/04_操作マニュアル.md)。
+
+| 画面 | できること |
+|---|---|
+| 図面を登録 | 図面PDF・STEP・DXFをまとめてドラッグ＆ドロップ。同じ名前のPDFと形状ファイルを1件にまとめ、図面PDFの読み取り結果を下書きにして、図番・品名・顧客・改訂・分類を確認して登録。同じ図番があれば「新しい版として登録」。形状ファイルは登録時に解析 |
+| 新規見積作成・解析の進み具合 | 登録済みの図面を選び、顧客・数量（必須）・希望納期・材質・表面処理、Kファクター（STEP）や板厚・平板（DXF）を入れて開始。形状解析 → 図面の読み取り → マスタ照合 → 見積計算 → 類似実績の検索 の段階と、途中で分かった値を表示 |
+| 見積結果 | 費目（材料・レーザー切断・ピアス・曲げ・段取り・追加加工・表面処理・特急割増・粗利）と単価・小計・消費税・合計。図面から読み取った条件と状態、形状解析（3D・展開図・確定／概算）、未入力の項目の一覧（埋まるまで発行できない）、類似実績、修正履歴、チャットでの条件変更、顧客提示モード |
+| 案件・進捗 | カンバンと一覧、ステータスのグループのタブ、絞り込み、警告（納期超過・納期まで3日以内・3日以上更新なし・回答待ち3日以上）。ドラッグか ←→ で進捗を変える。失注は理由と他社価格を記録 |
+| 図面一覧・図面詳細 | 条件検索・似た形・図面内の文字、分類、プレビュー／リスト。図面詳細は版の切り替え、図面情報（属性の編集）・改訂履歴・使用先・関連書類・注意／不具合メモ、図面への書き込み、似た図面の過去実績 |
+| 見積・振り返り分析 | 見積の一覧。直近3・6・12か月の見積件数・受注率・平均回答日数・見積総額、顧客別・担当者別・失注の理由 |
+| 帳票発行 | 見積書・納品書・請求書。テンプレートを選んでプレビュー（発行するPDFそのもの）、発行、PDFのダウンロード、発行履歴 |
+| 書類・ナレッジ検索、取引先管理 | キーワード検索（文字データのあるPDF・Excel、登録済みの図面・見積）と書類の登録。協力会社・顧客の台帳（記録と表示だけ） |
+| 設定 | マスタ（材料・工程・表面処理・価格方針・自社情報）、見積ロジック（計算式の表示だけ）、見積書テンプレート、案件ステータス、分類・属性項目、担当者、過去見積の取り込み（CSVの列の対応づけ） |
+
+ログインはまだありません。「設定 ＞ 担当者」で、この端末で操作する担当者を選ぶと、修正履歴・進捗の変更・帳票の発行に「だれが」が記録されます。
 
 ## 解析方式
 
@@ -152,13 +186,21 @@ Kファクター未指定（既定0.33）で曲げがある場合は、従来ど
 - 曲げ：曲げ数 × 曲げ単価
 - 段取り・追加工程：登録単価
 
-各マスター行の `charge_scope` が `per_part` なら部品数量倍、`per_order` なら案件につき1回です。必須解析値が欠けた場合は金額を出しません。概算の解析値を含む場合は、画面に「確認してください」と理由を出します（見積書は確定として出力します）。
+各マスター行の `charge_scope` が `per_part` なら部品数量倍、`per_order` なら案件につき1回です。
+
+**見積書を発行できる条件**（`src/services/platform/pricing.py`。判定はAPIが行い、未入力があれば発行を拒否します）：金額に必要な項目がすべて入力されていること。数量、材質、形状の値5つ（板厚・展開面積・切断長・穴数・曲げ数。形状解析で求められなかったときは担当者が入力）、マスターにない材料・加工・表面処理の単価（材料はkg単価と密度、加工は1か所あたり、表面処理は1個あたり）。入力されていれば、図面の読み取りが「要確認」でも、形状解析が「概算」でも、その値で確定として発行できます（要確認・概算はヒントとして表示）。表面処理「なし」・特急「なし」は入力済みとして扱います。
+
+**マスターにない材料・加工・表面処理**：似たものに寄せません。担当者が入れた単価をその見積だけに使い、マスターには登録しません（材料は入力したkg単価に、マスターの板材と同じ歩留まり係数1.15を掛けます）。金額は入力した単価でも `QuoteEngine` がルールで計算します。**希望納期**は記録・見積書への表示・進捗の警告に使い、金額には影響しません（特急は人が指定します）。
 
 ## 見積書の出力
 
-見積の画面で解析と条件の確認を終えたら「見積書を作成する →」を押します。見積書の画面に移るので、宛先・品名・図番・件名・受渡場所・備考を入れて「見積書PDFを作成」を押すと、見積書PDFをその場でダウンロードできます（「← 見積に戻る」で見積の画面に戻っても、入力は残ります）。見積書は作成した時点で条件が確定したものとして扱い、つねに「御見積書」として出します（概算の見積書はありません）。LLM API は使いません（APIキーがなくても、STEP／DXFと手入力の条件だけで出力できます）。コードは `src/quote_document.py`（中身と金額）、`src/quote_pdf.py`（PDFの描画）、`src/quote_log.py`（見積番号と記録）です。
+画面の「帳票発行」（見積結果の「見積書を発行」から開けます）で、案件とテンプレートを選び、プレビュー（発行するPDFそのもの）を確かめて発行します。未入力の項目がある見積は発行できず（APIが 409 `NOT_ISSUABLE` と未入力の一覧を返します）、見積結果へのリンクを出します。見積書は発行した時点で条件が確定したものとして扱い、つねに「御見積書」として出します（概算の見積書はありません）。番号は案件番号（`Q-2026-0001`。再発行は `-2`、`-3`…）。LLM API は使いません。コードは `src/quote_document.py`（中身と金額）、`src/quote_pdf.py`（PDFの描画。テンプレートの表示項目に対応）、`src/services/platform/documents.py`（発行・番号・記録）です。
 
-![見積書を出力する画面](analysis/quote_document_ui.png)
+**納品書・請求書**（`src/trade_pdf.py`）：受注した案件で、発行済みの見積書と同じ金額で作ります（番号 `D-2026-0001`、`I-2026-0001`）。請求書は適格請求書として、自社の登録番号と税率別の合計（10%対象の金額・消費税・合計）を入れます。支払期限は翌月末です。
+
+**テンプレート**（設定 ＞ 見積書テンプレート）：表示する項目（費目の内訳＝項目名と数量だけ・単価と数量・図番と改訂・有効期限・備考欄・社印）を切り替えます。適用する顧客を指定でき、原価・粗利は社外用に出しません（固定）。
+
+API だけで使う場合の見積書（`POST /api/documents`、番号は `Q20260928-001` 形式で `output/quote_log.csv` に記録）も今までどおり使えます。
 
 **書式**：A4縦1ページ。見本は [analysis/quote_document_sample.pdf](analysis/quote_document_sample.pdf)（確定）と [analysis/quote_document_sample_estimate.pdf](analysis/quote_document_sample_estimate.pdf)（概算）。概算の見本は、今は使いません。この機能で出力した例は [通常](analysis/quote_document_example.pdf)・[未登録の加工を別途見積にした例](analysis/quote_document_example_separate.pdf)・[社内用の見積根拠](analysis/quote_document_example_internal.pdf) です（仮の宛先。`python scripts/make_quote_examples.py` で作り直せます）。
 
@@ -196,31 +238,22 @@ Kファクター未指定（既定0.33）で曲げがある場合は、従来ど
 
 ## 類似見積
 
-見積の画面の下に、過去の見積から参考になるものを最大5件、1件ずつボタンで表示します（日付・顧客・図番・品名・単価と今回比）。ボタンを押すと、その見積の画面に移り、「なぜ似ているか」「何が違うか」「値段はどうだったか」と元の行の全項目を表示します。見積書の画面で宛先と図番を入れると、リピートも探します。今回の単価は自動では書き換えません。LLM API は使いません。コードは `src/past_quotes.py`（履歴・取り込み）と `src/similar_quotes.py`（検索・説明・値段の比較）です。
+**条件**（`src/similar_quotes.py` の `is_similar`。図面一覧の「似た形」、図面詳細、見積結果の「類似実績」で同じ）：**材料が同じ、曲げ数の差が1以内、穴数の差が2以内**。差の小さい順（曲げと穴の差の合計、曲げの差、穴の差、新しい順）に並べます。曲げ数・穴数が分からない図面（形状ファイルがない）や過去見積は対象外です。対象は、登録済みの図面（最新の版の材質と形状解析の曲げ数・穴数、最新の見積の単価と状態）と、登録図面に結び付かない過去見積の履歴です。今回の単価は自動では書き換えません。LLM API は使いません。
 
-![類似見積の表示](analysis/similar_quotes_ui.png)
+過去見積には、似ている理由・今回との違い・値段の比較（今のマスターで計算し直した標準単価と出し値の比）を付けます（API `POST /api/similar-quotes`）。
 
-**検索の考え方**（値段を決める要素が近いものを優先）
-
-1. **リピート**：同じ顧客・同じ図番（改訂違いを含む）。あれば必ず先頭に、新しい順に出します。顧客名は「株式会社」などを除き、図番は全角・空白をそろえて比べます。別の顧客の同じ図番は別の部品として扱います
-2. **同じ顧客の近い部品**、3. **他の顧客の近い部品**：材質の系統（鉄・ステンレス・アルミ・銅）が同じで、板厚が同じか隣（0.8・1.0・1.2・1.6・2.0・2.3・3.2・4.5…の系列で1段まで）のものだけが候補です。そのうえで、材質が同じ、数量帯（1〜9、10〜99、100〜999、1000〜）、展開面積（±30%）、曲げ数・穴数、表面処理、追加加工の共通度、新しさで順位を付けます。形状の数値がない過去見積も、材質・板厚・数量・図番で候補になります（大きさは比べないだけで、除外しません）
-
-各件には、見積日・顧客・図番と改訂・品名・材質と板厚・数量・表面処理・追加加工・特急・単価・結果（受注／失注／未回答）、**似ている理由**（例「同じ顧客・同じ図番、材質同じ（SPCC）、板厚同じ（t2）」）、**今回との違い**（例「数量 1000→100、圧入ナット -4」）を出し、元の行の全項目を開けます。2年以上前の見積と特急の見積には注意を出します。
-
-**値段の比較**：今回の単価との差（%）を出します。過去の見積に形状の数値があり、条件がすべて今のマスターにあるときは、その条件を **今のマスターで計算し直した標準単価** と実際の単価の比（出し値÷標準）を求め、今回の標準単価に掛けた「過去の出し値の水準で見た今回の単価」を示します。数量や時期、加工が違っても比べやすくするためです。リピートでこの水準との差が±20%を超えると注意を出します。画面上部の「参考」は、最新のリピート、なければ同じ顧客の近い部品（中央値）、それもなければ他の顧客の近い部品の水準です。
-
-**参考価格の効果**（[analysis/similar_quotes_eval.md](analysis/similar_quotes_eval.md)）：種データのうち標準単価を計算できる1,045件で、それより前の見積だけを過去として検索し、実際の単価との誤差を比べました。
+**参考価格の効果**（[analysis/similar_quotes_eval.md](analysis/similar_quotes_eval.md)）：種データのうち標準単価を計算できる1,045件で、それより前の見積だけを過去として検索し、実際の単価との誤差を比べました。条件を上の規則に統一したため、以前（材質の系統と板厚で探す方式：全体7.9%、リピート4.9%）より全体の誤差は少し大きくなりましたが、自動見積だけよりは小さいままです。
 
 | 対象 | 自動見積（標準単価）だけ | 類似見積を使う |
 |---|---:|---:|
-| 全体（1,045件） | 平均誤差 10.8% | 7.9% |
-| リピート（270件） | 9.9% | 4.9% |
+| 全体（1,045件） | 平均誤差 10.8% | 8.8% |
+| リピート（270件） | 9.9% | 5.0% |
 
-検索（履歴全体を対象、説明と標準単価の再計算を含む）は、種データ（2,084件）で平均 1.9 ms・最大 15 ms、1万件に増やした履歴で平均 8.3 ms・最大 35 ms でした（いずれも1秒以内）。
+検索は、種データ（2,084件）で平均 0.5 ms・最大 1.2 ms、1万件に増やした履歴で平均 1.4 ms・最大 3.1 ms でした。
 
 **データの持ち方**：履歴は `data/past_quotes/history.csv`（UTF-8、1行1見積、Gitで差分が読める）に置き、コミットします。材質・表面処理・追加加工は、書かれた文字（`*_text`）と、マスターの別名で対応づけたコード（`*_code`）の両方を持ちます。対応できないものは、系統だけ分かる材質（「SUS」「AL」など）は `material_code` が空で `material_family` だけ、マスターにない材質・処理・加工は `UNREGISTERED`、表面処理の空欄は「記録なし」（空）です。取り込んだ元の行は `original` 列（JSON）に残します。
 
-**過去見積の取り込み**：Excel などから書き出したCSV（UTF-8 か Shift_JIS）を取り込みます。列は名前で対応づけ（「顧客名／得意先」「見積日／日付」など）、違う列名は `--map` で指定します。欠けた列は空欄になります。同じ見積（見積番号・見積日・顧客が同じ）は二重に入りません。
+**過去見積の取り込み**：Excel などから書き出したCSV（UTF-8 か Shift_JIS）を、画面の「見積作業 ＞ 過去見積の取り込み」で取り込みます（データベースに入ります）。列は名前で自動で対応づけ（「顧客名／得意先」「見積日／日付」など）、違うところは画面で直します。コマンドで履歴ファイルに取り込むときは `--map` で列を指定します。欠けた列は空欄になります。同じ見積（見積番号・見積日・顧客が同じ）は二重に入りません。
 
 ```powershell
 .venv\Scripts\python.exe scripts\import_past_quotes.py data\past_quotes\past_quotes_seed.csv
@@ -230,36 +263,41 @@ Kファクター未指定（既定0.33）で曲げがある場合は、従来ど
 
 種データ（`data/past_quotes/past_quotes_seed.csv`、架空）は取り込み済みです。`出典` 列は試験用のため、取り込み時に捨てています（検索・表示には使いません）。
 
-**履歴への追加と結果の記録**：見積書PDFを出力すると、その見積（顧客、図番・改訂、品名、条件、解析値、単価、見積日）が自動で履歴に入り、次の検索から出ます。見積番号は出力記録（`output/quote_log.csv`）と履歴の両方を見て重複しないように決めます。受注・失注は見積書の画面の「受注・失注の記録」で後から記録できます。テストは履歴の一時的な複製を使い、コミットされた履歴を書き換えません。
+**履歴への追加と結果の記録**：`data/past_quotes/history.csv` は初期データで、最初の起動でデータベースに入ります。以後、見積書を発行するとその見積が履歴（データベース）に入り、案件の受注・失注に合わせて結果も変わります（振り返り分析・類似実績に反映）。コミットされた履歴ファイルは書き換えません。テストは履歴の一時的な複製を使います。
 
 ## API（サーバー）
 
-画面から独立した API（FastAPI）で、今の機能をすべて使えます。Streamlit のデモも同じ処理の層（`src/services/`）を呼ぶので、画面・API・見積書で金額は同じです。設計と呼び出しの流れ、段階2・3で差し替える部分は [analysis/api_design.md](analysis/api_design.md)、仕様書は起動後の `/docs` にあります。
+画面は API（FastAPI）だけを呼び、金額・発行の可否・類似の判定はすべて API が決めます（画面で計算し直しません）。設計は [analysis/api_design.md](analysis/api_design.md)、仕様書は起動後の `/docs` にあります。
 
 | 機能 | 呼び出し |
 |---|---|
-| マスター | `GET /api/masters` |
-| 形状の解析（受付番号方式） | `POST /api/files` → `POST /api/analyses` → `GET /api/jobs/{job_id}` |
-| 図面PDFの読み取り（受付番号方式。APIキーがなければ 503） | `POST /api/files` → `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` |
-| 見積の計算 | `POST /api/quotes` |
-| 見積書 | `POST /api/documents` → `GET /api/documents/{quote_no}/quote.pdf`（社内用は `internal.pdf`） |
-| 類似見積 | `POST /api/similar-quotes` |
-| 過去見積の履歴 | `POST /api/history/import`、`GET /api/history`、`GET /api/history/{quote_no}`、`PUT /api/history/{quote_no}/outcome` |
-| 3D表示用の形状（glTF） | `GET /api/files/{file_id}/model.glb` |
+| 図面の登録・一覧・詳細・類似 | `POST /api/drawings/register`、`GET /api/drawings`、`GET/PUT /api/drawings/{id}`、`GET /api/drawings/{id}/similar` |
+| 見積（作成は受付番号方式） | `POST /api/estimates` → `GET /api/jobs/{job_id}` → `GET/PUT /api/estimates/{id}`、`POST /api/estimates/{id}/chat` |
+| 帳票 | `GET /api/estimates/{id}/documents/preview.png`、`POST /api/estimates/{id}/documents`（kind: quote / delivery / invoice）、`GET /api/issued` |
+| 案件・振り返り | `GET /api/cases`、`PUT /api/cases/{id}/status`、`GET /api/review` |
+| 検索・書類・取引先 | `GET /api/search`、`GET/POST /api/library`、`GET/POST/PUT /api/partners` |
+| 設定・マスター | `/api/statuses`、`/api/categories`、`/api/attributes`、`/api/templates`、`/api/staff`、`/api/master-tables/{table}`、`GET /api/logic` |
+| 形状の解析・図面PDFの読み取り（単体） | `POST /api/files` → `POST /api/analyses` または `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` |
+| 見積の計算・見積書・類似見積・履歴（画面を使わない呼び出し） | `POST /api/quotes`、`POST /api/documents`、`POST /api/similar-quotes`、`/api/history...` |
 
-解析と図面の読み取りは、受け付けるとすぐ受付番号を返し、裏で処理します。受付の状態と結果はファイルに残るので、APIを再起動しても取れます（処理中だったものは再起動後に続きを処理します）。
-
-データの置き場所と制限は環境変数で変えられます（既定はリポジトリ内の今の場所）。
+更新は版（`version`）つきで受け付け、ほかの人が先に保存していたら 409（`CONFLICT`）を返します（黙って上書きしません）。解析と図面の読み取りは受付番号を返して裏で処理し、受付の状態はファイルに残るので、APIを再起動しても取れます。
 
 | 変数 | 既定 | 内容 |
 |---|---|---|
-| `ESTIMATE_DATA_DIR` | `data` | マスター |
-| `ESTIMATE_STORAGE_DIR` | `output` | アップロード・受付・見積書・3D表示のファイル |
-| `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 見積履歴 |
-| `QUOTE_LOG_PATH` | `output/quote_log.csv` | 見積書の出力記録 |
-| `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要 |
-| `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類は .step .stp .dxf .pdf、中身の先頭も確認） |
+| `DATABASE_URL` | なし（SQLite `<保存先>/app.db`） | データベース。PostgreSQL は `postgresql+psycopg://user:pass@host/db` |
+| `ESTIMATE_DATA_DIR` | `data` | 初期データのマスターと自社情報（評価とテストはこの CSV を直接読む） |
+| `ESTIMATE_STORAGE_DIR` | `output` | 図面PDF・形状ファイル・帳票・書類・受付・3D表示のファイル |
+| `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴 |
+| `QUOTE_LOG_PATH` | `output/quote_log.csv` | `POST /api/documents` の見積書の記録 |
+| `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要。守りは `api/security.py` の1か所 |
+| `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類と中身の先頭も確認） |
 | `JOB_WORKERS` | 2 | 裏で処理する数 |
+| `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・資料の撮影用。API を呼ばない） |
+| `WEB_DIST` | `web/dist` | API が配信する画面 |
+
+## データベース
+
+SQLAlchemy 2 のモデル（`src/db/models.py`）と Alembic のマイグレーション（`migrations/`）で管理します。保管するもの：図面と版（ファイル・解析・読み取り・属性）、書き込みとメモ、案件・ステータスの履歴（当時の名前で残る）、見積（条件・解析・計算結果・修正履歴・チャット）、発行した帳票（金額）、過去見積の履歴、取引先、書類（文字データ）、担当者、案件ステータス、分類、属性項目、テンプレート、マスター、自社情報、連番。構造を変えるときは `alembic revision --autogenerate -m "..."` で移行を作り、`alembic upgrade head`（API の起動時にも実行）で反映します。
 
 ## チャットと情報保護
 
@@ -302,7 +340,7 @@ OpenAIへ送信するのは、チャット文章、現在の材料・数量・�
 .venv\Scripts\python.exe -m pytest -q
 ```
 
-テストには、不正入力、B-Rep、適応公差、面隣接、板厚、平板と複数穴、L/U/Z相当の複数曲げ、45/60/120度曲げ、異なるR、2D包含、Kファクター、対象外形状、課金単位、LLM送信項目、API失敗時の状態保持、Streamlit表示が含まれます。
+テストには、不正入力、B-Rep、適応公差、面隣接、板厚、平板と複数穴、L/U/Z相当の複数曲げ、45/60/120度曲げ、異なるR、2D包含、Kファクター、対象外形状、課金単位、LLM送信項目、API失敗時の状態保持、画面のAPI（金額の一致、発行できる条件、類似の条件、再起動後のデータ、同時保存）が含まれます。`tests/test_e2e_flow.py` はブラウザ（Playwright）で、図面の登録から見積・発行・進捗・受注・納品書・請求書・振り返りまでを1本で通します（`web/dist` がないときは飛ばします。先に `cd web; npm ci; npm run build`）。テストは SQLite を使い、PostgreSQL は要りません。
 
 ## ゴールデンデータによる評価
 

@@ -81,7 +81,8 @@ export default function RegisterPage() {
   }
 
   async function readDrawing(row: Row) {
-    if (!meta?.drawing_reader) {
+    const available = meta ? meta.drawing_reader : (await get("/api/health").catch(() => ({}))).drawing_reader;
+    if (!available) {
       patch(row.key, { reading: "unavailable", readNote: "図面の読み取りは使えません（APIキー未設定）。手で入力してください。" });
       checkSame(row.key, row.drawing_no);
       return;

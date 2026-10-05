@@ -7,7 +7,6 @@ the result is a draft that a person confirms. No AI sorting of files.
 from __future__ import annotations
 
 import io
-import threading
 from datetime import date, datetime
 from pathlib import Path
 
@@ -20,9 +19,9 @@ from src.db.models import (Case, Category, Drawing, DrawingMemo, DrawingNote, Dr
 from src.master_loader import UNREGISTERED
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
+from src.services.pdfium_lock import PDFIUM_LOCK
 from src.services.platform.core import Platform, check_version, iso
 
-PDFIUM_LOCK = threading.Lock()  # pdfium is not thread-safe
 METRICS = ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")
 
 
