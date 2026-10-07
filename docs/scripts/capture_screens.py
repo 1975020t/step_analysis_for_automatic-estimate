@@ -93,7 +93,7 @@ def run_screens(browser, port: int) -> None:
     page.wait_for_function("/^\\/estimates\\/\\d+$/.test(location.pathname)", timeout=120_000)
 
     for name, path, height in (
-            ("05_estimate.png", f"/estimates/{main['id']}", 2100),
+            ("05_estimate.png", f"/estimates/{main['id']}", 2450),
             ("05_estimate_missing.png", f"/estimates/{by_no['AB-22-3449']['id']}", 1300),
             ("05_estimate_shape_input.png", f"/estimates/{by_no['KA421-2456']['id']}", 1500),
             ("06_cases.png", "/cases", 900), ("07_drawings.png", "/drawings", 1300),
@@ -106,16 +106,18 @@ def run_screens(browser, port: int) -> None:
             ("19_templates.png", "/settings/templates", 1000), ("20_statuses.png", "/settings/statuses", 1100),
             ("21_staff.png", "/settings/staff", 700), ("22_import.png", "/settings/import", 700)):
         page.goto(base + path)
+        if name in ("05_estimate.png", "05_estimate_customer.png"):
+            page.wait_for_function("!document.querySelector('main').innerText.includes('読み込み中')", timeout=60_000)
         if name == "05_estimate_shape_input.png":
             page.get_by_text("寸法の値（CADデータから").wait_for()
         shot(page, name, height)
     page.goto(f"{base}/estimates/{main['id']}")
+    page.wait_for_function("!document.querySelector('main').innerText.includes('読み込み中')", timeout=60_000)
     page.get_by_role("button", name="顧客提示モード").click()
-    shot(page, "05_estimate_customer.png", 900)
+    shot(page, "05_estimate_customer.png", 1250)
     page.get_by_role("button", name="顧客提示モード").click()
     page.get_by_role("tab", name="CADデータ").click()
-    page.wait_for_function("!document.querySelector(\"main aside\").innerText.includes(\"読み込み中\")", timeout=60_000)
-    page.wait_for_timeout(1500)
+    page.wait_for_timeout(1000)
     box = page.locator("main aside").bounding_box()
     page.screenshot(path=str(OUT / "05_estimate_shape.png"), clip={"x": box["x"] - 8, "y": box["y"], "width": box["width"] + 16,
                                                                     "height": min(box["height"], 1500)}, full_page=True)

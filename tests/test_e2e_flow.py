@@ -97,6 +97,9 @@ def test_register_estimate_issue_progress_accept_documents_review(server):
         page.wait_for_url("**/progress**")
         page.wait_for_function("/^\\/estimates\\/\\d+$/.test(location.pathname)", timeout=120_000)
         expect(page.get_by_test_id("missing")).to_contain_text("M10タップ")
+        views = page.get_by_test_id("shape-views")  # 3D and the flat pattern above the cost lines
+        expect(views.locator("canvas")).to_be_visible()
+        expect(views.get_by_test_id("flat-pattern").locator("path").first).to_be_visible()
         expect(page.get_by_role("button", name="見積書を発行")).to_be_disabled()
         page.get_by_label("未登録の加工の単価").fill("120")
         page.get_by_role("button", name="保存して計算し直す").click()

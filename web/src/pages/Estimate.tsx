@@ -109,6 +109,7 @@ export default function EstimatePage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1.9fr) minmax(300px, 1fr)", gap: 26, marginTop: 20 }}>
         <div>
+          <ShapeViews q={q} />
           {!customerMode ? (
             <>
               <h2 style={{ marginBottom: 8 }}>原価内訳</h2>
@@ -270,8 +271,28 @@ function ShapePanel({ q }: { q: any }) {
           ))}
         </tbody>
       </table>
-      {q.drawing?.shape_kind === "step" && <Model3D fileId={q.drawing.shape_file_id} height={240} />}
-      {a?.flat_pattern && (<><span className="small muted">展開図（赤い破線は曲げ線）</span><FlatPattern flat={a.flat_pattern} height={200} /></>)}
+    </div>
+  );
+}
+
+function ShapeViews({ q }: { q: any }) {
+  const has3d = q.drawing?.shape_kind === "step" && !!q.drawing.shape_file_id;
+  const flat = q.analysis?.flat_pattern;
+  if (!has3d && !flat) return null;
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: has3d && flat ? "1fr 1fr" : "1fr", gap: 16, marginBottom: 22 }} data-testid="shape-views">
+      {has3d && (
+        <div>
+          <div className="row between"><h3 style={{ marginBottom: 6 }}>3D</h3><span className="small muted">ドラッグで回転・ホイールで拡大</span></div>
+          <Model3D fileId={q.drawing.shape_file_id} height={300} />
+        </div>
+      )}
+      {flat && (
+        <div>
+          <div className="row between"><h3 style={{ marginBottom: 6 }}>展開図</h3><span className="small muted">赤い破線は曲げ線</span></div>
+          <FlatPattern flat={flat} height={300} />
+        </div>
+      )}
     </div>
   );
 }
