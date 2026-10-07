@@ -59,14 +59,13 @@ export default function CategoriesPage() {
             </div>
           </div>
         ))}
-        <p className="small muted">1つの図面を複数の分類に入れられます（図面詳細の「属性を編集」）。</p>
       </section>
       <section>
         <div className="row between" style={{ paddingBottom: 6 }}>
           <h2>図面の属性・検索項目</h2>
           <button className="btn" onClick={() => setAttrs([...attrs, { id: null, label: "", input_type: "text", options: [], unit: "", searchable: true, builtin: false }])}>＋ 項目を追加</button>
         </div>
-        <p className="small muted">自社で使う項目名・入力の種類・選択肢を設定します。「検索に使う」をオンにした項目が、図面一覧の検索条件に上から順に並びます。</p>
+        <p className="small muted">「検索に使う」をオンにした項目が、図面一覧の検索条件に並びます。</p>
         <table className="rule">
           <thead><tr><th>順番</th><th>項目名</th><th>入力の種類</th><th>選択肢・単位</th><th>検索</th></tr></thead>
           <tbody>
@@ -77,7 +76,7 @@ export default function CategoriesPage() {
                 <td><input aria-label="項目名" value={a.label} onChange={(e) => setAttrs(attrs.map((x, j) => (j === i ? { ...x, label: e.target.value } : x)))} />{!a.builtin && a.id && <span className="sub">自社追加</span>}</td>
                 <td><select aria-label="入力の種類" disabled={a.builtin} value={a.input_type} onChange={(e) => setAttrs(attrs.map((x, j) => (j === i ? { ...x, input_type: e.target.value } : x)))}>
                   {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}</select></td>
-                <td>{a.builtin ? <span className="small muted">{a.unit || (a.input_type === "select" ? "マスター・ステータスから" : "")}</span> : a.input_type === "select" ? (
+                <td>{a.builtin ? <span className="small muted">{a.unit || (a.input_type === "select" ? "マスタ・ステータスから" : "")}</span> : a.input_type === "select" ? (
                   <input aria-label="選択肢" placeholder="カンマ区切り" value={(a.options || []).join(",")} onChange={(e) => setAttrs(attrs.map((x, j) => (j === i ? { ...x, options: e.target.value.split(",") } : x)))} />
                 ) : a.input_type === "number_range" ? <input aria-label="単位" placeholder="単位" value={a.unit} onChange={(e) => setAttrs(attrs.map((x, j) => (j === i ? { ...x, unit: e.target.value } : x)))} /> : null}</td>
                 <td><input type="checkbox" aria-label="検索に使う" checked={a.searchable} onChange={(e) => setAttrs(attrs.map((x, j) => (j === i ? { ...x, searchable: e.target.checked } : x)))} />

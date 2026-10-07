@@ -39,7 +39,7 @@ export default function ImportPage() {
   }
   return (
     <div style={{ maxWidth: 1000 }}>
-      <p className="lead">今までの見積を記録したCSV（Excelで「CSV（UTF-8）」か「CSV（コンマ区切り）」で保存したもの）を、見積の履歴に取り込みます。取り込んだ見積は、類似実績と振り返り分析に使われます。同じ見積番号・日付・顧客の行は二重に取り込みません。</p>
+      <p className="lead">今までの見積を記録したCSVを取り込みます。取り込んだ見積は、類似実績と振り返り分析に使われます。同じ見積番号・日付・顧客の行は二重に取り込みません。</p>
       <Field label="CSVファイル"><input type="file" accept=".csv" aria-label="CSVファイル" onChange={(e) => choose(e.target.files?.[0] || null)} /></Field>
       <ErrorBox error={error} />
       {cols && (

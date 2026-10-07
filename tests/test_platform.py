@@ -178,10 +178,10 @@ def test_a_quotation_is_issued_only_when_every_amount_item_is_entered(client):
     assert [m["field"] for m in q["result"]["missing"]] == ["custom_processes.0"] and issue(client, q).status_code == 409
     assert any("要確認" in h for h in q["result"]["hints"])
     custom = q["inputs"]["custom_processes"]
-    assert custom[0]["name"] == "M10タップ 6ヶ所" and custom[0]["quantity"] == 6
+    assert custom[0]["name"] == "M10タップ" and custom[0]["quantity"] == 6
     q = change(client, q, custom_processes=[{**custom[0], "unit_price": 120}])
     assert q["result"]["issuable"] and issue(client, q).status_code == 201
-    assert next(l for l in q["result"]["lines"] if l["name"] == "M10タップ 6ヶ所")["amount"] == 6 * 120 * 50
+    assert next(l for l in q["result"]["lines"] if l["name"] == "M10タップ")["amount"] == 6 * 120 * 50
 
     # (3) the shape cannot be analysed: the five values are entered, and the price is the rules' price of them
     broken = b"ISO-10303-21;\nHEADER;\nENDSEC;\nDATA;\n#1=NOTHING();\nENDSEC;\nEND-ISO-10303-21;\n"

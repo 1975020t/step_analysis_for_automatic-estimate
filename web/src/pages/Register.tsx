@@ -83,26 +83,26 @@ export default function RegisterPage() {
   async function readDrawing(row: Row) {
     const available = meta ? meta.drawing_reader : (await get("/api/health").catch(() => ({}))).drawing_reader;
     if (!available) {
-      patch(row.key, { reading: "unavailable", readNote: "図面の読み取りは使えません（APIキー未設定）。手で入力してください。" });
+      patch(row.key, { reading: "unavailable", readNote: "図面の自動読み取りは使えません。手で入力してください。" });
       checkSame(row.key, row.drawing_no);
       return;
     }
-    patch(row.key, { reading: "reading", readNote: "図面PDFを読み取り中…" });
+    patch(row.key, { reading: "reading", readNote: "図面を読み取り中…" });
     try {
       const job = await post("/api/drawings/readings", { file_id: row.pdf!.file_id });
       patch(row.key, { readingJob: job.job_id });
       const done = await waitJob(job.job_id);
       if (done.status !== "done") throw new Error(done.error || "読み取りに失敗しました");
       const r = done.result.reading;
-      const change: Partial<Row> = { reading: "done", readNote: "図面PDFの読み取り結果を下書きに入れました（確認してください）" };
+      const change: Partial<Row> = { reading: "done", readNote: "読み取り結果を下書きに入れました（確認してください）" };
       if (r.drawing_no) change.drawing_no = r.drawing_no;
       if (r.revision) change.revision = r.revision;
       if (r.material) change.material = r.material === "UNREGISTERED" ? r.source_texts?.material || "" : r.material;
       if (row.shape?.kind === "dxf" && r.thickness_mm && !row.thickness) change.thickness = String(r.thickness_mm);
       patch(row.key, change);
       checkSame(row.key, change.drawing_no || row.drawing_no);
-    } catch (e: any) {
-      patch(row.key, { reading: "failed", readNote: `読み取りできませんでした（${e.message}）。手で入力してください。` });
+    } catch {
+      patch(row.key, { reading: "failed", readNote: "読み取れませんでした。手で入力してください。" });
       checkSame(row.key, row.drawing_no);
     }
   }
@@ -134,9 +134,6 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <p className="lead">
-        まず図面を登録します。1件の図面は「図面PDF＋形状ファイル（STEP／DXF）」の組です（片方だけでも登録できます）。同じ名前のファイルは1件にまとめます。見積は登録した図面から作成します。
-      </p>
       <Marked
         className={`drop ${over ? "over" : ""}`}
         onDragOver={(e: any) => {
@@ -150,12 +147,13 @@ export default function RegisterPage() {
           addFiles(Array.from(e.dataTransfer.files));
         }}
       >
-        <h2>図面・形状ファイルをドラッグ＆ドロップ（まとめて登録できます）</h2>
+        <h2>図面PDF・CADデータをドラッグ＆ドロップ</h2>
         <div className="kinds">
           <span className="tag">図面PDF</span>
           <span className="tag">STEP / STP</span>
           <span className="tag">DXF（展開図）</span>
         </div>
+        <p className="small muted">同じ名前の図面PDFとCADデータは1件にまとめます。</p>
         <div className="row" style={{ justifyContent: "center" }}>
           <button className="btn" onClick={() => input.current?.click()} disabled={busy}>
             ファイルを選択
@@ -175,7 +173,7 @@ export default function RegisterPage() {
         <div className="empty">
           {done ? (
             <div>
-              登録しました（形状ファイルは登録と同時に解析しています）。
+              登録しました。
               <ul style={{ textAlign: "left", display: "inline-block" }}>
                 {done.map((d) => (
                   <li key={d.revision_id}>
@@ -210,7 +208,7 @@ export default function RegisterPage() {
                 <td style={{ minWidth: 190 }}>
                   {r.pdf && <div>📄 {r.pdf.filename}</div>}
                   {r.shape && <div>◆ {r.shape.filename}</div>}
-                  {!r.shape && <span className="small muted">形状ファイルなし（類似検索の対象外。見積時に形状の値を入力）</span>}
+                  {!r.shape && <span className="small muted">CADデータなし</span>}
                   {r.readNote && <span className={`small ${r.reading === "failed" ? "warn" : "muted"}`} style={{ display: "block" }}>{r.readNote}</span>}
                 </td>
                 <td><input aria-label="図番" value={r.drawing_no} className={r.drawing_no.trim() ? "" : "missing"}
@@ -229,7 +227,7 @@ export default function RegisterPage() {
                 <td style={{ minWidth: 120 }}>
                   <input aria-label="材質" placeholder="材質" value={r.material} onChange={(e) => patch(r.key, { material: e.target.value })} list="materials" />
                   {r.shape?.kind === "dxf" && (
-                    <input aria-label="板厚" placeholder="板厚 mm（DXF）" type="number" step="0.1" value={r.thickness} style={{ marginTop: 4 }}
+                    <input aria-label="板厚" placeholder="板厚 mm" type="number" step="0.1" value={r.thickness} style={{ marginTop: 4 }}
                       onChange={(e) => patch(r.key, { thickness: e.target.value })} />
                   )}
                 </td>
@@ -254,7 +252,7 @@ export default function RegisterPage() {
         {(meta?.materials || []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
       </datalist>
       <div className="row between" style={{ marginTop: 16 }}>
-        <span className="small muted">図番が未入力の行は登録されません。図面PDFの読み取り結果は下書きです。図番・品名・顧客は確認して入力してください。</span>
+        <span className="small muted">図番が未入力の行は登録されません。</span>
         <div className="row">
           <button className="btn" onClick={() => navigate("/drawings")}>図面一覧へ</button>
           <Marked>

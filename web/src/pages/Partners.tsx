@@ -47,7 +47,6 @@ export default function PartnersPage() {
           </tbody>
         </table>
       )}
-      <p className="small muted">取引先の単価・納期・評価は記録と表示だけです。見積の計算には使いません（金額はマスターで決まります）。</p>
       {edit && (
         <Modal title={edit.id ? "取引先を編集" : "取引先を追加"} onClose={() => setEdit(null)}>
           <div className="grid2">

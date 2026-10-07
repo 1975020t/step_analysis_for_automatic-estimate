@@ -197,8 +197,7 @@ class Platform:
 def check_version(row, version: int | None, what: str) -> None:
     """Refuse a save based on an older version (someone else saved in between): HTTP 409, never a silent overwrite."""
     if version is not None and row.version != version:
-        raise ServiceError(f"この{what}は、ほかの人が先に更新しました（あなたが開いた後に保存されています）。"
-                           "画面を読み直してから、もう一度変更してください。", 409, "CONFLICT")
+        raise ServiceError(f"この{what}は、ほかの人が先に変更しました。最新の内容を表示します。", 409, "CONFLICT")
 
 
 def iso(value) -> str | None:

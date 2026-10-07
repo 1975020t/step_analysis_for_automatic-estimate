@@ -44,7 +44,7 @@ export default function NewEstimatePage() {
     try {
       const body: any = { drawing_id: Number(drawingId), revision_id: rev?.id, customer: form.customer.trim(), title: form.title.trim(),
         quantity: Number(form.quantity), due_date: form.due_date || null, staff: form.staff };
-      if (form.material === "__custom") body.custom_material = { name: form.custom_name || "マスターにない材質",
+      if (form.material === "__custom") body.custom_material = { name: form.custom_name || "マスタにない材質",
         price_per_kg: form.custom_price ? Number(form.custom_price) : null, density_kg_m3: form.custom_density ? Number(form.custom_density) : null };
       else if (form.material) body.material = form.material;
       if (form.finish) body.surface_treatment = form.finish;
@@ -68,9 +68,8 @@ export default function NewEstimatePage() {
               <Thumb revisionId={rev?.id} hasPdf={!!rev?.pdf_file_id} className="thumb" />
               <div className="spacer">
                 <b>{drawing.drawing_no} {rev?.revision ? `Rev.${rev.revision}` : ""} {drawing.name}</b>
-                <div className="small muted">{drawing.customer || "顧客未設定"} ・ {drawing.material_name || "材質未設定"} ・ {kind ? kind.toUpperCase() : "形状ファイルなし"}</div>
+                <div className="small muted">{drawing.customer || "顧客未設定"} ・ {drawing.material_name || "材質未設定"} ・ {kind ? `CADデータ（${kind.toUpperCase()}）` : "CADデータなし"}</div>
               </div>
-              <span className="tag soft">主図面</span>
               <button className="btn link" onClick={() => setDrawingId("")}>外す</button>
             </div>
           ) : (
@@ -86,7 +85,7 @@ export default function NewEstimatePage() {
           </select>
         </Field>
         <p className="small muted">
-          未登録の図面は先に <Link to="/drawings/register">図面を登録</Link> してください。図面の読み取り結果・形状解析・改訂履歴は登録時の情報を引き継ぎます。
+          新しい図面は先に <Link to="/drawings/register">図面を登録</Link> してください。
         </p>
       </section>
       <Marked className="panel">
@@ -95,19 +94,19 @@ export default function NewEstimatePage() {
         <Field label="案件名"><input aria-label="案件名" value={form.title} onChange={(e) => set("title", e.target.value)} /></Field>
         <div className="grid2">
           <Field label="数量（必須）"><input aria-label="数量" type="number" min={1} value={form.quantity} onChange={(e) => set("quantity", e.target.value)} /></Field>
-          <Field label="希望納期" hint="金額には影響しません"><input aria-label="希望納期" type="date" value={form.due_date} onChange={(e) => set("due_date", e.target.value)} /></Field>
+          <Field label="希望納期"><input aria-label="希望納期" type="date" value={form.due_date} onChange={(e) => set("due_date", e.target.value)} /></Field>
         </div>
         <div className="grid2">
-          <Field label="材質（図面の値が初期値）">
+          <Field label="材質">
             <select aria-label="材質" value={form.material} onChange={(e) => set("material", e.target.value)}>
-              <option value="">（図面の読み取りに任せる）</option>
+              <option value="">（図面のとおり）</option>
               {(meta?.materials || []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
-              <option value="__custom">マスターにない材質…</option>
+              <option value="__custom">マスタにない材質…</option>
             </select>
           </Field>
-          <Field label="表面処理（図面の値が初期値）">
+          <Field label="表面処理">
             <select aria-label="表面処理" value={form.finish} onChange={(e) => set("finish", e.target.value)}>
-              <option value="">（図面の読み取りに任せる）</option>
+              <option value="">（図面のとおり）</option>
               {(meta?.surface_treatments || []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
             </select>
           </Field>
@@ -127,16 +126,16 @@ export default function NewEstimatePage() {
         </Field>
         {kind === "step" && (
           <div className="grid2" style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
-            <Field label="Kファクター（STEP）"><input type="number" step="0.01" min={0} max={1} value={form.k_factor} onChange={(e) => set("k_factor", e.target.value)} /></Field>
+            <Field label="Kファクター"><input type="number" step="0.01" min={0} max={1} value={form.k_factor} onChange={(e) => set("k_factor", e.target.value)} /></Field>
             <label className="check" style={{ marginTop: 18 }}>
               <input type="checkbox" checked={form.k_confirmed} onChange={(e) => set("k_confirmed", e.target.checked)} />
-              指定済み加工条件として扱う
+              自社の加工条件で決まった値
             </label>
           </div>
         )}
         {kind === "dxf" && (
           <div className="grid2" style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
-            <Field label="板厚 mm（DXFには板厚がありません）"><input aria-label="板厚" type="number" step="0.1" value={form.thickness} onChange={(e) => set("thickness", e.target.value)} /></Field>
+            <Field label="板厚（mm）" hint="展開図（DXF）には板厚がないため入力します"><input aria-label="板厚" type="number" step="0.1" value={form.thickness} onChange={(e) => set("thickness", e.target.value)} /></Field>
             <label className="check" style={{ marginTop: 18 }}>
               <input type="checkbox" checked={form.flat} onChange={(e) => set("flat", e.target.checked)} />
               曲げなし（平板）

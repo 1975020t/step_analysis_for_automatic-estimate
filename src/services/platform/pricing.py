@@ -103,7 +103,7 @@ def inputs_from_reading(reading: dict | None, masters: MasterLoader, base: Quote
             update["material"] = material
         elif material == UNREGISTERED:
             update["material"] = None
-            update["custom_material"] = CustomMaterial(name=texts.get("material") or "図面の材質（マスター未登録）")
+            update["custom_material"] = CustomMaterial(name=texts.get("material") or "図面の材質（マスタ未登録）")
     if "quantity" not in given and reading.get("quantity"):
         update["quantity"] = int(reading["quantity"])
     finish = reading.get("surface_treatment")
@@ -112,7 +112,7 @@ def inputs_from_reading(reading: dict | None, masters: MasterLoader, base: Quote
             update["surface_treatment"] = finish
         elif finish == UNREGISTERED:
             update["surface_treatment"] = None
-            update["custom_finish"] = CustomFinish(name=texts.get("surface_treatment") or "図面の表面処理（マスター未登録）")
+            update["custom_finish"] = CustomFinish(name=texts.get("surface_treatment") or "図面の表面処理（マスタ未登録）")
         else:
             update["surface_treatment"] = "NONE"
     if "processes" not in given and "custom_processes" not in given:
@@ -123,8 +123,8 @@ def inputs_from_reading(reading: dict | None, masters: MasterLoader, base: Quote
             if p.get("code") in masters.process_rates:
                 processes.append(ProcessInput(code=p["code"], quantity=count or None, source="drawing"))
             elif p.get("code") == UNREGISTERED:
-                name = unregistered_texts.pop(0) if unregistered_texts else "図面の加工（マスター未登録）"
-                custom.append(CustomProcess(name=name, quantity=count or count_in(name), source="drawing"))
+                text = unregistered_texts.pop(0) if unregistered_texts else "図面の加工（マスタ未登録）"
+                custom.append(CustomProcess(name=without_count(text), quantity=count or count_in(text), source="drawing"))
         update["processes"], update["custom_processes"] = processes, custom
     if "rush" not in given:
         update["rush"] = bool(reading.get("rush"))
@@ -140,6 +140,17 @@ def count_in(text: str) -> float | None:
     m = re.search(r"(\d+)\s*(?:ヶ所|箇所|か所|カ所|個|点)", t) or re.search(r"[×xX]\s*(\d+)\s*$", t) or \
         re.match(r"^\s*(\d+)\s*[xX×]\s", t)
     return float(m.group(1)) if m and int(m.group(1)) > 0 else None
+
+
+def without_count(text: str) -> str:
+    """The callout without its count ("M10タップ 6ヶ所" -> "M10タップ"): the count is the quantity column."""
+    import re
+
+    t = (text or "").strip()
+    out = re.sub(r"\s*[\d０-９]+\s*(?:ヶ所|箇所|か所|カ所|個|点)\s*$", "", t)
+    out = re.sub(r"\s*[×xX]\s*[\d０-９]+\s*$", "", out)
+    out = re.sub(r"^\s*[\d０-９]+\s*[xX×]\s+", "", out)
+    return out.strip() or t
 
 
 def evidence_texts(reading: dict) -> dict:
@@ -182,7 +193,7 @@ def effective_analysis(analysis: dict | None, shape: ShapeInput, file_name: str 
     if usable:
         return base.model_copy(update=values), detail
     return SheetMetalAnalysis(status="partial", file_name=(base.file_name if base else file_name) or "manual",
-                              assumptions=["形状の値は担当者の入力"], **values), detail
+                              assumptions=["寸法の値は担当者の入力"], **values), detail
 
 
 # ---------------------------------------------------------------- missing items
@@ -192,38 +203,38 @@ def missing_items(inputs: QuoteInputs, masters: MasterLoader, shape_detail: dict
         out.append(Missing(field="quantity", label="数量", message="数量が未入力です"))
     if inputs.material:
         if inputs.material not in masters.materials:
-            out.append(Missing(field="material", label="材質", message=f"材質 {inputs.material} がマスターにありません。選び直してください"))
+            out.append(Missing(field="material", label="材質", message=f"材質 {inputs.material} がマスタにありません。選び直してください"))
     elif inputs.custom_material is not None:
         lacking = [x for x, v in (("kg単価", inputs.custom_material.price_per_kg), ("密度", inputs.custom_material.density_kg_m3)) if not v]
         if lacking:
-            out.append(Missing(field="custom_material", label="材質（マスター未登録）",
-                               message=f"マスターにない材質「{inputs.custom_material.name}」の{'・'.join(lacking)}が未入力です"))
+            out.append(Missing(field="custom_material", label="材質（マスタ未登録）",
+                               message=f"マスタにない材質「{inputs.custom_material.name}」の{'・'.join(lacking)}が未入力です"))
     else:
         out.append(Missing(field="material", label="材質", message="材質が未選択です"))
     if inputs.custom_finish is not None and inputs.surface_treatment in (None, ""):
         if inputs.custom_finish.unit_price is None:
-            out.append(Missing(field="custom_finish", label="表面処理（マスター未登録）",
-                               message=f"マスターにない表面処理「{inputs.custom_finish.name}」の単価（1個あたり）が未入力です"))
+            out.append(Missing(field="custom_finish", label="表面処理（マスタ未登録）",
+                               message=f"マスタにない表面処理「{inputs.custom_finish.name}」の単価（1個あたり）が未入力です"))
     elif inputs.surface_treatment not in (None, "", "NONE") and inputs.surface_treatment not in masters.surface_treatments:
         out.append(Missing(field="surface_treatment", label="表面処理",
-                           message=f"表面処理 {inputs.surface_treatment} がマスターにありません。選び直してください"))
+                           message=f"表面処理 {inputs.surface_treatment} がマスタにありません。選び直してください"))
     for i, p in enumerate(inputs.processes):
         if p.code not in masters.process_rates:
-            out.append(Missing(field=f"processes.{i}", label="追加加工", message=f"追加加工 {p.code} がマスターにありません"))
+            out.append(Missing(field=f"processes.{i}", label="追加加工", message=f"追加加工 {p.code} がマスタにありません"))
         elif not p.quantity:
             name = masters.process_rates[p.code]["display_name"]
             out.append(Missing(field=f"processes.{i}", label="追加加工", message=f"追加加工「{name}」の箇所数が未入力です"))
     for i, p in enumerate(inputs.custom_processes):
         lacking = [x for x, v in (("単価（1か所あたり）", p.unit_price), ("箇所数", p.quantity)) if v is None]
         if lacking:
-            out.append(Missing(field=f"custom_processes.{i}", label="追加加工（マスター未登録）",
-                               message=f"マスターにない加工「{p.name}」の{'・'.join(lacking)}が未入力です"))
+            out.append(Missing(field=f"custom_processes.{i}", label="追加加工（マスタ未登録）",
+                               message=f"マスタにない加工「{p.name}」の{'・'.join(lacking)}が未入力です"))
     if analysis_pending:
-        out.append(Missing(field="analysis", label="形状解析", message="形状解析がまだ終わっていません"))
+        out.append(Missing(field="analysis", label="CADデータ", message="CADデータの解析がまだ終わっていません"))
     else:
         for name, label in SHAPE_FIELDS.items():
             if shape_detail[name]["value"] is None:
-                out.append(Missing(field=f"shape.{name}", label=label, message=f"形状の値「{label}」が未入力です（形状解析で求められませんでした）"))
+                out.append(Missing(field=f"shape.{name}", label=label, message=f"{label}が未入力です（CADデータから求められませんでした）"))
     return out
 
 
@@ -318,24 +329,26 @@ def priced(inputs: QuoteInputs, masters: MasterLoader, analysis: dict | None, fi
 # ---------------------------------------------------------------- hints and the drawing items
 def hints(inputs: QuoteInputs, analysis: dict | None, reading: dict | None, masters: MasterLoader) -> list[str]:
     """Points worth a look before issuing (they never block issuing)."""
+    from src.services.platform.wording import notes, review_reason
+
     out = []
     review = set((reading or {}).get("needs_review") or [])
     reasons = (reading or {}).get("review_reasons") or {}
     labels = {"material": "材質", "thickness_mm": "板厚", "quantity": "数量", "surface_treatment": "表面処理",
               "processes": "追加加工", "rush": "特急"}
     for name in sorted(review):
-        why = "・".join(reasons.get(name) or [])
-        out.append(f"図面の読み取り：{labels.get(name, name)}は要確認です" + (f"（{why}）" if why else ""))
+        why = "・".join(dict.fromkeys(review_reason(r) for r in reasons.get(name) or []))
+        out.append(f"図面の{labels.get(name, name)}は要確認です" + (f"（{why}）" if why else ""))
     if analysis:
         a = SheetMetalAnalysis.model_validate(analysis)
         estimated = a.status == "partial" or a.assumptions or any(
             q.confidence in {"medium", "low"} for q in a.metric_quality.values())
         if a.status in ("success", "partial") and estimated:
-            why = "／".join(a.assumptions or a.warnings or ["一部の解析値が概算"])
-            out.append(f"形状解析：概算です（{why}）")
+            why = "／".join(notes(analysis))
+            out.append("展開寸法は概算です" + (f"（{why}）" if why else ""))
         drawn = (reading or {}).get("thickness_mm")
         if drawn is not None and a.thickness_mm is not None and abs(float(drawn) - float(a.thickness_mm)) > 1e-6:
-            out.append(f"板厚：図面 {float(drawn):g} mm と形状 {a.thickness_mm:g} mm が異なります（形状の板厚で計算します）")
+            out.append(f"板厚が図面（{float(drawn):g} mm）とCADデータ（{a.thickness_mm:g} mm）で違います。CADデータの板厚で計算しています")
     flags = {"inspection": "検査成績書の指定があります", "tolerance": "厳しい公差の指定があります",
              "appearance": "外観の指定があります"}
     out += [f"図面の注記：{flags[f]}" for f in (reading or {}).get("flags") or [] if f in flags]
@@ -347,30 +360,31 @@ def drawing_items(reading: dict | None, inputs: QuoteInputs, masters: MasterLoad
     if not reading:
         return []
     from src.pdf_quote import condition_items
+    from src.services.platform.wording import review_reason
 
     used = {
         "material": inputs.material and masters.materials.get(inputs.material, {}).get("display_name", inputs.material)
-        or (inputs.custom_material.name + "（マスター未登録）" if inputs.custom_material else "未選択"),
+        or (inputs.custom_material.name + "（マスタ未登録）" if inputs.custom_material else "未選択"),
         "thickness_mm": None,
         "quantity": f"{inputs.quantity} 個" if inputs.quantity else "未入力",
-        "surface_treatment": (inputs.custom_finish.name + "（マスター未登録）" if inputs.custom_finish and not inputs.surface_treatment
+        "surface_treatment": (inputs.custom_finish.name + "（マスタ未登録）" if inputs.custom_finish and not inputs.surface_treatment
                               else masters.surface_treatments.get(inputs.surface_treatment or "NONE", {}).get("display_name", "なし")),
         "processes": "、".join([f"{masters.process_rates[p.code]['display_name']} ×{p.quantity:g}" if p.quantity else
                                masters.process_rates.get(p.code, {}).get("display_name", p.code)
                                for p in inputs.processes if p.code in masters.process_rates]
-                              + [f"{p.name}（マスター未登録）" for p in inputs.custom_processes]) or "なし",
+                              + [f"{p.name}（マスタ未登録）" for p in inputs.custom_processes]) or "なし",
         "rush": "あり" if inputs.rush else "なし",
     }
     shape_t = (analysis or {}).get("thickness_mm")
-    used["thickness_mm"] = f"{shape_t:g} mm（形状）" if shape_t is not None else (
-        f"{inputs.shape.thickness_mm:g} mm" if inputs.shape.thickness_mm else "形状の値")
+    used["thickness_mm"] = f"{shape_t:g} mm（CADデータ）" if shape_t is not None else (
+        f"{inputs.shape.thickness_mm:g} mm" if inputs.shape.thickness_mm else "未入力")
     rows = []
     for item in condition_items(reading, masters):
         notice = ""
         if item.field == "thickness_mm" and item.value is not None and shape_t is not None and \
                 abs(float(item.value) - float(shape_t)) > 1e-6:
-            notice = f"図面 {float(item.value):g} mm と形状 {shape_t:g} mm が異なります"
+            notice = f"CADデータの板厚（{shape_t:g} mm）と違います"
         rows.append({"field": item.field, "label": item.label, "read": item.display, "status": item.status,
-                     "status_label": STATUS_LABEL.get(item.status, item.status), "reasons": list(item.reasons),
+                     "status_label": STATUS_LABEL.get(item.status, item.status), "reasons": list(dict.fromkeys(review_reason(r) for r in item.reasons)),
                      "used": used[item.field], "notice": notice})
     return rows

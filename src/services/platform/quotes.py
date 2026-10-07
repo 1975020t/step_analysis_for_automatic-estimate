@@ -20,9 +20,10 @@ from src.services.platform.core import Platform, bump, check_version, iso
 from src.services.platform.drawings import reading_for_pricing, sync_revision
 from src.services.platform.pricing import QuoteInputs, compute, inputs_from_reading
 from src.services.platform.similar import similar
+from src.services.platform.wording import failure, notes
 
 ANALYSIS_KEYS = ("k_factor", "k_factor_confirmed", "thickness_mm", "flat_confirmed")
-STAGES = ["形状解析", "図面の読み取り", "マスタ照合", "見積計算", "類似実績の検索"]
+STAGES = ["CADデータの解析", "図面の読み取り", "マスタ照合", "見積計算", "類似実績の検索"]
 
 
 class EstimateCreate(BaseModel):
@@ -141,7 +142,7 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
         quote.analysis = analysis
         a = analysis or {}
         values["shape"] = {k: a.get(k) for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")}
-        values["shape_status"] = a.get("status") or "形状ファイルなし"
+        values["shape_status"] = shape_state(a) if a else "CADデータなし"
         stage(1)
         if revision is not None:
             sync_revision(pf, s, revision)
@@ -196,7 +197,7 @@ def analyse(pf: Platform, revision: DrawingRevision | None, inputs: QuoteInputs)
         return pf.service.analyze_bytes(data, meta["filename"], inputs.thickness_mm, inputs.k_factor,
                                         inputs.k_factor_confirmed, inputs.flat_confirmed).model_dump(mode="json")
     except Exception:  # noqa: BLE001
-        return {"status": "error", "file_name": meta["filename"], "message": "形状ファイルを解析できませんでした。"}
+        return {"status": "error", "file_name": meta["filename"], "message": "CADデータを解析できませんでした。"}
 
 
 # ---------------------------------------------------------------- reading
@@ -236,7 +237,8 @@ def detail(pf: Platform, quote_id: int) -> dict:
             "analysis": {k: a.get(k) for k in ("status", "file_name", "thickness_mm", "blank_area_mm2", "cut_length_mm",
                                                "hole_count", "bend_count", "reason_code", "reason_codes", "message",
                                                "warnings", "assumptions", "flat_pattern")}
-                         | {"state": shape_state(a)} if a else None,
+                         | {"state": shape_state(a), "notes": notes(a),
+                            "failure": failure(a) if shape_state(a) == "解析不可" else None} if a else None,
             "job": {"job_id": job["job_id"], "status": job["status"], "error": job.get("error"),
                     "progress": job.get("progress")} if job else None,
             "result": result, "edit_log": log, "documents": docs, "chat": quote.chat or [],
@@ -344,10 +346,10 @@ def update(pf: Platform, quote_id: int, body: EstimateUpdate, actor: str) -> dic
 
 
 LABELS = {"customer": "顧客", "title": "案件名", "staff": "担当", "quantity": "数量", "due_date": "希望納期",
-          "material": "材質", "custom_material": "材質（マスター未登録）", "surface_treatment": "表面処理",
-          "custom_finish": "表面処理（マスター未登録）", "rush": "特急", "processes": "追加加工",
-          "custom_processes": "追加加工（マスター未登録）", "k_factor": "Kファクター", "k_factor_confirmed": "Kファクター指定",
-          "thickness_mm": "板厚（DXF）", "flat_confirmed": "曲げなし（平板）", "shape": "形状の値"}
+          "material": "材質", "custom_material": "材質（マスタ未登録）", "surface_treatment": "表面処理",
+          "custom_finish": "表面処理（マスタ未登録）", "rush": "特急", "processes": "追加加工",
+          "custom_processes": "追加加工（マスタ未登録）", "k_factor": "Kファクター", "k_factor_confirmed": "Kファクター指定",
+          "thickness_mm": "板厚（DXF）", "flat_confirmed": "曲げなし（平板）", "shape": "寸法の値"}
 
 
 def changes(before: QuoteInputs, after: QuoteInputs, masters) -> str:

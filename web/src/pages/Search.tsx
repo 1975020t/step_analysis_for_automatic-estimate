@@ -40,7 +40,7 @@ export default function SearchPage() {
           <button key={k} className={`btn small ${kind === k ? "primary" : ""}`} onClick={() => setKind(k)}>{k} {data?.counts?.[k] || 0}</button>
         ))}
       </div>
-      <p className="small muted">{results.length}件 ・ 文字データのあるPDF・Excelと、登録済みの図面・見積が対象（スキャンの文字は読みません）</p>
+      <p className="small muted">{results.length}件</p>
       <ErrorBox error={error} />
       {query && results.length === 0 && <div className="empty">見つかりませんでした。</div>}
       {!query && <div className="empty">キーワードを入れて Enter を押してください。</div>}

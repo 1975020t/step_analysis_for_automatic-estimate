@@ -3,8 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { get, num, yen } from "../api";
 import { ErrorBox, Marked } from "../ui";
 
-const STAGES = ["形状解析", "図面の読み取り", "マスタ照合", "見積計算", "類似実績の検索"];
-const NOTES = ["STEP・DXFから板厚・展開面積・切断長・穴・曲げ", "登録時に読み取った図面の条件", "材質・表面処理・追加加工をマスターと照らす", "マスターとルールで金額を計算", "材料が同じ・曲げ±1・穴±2"];
+const STAGES = ["CADデータの解析", "図面の読み取り", "マスタ照合", "見積計算", "類似実績の検索"];
 
 export default function ProgressPage() {
   const { id } = useParams();
@@ -63,7 +62,7 @@ export default function ProgressPage() {
           <div className="spacer">
             <div className="small muted">ステップ {Math.min(step + (done ? 0 : 1), STAGES.length)} / {STAGES.length}</div>
             <h2 style={{ fontSize: 28 }}>{done ? "完了" : STAGES[step] || "受付中"}</h2>
-            <div className="muted">{done ? "見積結果を開きます…" : NOTES[step]}</div>
+            {done && <div className="muted">見積結果を開きます…</div>}
           </div>
           <span className="num">経過 {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}</span>
         </div>
@@ -77,14 +76,14 @@ export default function ProgressPage() {
       <div className="section-title"><h2>ここまでに分かったこと</h2></div>
       <div className="figures" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
         <div>
-          <span className="label">形状解析</span>
+          <span className="label">CADデータ</span>
           <div className="value">{shape.thickness_mm ? `t${shape.thickness_mm}` : "—"}</div>
-          <span className="small muted">{shape.hole_count !== undefined && shape.hole_count !== null ? `穴 ${shape.hole_count} ・ 曲げ ${shape.bend_count} ・ 展開 ${num(shape.blank_area_mm2, 0)}mm²` : v.shape_status === "形状ファイルなし" ? "形状ファイルなし（値を入力）" : "待機中"}</span>
+          <span className="small muted">{shape.hole_count !== undefined && shape.hole_count !== null ? `穴 ${shape.hole_count} ・ 曲げ ${shape.bend_count} ・ 展開 ${num(shape.blank_area_mm2, 0)}mm²` : v.shape_status === "解析不可" ? "寸法を求められませんでした" : v.shape_status === "CADデータなし" ? "CADデータなし" : "待機中"}</span>
         </div>
         <div>
           <span className="label">図面の読み取り</span>
           <div className="value">{v.reading ? `${v.reading.items}項目` : step > 1 ? "なし" : "—"}</div>
-          <span className="small muted">{v.reading ? `要確認 ${v.reading.review}` : step > 1 ? "図面PDFの読み取りなし（手入力）" : "待機中"}</span>
+          <span className="small muted">{v.reading ? `要確認 ${v.reading.review}` : step > 1 ? "図面の読み取りなし" : "待機中"}</span>
         </div>
         <div>
           <span className="label">マスタ照合</span>
@@ -94,7 +93,7 @@ export default function ProgressPage() {
         <div>
           <span className="label">金額（税抜）</span>
           <div className="value">{v.price ? yen(v.price) : v.missing ? `未入力 ${v.missing}` : "—"}</div>
-          <span className="small muted">{v.price ? "マスターとルールで計算" : v.missing ? "見積結果で入力してください" : "待機中"}</span>
+          <span className="small muted">{v.price ? "計算済み" : v.missing ? "見積結果で入力してください" : "待機中"}</span>
         </div>
         <div>
           <span className="label">類似実績</span>

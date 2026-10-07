@@ -67,7 +67,6 @@ export default function TemplatesPage() {
       </section>
       <section className="preview-paper">
         {sel ? <ApiImage key={`${sel}-${v}`} src={`/api/templates/${sel}/preview.png?v=${v}`} alt="テンプレートのプレビュー" /> : null}
-        <p className="small muted" style={{ marginBottom: 0 }}>直近の見積（未入力のないもの）にテンプレートを当てた見本です。見本に使える見積がないときは表示されません。</p>
       </section>
     </div>
   );

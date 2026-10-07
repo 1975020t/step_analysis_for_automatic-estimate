@@ -10,7 +10,7 @@ export default function LogicPage() {
   return (
     <div>
       <div className="panel" style={{ marginBottom: 18 }}>
-        <span className="small muted">現在の計算式（表示のみ）</span>
+        <span className="small muted">現在の計算式</span>
         <div style={{ fontWeight: 700, fontSize: 15 }}>{data.summary}</div>
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "250px minmax(0, 1fr)", gap: 22, alignItems: "start" }}>

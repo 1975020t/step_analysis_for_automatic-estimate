@@ -125,7 +125,6 @@ export default function DocumentsPage() {
       <section className="preview-paper" data-testid="document-preview">
         {previewSrc ? <ApiImage key={previewSrc} src={previewSrc} alt={`${LABEL[kind]}のプレビュー`} />
           : <div className="hatch" style={{ height: 520, display: "grid", placeItems: "center" }}><span className="muted">{estimate ? "発行できる状態になるとプレビューを表示します" : "対象の案件を選んでください"}</span></div>}
-        <p className="small muted" style={{ marginBottom: 0 }}>プレビューは発行するPDFと同じものです（番号は発行時に決まります）。原価・粗利は記載しません。</p>
       </section>
     </div>
   );

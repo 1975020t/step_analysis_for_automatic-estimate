@@ -23,6 +23,8 @@ MASTER_TABLES = {
     "pricing_policy": (PolicyRow, ["value", "description"], ["value"]),
     "company": (CompanyRow, ["value", "description"], []),
 }
+FIELD_LABELS = {"density_kg_m3": "密度", "price_per_kg": "kg単価", "waste_factor": "歩留まり係数", "unit_price": "単価",
+                "value": "値"}
 INPUT_TYPES = ["text", "select", "number_range", "date_range"]
 
 
@@ -249,7 +251,7 @@ def save_partner(pf: Platform, partner_id: int | None, body: PartnerIn) -> dict:
 # ---------------------------------------------------------------- masters
 def masters_table(pf: Platform, table: str) -> list[dict]:
     if table not in MASTER_TABLES:
-        raise ServiceError("マスターの種類が正しくありません。", 404, "NOT_FOUND")
+        raise ServiceError("マスタの種類が正しくありません。", 404, "NOT_FOUND")
     model, fields, _ = MASTER_TABLES[table]
     with pf.session() as s:
         rows = s.scalars(select(model).order_by(model.sort))
@@ -261,7 +263,7 @@ def save_master_row(pf: Platform, table: str, code: str, values: dict[str, Any],
     """Add or change one master row. Values are checked (numbers, charge scope); a change applies to quotes
     computed from now on (issued documents keep their amounts)."""
     if table not in MASTER_TABLES:
-        raise ServiceError("マスターの種類が正しくありません。", 404, "NOT_FOUND")
+        raise ServiceError("マスタの種類が正しくありません。", 404, "NOT_FOUND")
     model, fields, numeric = MASTER_TABLES[table]
     code = (code or "").strip()
     if not code:
@@ -275,9 +277,9 @@ def save_master_row(pf: Platform, table: str, code: str, values: dict[str, Any],
                     if float(v) < 0:
                         raise ValueError
                 except ValueError:
-                    raise ServiceError(f"{f} は0以上の数値で入力してください。") from None
+                    raise ServiceError(f"{FIELD_LABELS.get(f, f)}は0以上の数値で入力してください。") from None
             if f == "charge_scope" and v not in ("per_part", "per_order"):
-                raise ServiceError("課金の範囲は per_part（1個ごと）か per_order（1注文に1回）です。")
+                raise ServiceError("課金の範囲は「1個ごと」か「1注文に1回」です。")
             if f == "aliases":
                 v = "|".join(a.strip() for a in v.replace("、", "|").split("|") if a.strip())
             clean[f] = v
@@ -294,8 +296,8 @@ def save_master_row(pf: Platform, table: str, code: str, values: dict[str, Any],
             s.add(row)
         else:
             if row is None:
-                raise ServiceError("マスターの行が見つかりません。", 404, "NOT_FOUND")
-            check_version(row, version, "マスターの行")
+                raise ServiceError("マスタの行が見つかりません。", 404, "NOT_FOUND")
+            check_version(row, version, "マスタの行")
             for f, v in clean.items():
                 setattr(row, f, v)
         row.updated_at = now()
@@ -318,35 +320,34 @@ def logic(pf: Platform) -> dict:
                    f"×（1 ＋ 特急割増 {rush:.0%}：特急のときだけ）×（1 ＋ 粗利率 {margin:.0%}）",
         "items": [
             {"name": "材料費", "rows": [
-                {"item": "1個の重量", "formula": "展開面積(mm²) × 板厚(mm) ÷ 10⁹ × 密度(kg/m³)", "note": "形状解析の値と材料マスター"},
-                {"item": "材料費", "formula": "1個の重量 × kg単価 × 歩留まり係数 × 数量", "note": "材料マスター（課金の範囲が1個ごと）"}]},
+                {"item": "1個の重量", "formula": "展開面積(mm²) × 板厚(mm) ÷ 10⁹ × 密度(kg/m³)", "note": "CADデータの値と材料マスタ"},
+                {"item": "材料費", "formula": "1個の重量 × kg単価 × 歩留まり係数 × 数量", "note": "材料マスタ（課金の範囲が1個ごと）"}]},
             {"name": "レーザー切断", "rows": [
-                {"item": "レーザー切断", "formula": "切断長(mm) × 単価(円/mm) × 数量", "note": "工程マスター LASER_CUT"}]},
+                {"item": "レーザー切断", "formula": "切断長(mm) × 単価(円/mm) × 数量", "note": "工程マスタ"}]},
             {"name": "ピアス加工", "rows": [
-                {"item": "ピアス加工", "formula": "穴数 × 単価(円/穴) × 数量", "note": "工程マスター PIERCE"}]},
+                {"item": "ピアス加工", "formula": "穴数 × 単価(円/穴) × 数量", "note": "工程マスタ"}]},
             {"name": "曲げ加工", "rows": [
-                {"item": "曲げ加工", "formula": "曲げ数 × 単価(円/曲げ) × 数量", "note": "工程マスター BEND"}]},
+                {"item": "曲げ加工", "formula": "曲げ数 × 単価(円/曲げ) × 数量", "note": "工程マスタ"}]},
             {"name": "段取り", "rows": [
-                {"item": "段取り", "formula": "単価(円/式) × 1", "note": "工程マスター SETUP（1注文に1回）"}]},
+                {"item": "段取り", "formula": "単価(円/式) × 1", "note": "工程マスタ（1注文に1回）"}]},
             {"name": "追加加工", "rows": [
-                {"item": "追加加工", "formula": "1個あたりの箇所数 × 単価 × 数量", "note": "工程マスター（タップ・皿穴・溶接など）。図面の読み取りか担当者の入力"},
-                {"item": "マスターにない加工", "formula": "1個あたりの箇所数 × 担当者が入力した単価 × 数量", "note": "その見積だけに使う（マスターには登録しない）"}]},
+                {"item": "追加加工", "formula": "1個あたりの箇所数 × 単価 × 数量", "note": "工程マスタ（タップ・皿穴・溶接など）。図面の読み取りか担当者の入力"},
+                {"item": "マスタにない加工", "formula": "1個あたりの箇所数 × 担当者が入力した単価 × 数量", "note": "その見積だけに使う（マスタには登録しない）"}]},
             {"name": "表面処理", "rows": [
-                {"item": "表面処理", "formula": "単価(円/個) × 数量", "note": "表面処理マスター。「なし」は0円"},
-                {"item": "マスターにない表面処理", "formula": "担当者が入力した単価(円/個) × 数量", "note": "その見積だけに使う"}]},
+                {"item": "表面処理", "formula": "単価(円/個) × 数量", "note": "表面処理マスタ。「なし」は0円"},
+                {"item": "マスタにない表面処理", "formula": "担当者が入力した単価(円/個) × 数量", "note": "その見積だけに使う"}]},
             {"name": "特急割増", "rows": [
-                {"item": "特急割増", "formula": f"小計 × {rush:.0%}", "note": "特急を指定したときだけ（価格方針 rush_surcharge_rate）"}]},
+                {"item": "特急割増", "formula": f"小計 × {rush:.0%}", "note": "特急を指定したときだけ（価格方針の特急割増率）"}]},
             {"name": "粗利", "rows": [
-                {"item": "見積金額", "formula": f"（小計 ＋ 特急割増）× (1 ＋ {margin:.0%})", "note": "価格方針 margin_rate"}]},
+                {"item": "見積金額", "formula": f"（小計 ＋ 特急割増）× (1 ＋ {margin:.0%})", "note": "価格方針の粗利率"}]},
             {"name": "単価・消費税", "rows": [
                 {"item": "単価", "formula": "見積金額 ÷ 数量 を1円未満切り上げ", "note": "画面・見積書・納品書・請求書で同じ"},
                 {"item": "金額・小計", "formula": "単価 × 数量", "note": ""},
-                {"item": "消費税", "formula": f"小計 × {tax:.0%} を1円未満切り捨て", "note": "価格方針 tax_rate"},
+                {"item": "消費税", "formula": f"小計 × {tax:.0%} を1円未満切り捨て", "note": "価格方針の消費税率"},
                 {"item": "合計", "formula": "小計 ＋ 消費税", "note": ""}]},
         ],
-        "notes": ["金額はマスターとルールだけで決まります（AIは金額を計算しません）。",
-                  "希望納期は記録と表示に使い、金額には影響しません（特急は担当者が指定します）。",
-                  "マスターにない材料は、入力したkg単価と密度に、歩留まり係数1.15を掛けて計算します。",
-                  "この画面は表示だけです。式や費目は変えられません。単価や率はマスターの画面で変えます。"],
+        "notes": [                  "希望納期は記録と表示に使い、金額には影響しません（特急は担当者が指定します）。",
+                  "マスタにない材料は、入力したkg単価と密度に、歩留まり係数1.15を掛けて計算します。",
+                  "単価や率はマスタの画面で変えます。"],
         "values": {"margin_rate": margin, "rush_surcharge_rate": rush, "tax_rate": tax},
     }

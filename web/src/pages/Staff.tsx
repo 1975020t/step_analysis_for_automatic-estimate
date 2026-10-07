@@ -27,7 +27,6 @@ export default function StaffPage() {
     <div className="grid2" style={{ gap: 30, alignItems: "start", maxWidth: 1000 }}>
       <section>
         <h2 style={{ marginBottom: 8 }}>担当者の一覧</h2>
-        <p className="small muted">案件・見積の担当と、振り返りの担当者別の集計に使います。消した担当者の過去の案件は、名前のまま残ります。</p>
         <table className="rule">
           <tbody>
             {rows.map((r, i) => (
@@ -46,14 +45,14 @@ export default function StaffPage() {
       </section>
       <section className="panel">
         <h2 style={{ marginBottom: 8 }}>この端末で操作する人</h2>
-        <p className="small muted">ログインはまだありません。ここで選んだ担当者が、修正履歴・ステータスの変更・帳票の発行の「だれが」として記録されます（この端末のブラウザに保存）。</p>
+        <p className="small muted">修正履歴・ステータスの変更・帳票の発行に、この担当者の名前が残ります。</p>
         <Field label="操作する担当者">
           <select aria-label="操作する担当者" value={actor} onChange={(e) => { setActor(e.target.value); session.setActor(e.target.value); toast("操作する担当者を設定しました"); }}>
             <option value="">（記録しない）</option>
             {rows.filter((r) => r.id).map((r) => <option key={r.id}>{r.name}</option>)}
           </select>
         </Field>
-        <Field label="APIトークン（サーバーで API_TOKEN を設定している場合だけ）">
+        <Field label="接続用の合言葉（管理者から伝えられた場合だけ入力）">
           <input type="password" value={token} onChange={(e) => setToken(e.target.value)} onBlur={() => session.setToken(token.trim())} />
         </Field>
       </section>

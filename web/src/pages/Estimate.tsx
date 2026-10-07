@@ -38,7 +38,10 @@ export default function EstimatePage() {
       toast("条件を保存し、計算し直しました");
       return true;
     } catch (e) {
-      setError(e);
+      if (e instanceof ApiError && e.status === 409 && e.code === "CONFLICT") {
+        toast(e.message);
+        await load();
+      } else setError(e);
       return false;
     }
   }
@@ -47,7 +50,6 @@ export default function EstimatePage() {
   const r = q.result;
   const price = r.price;
   const inp = q.inputs;
-  const conflict = error instanceof ApiError && error.status === 409 && error.code === "CONFLICT";
   return (
     <div>
       <div className="row">
@@ -77,7 +79,6 @@ export default function EstimatePage() {
       </div>
 
       <ErrorBox error={error} />
-      {conflict && <p><button className="btn" onClick={load}>最新の内容を読み直す</button></p>}
 
       <div className="figures" style={{ gridTemplateColumns: customerMode ? "1fr 1fr 1.6fr" : `repeat(${(r.groups || []).length || 4}, 1fr) 1.8fr` }} data-testid="figures">
         {!customerMode && (r.groups || [{ name: "材料費" }, { name: "加工費" }, { name: "表面処理" }, { name: "粗利" }]).map((g: any) => (
@@ -153,7 +154,7 @@ export default function EstimatePage() {
 
           <div className="section-title"><h2>図面から読み取った条件</h2></div>
           {r.items.length === 0 ? (
-            <div className="empty">図面PDFの読み取り結果はありません（条件は下で入力します）。</div>
+            <div className="empty">図面の読み取り結果はありません。</div>
           ) : (
             <table className="rule" data-testid="drawing-items">
               <thead><tr><th>項目</th><th>状態</th><th>図面の値</th><th>見積に使う値</th></tr></thead>
@@ -163,7 +164,7 @@ export default function EstimatePage() {
                     <td>{it.label}</td>
                     <td><span className={it.status === "確定" ? "tag soft" : it.status === "要確認" ? "tag solid" : "tag grey"}>{it.status_label}</span></td>
                     <td>{it.read}{it.reasons.length > 0 && <span className="sub">{it.reasons.join("・")}</span>}</td>
-                    <td>{it.used}{it.notice && <span className="sub warn">⚠ {it.notice}（形状の板厚で計算）</span>}</td>
+                    <td>{it.used}{it.notice && <span className="sub warn">⚠ {it.notice}</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -178,11 +179,10 @@ export default function EstimatePage() {
             <Marked className="panel" style={{ marginBottom: 18 }}>
               <h3 style={{ marginBottom: 6 }}>確認のヒント</h3>
               <ul style={{ margin: 0, paddingLeft: 18 }} className="small">{r.hints.map((h: string, i: number) => <li key={i}>{h}</li>)}</ul>
-              <p className="small muted" style={{ marginBottom: 0 }}>要確認は発行を止めません。入力された値で見積書を発行できます。</p>
             </Marked>
           )}
           <LineTabs value={tab} onChange={setTab} options={[
-            { value: "similar", label: `類似実績 ${q.similar.length}` }, { value: "shape", label: "形状解析" },
+            { value: "similar", label: `類似実績 ${q.similar.length}` }, { value: "shape", label: "CADデータ" },
             { value: "history", label: "修正履歴" }, { value: "chat", label: "チャット" },
           ]} />
           {tab === "similar" && <SimilarList items={q.similar} unitPrice={price?.unit_price} />}
@@ -233,7 +233,6 @@ function SimilarList({ items, unitPrice }: { items: any[]; unitPrice?: number })
   if (!items.length) return <div className="small muted">材料が同じで、曲げ数の差が1以内・穴数の差が2以内の実績はありません。</div>;
   return (
     <div data-testid="similar">
-      <p className="small muted" style={{ marginTop: 0 }}>材料が同じ・曲げ数±1・穴数±2。差の小さい順。</p>
       <table className="rule">
         <thead><tr><th>図番</th><th>差</th><th className="right">数量</th><th className="right">単価</th><th>結果</th></tr></thead>
         <tbody>
@@ -256,18 +255,18 @@ function SimilarList({ items, unitPrice }: { items: any[]; unitPrice?: number })
 function ShapePanel({ q }: { q: any }) {
   const a = q.analysis;
   const shape = q.result.shape;
-  const statusText = !a ? "形状ファイルなし" : a.state;
+  const statusText = !a ? "CADデータなし" : a.state;
   return (
     <div className="stack">
-      <div className="row"><b>形状解析：</b><span className={a?.state === "確定" ? "tag soft" : "tag solid"}>{statusText}</span>
+      <div className="row"><span className={a?.state === "確定" ? "tag soft" : "tag solid"}>{statusText}</span>
         <span className="small muted">{q.drawing?.shape_name}</span></div>
-      {a?.message && <div className="small">{a.message}</div>}
-      {(a?.assumptions || []).length > 0 && <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{a.assumptions.map((x: string, i: number) => <li key={i}>{x}</li>)}</ul>}
+      {a?.failure && <div className="small">{a.failure}。下の「見積の条件」で寸法を入力してください。</div>}
+      {(a?.notes || []).length > 0 && <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{a.notes.map((x: string, i: number) => <li key={i}>{x}</li>)}</ul>}
       <table className="rule">
         <tbody>
           {SHAPE.map(([k, label, unit]) => (
             <tr key={k}><td>{label}</td><td className="right">{shape[k].value === null ? <span className="warn">未入力</span> : `${num(shape[k].value, 2)} ${unit}`}</td>
-              <td className="small muted">{shape[k].source === "input" ? "入力値" : shape[k].source === "analysis" ? "解析" : ""}</td></tr>
+              <td className="small muted">{shape[k].source === "input" ? "入力値" : ""}</td></tr>
           ))}
         </tbody>
       </table>
@@ -293,7 +292,7 @@ function Chat({ q, onDone, onError }: { q: any; onDone: (d: any) => void; onErro
   }
   return (
     <div className="stack">
-      <p className="small muted" style={{ margin: 0 }}>例：「皿もみを4か所追加」「数量を200に」。文章から条件を読み取り、金額はマスターとルールで計算し直します。</p>
+      <p className="small muted" style={{ margin: 0 }}>例：「皿もみを4か所追加」「数量を200に」</p>
       <div className="chat">
         {(q.chat || []).length === 0 && <span className="small muted">まだやりとりはありません。</span>}
         {(q.chat || []).map((m: any, i: number) => <div key={i} className={m.role === "user" ? "u" : "a"}><span>{m.content}</span></div>)}
@@ -334,7 +333,7 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
 
   return (
     <section id="conditions" className="panel" style={{ marginTop: 24 }}>
-      <div className="row between"><h2>見積の条件</h2><span className="small muted">保存すると、サーバーで計算し直します</span></div>
+      <h2>見積の条件</h2>
       <div className="grid3" style={{ marginTop: 12 }}>
         <div className="field"><label>顧客</label><input aria-label="顧客" value={f.customer} onChange={(e) => set("customer", e.target.value)} /></div>
         <div className="field"><label>案件名</label><input aria-label="案件名" value={f.title} onChange={(e) => set("title", e.target.value)} /></div>
@@ -343,7 +342,7 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
             <option value="">（未設定）</option>{(meta?.staff || []).map((s) => <option key={s.id}>{s.name}</option>)}
           </select></div>
         <div className="field"><label>数量（必須）</label><input aria-label="数量" type="number" min={1} className={missingField("quantity") ? "missing" : ""} value={f.quantity ?? ""} onChange={(e) => set("quantity", e.target.value)} /></div>
-        <div className="field"><label>希望納期（金額に影響しません）</label><input aria-label="希望納期" type="date" value={f.due_date} onChange={(e) => set("due_date", e.target.value)} /></div>
+        <div className="field"><label>希望納期</label><input aria-label="希望納期" type="date" value={f.due_date} onChange={(e) => set("due_date", e.target.value)} /></div>
         <label className="check" style={{ marginTop: 18 }}><input type="checkbox" checked={f.rush} onChange={(e) => set("rush", e.target.checked)} />特急（割増 {Math.round((meta?.policy.rush_surcharge_rate || 0) * 100)}%）</label>
         <div className="field"><label>材質（必須）</label>
           <select aria-label="材質" className={missingField("material") || missingField("custom_material") ? "missing" : ""} value={materialValue}
@@ -351,20 +350,20 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
               : setF({ ...f, material: e.target.value || null, custom_material: null })}>
             <option value="">未選択</option>
             {(meta?.materials || []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
-            <option value="__custom">マスターにない材質（単価を入力）</option>
+            <option value="__custom">マスタにない材質（単価を入力）</option>
           </select></div>
         <div className="field"><label>表面処理</label>
           <select aria-label="表面処理" className={missingField("custom_finish") ? "missing" : ""} value={finishValue}
             onChange={(e) => e.target.value === "__custom" ? setF({ ...f, surface_treatment: null, custom_finish: f.custom_finish || { name: "", unit_price: null } })
               : setF({ ...f, surface_treatment: e.target.value, custom_finish: null })}>
             {(meta?.surface_treatments || []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}
-            <option value="__custom">マスターにない表面処理（単価を入力）</option>
+            <option value="__custom">マスタにない表面処理（単価を入力）</option>
           </select></div>
       </div>
       {materialValue === "__custom" && (
         <div className="grid3">
           <div className="field"><label>材質の名前</label><input aria-label="材質の名前" value={f.custom_material.name} onChange={(e) => set("custom_material", { ...f.custom_material, name: e.target.value })} /></div>
-          <div className="field"><label>kg単価（円、歩留まり1.15を掛けます）</label><input aria-label="kg単価" type="number" className={f.custom_material.price_per_kg ? "" : "missing"} value={f.custom_material.price_per_kg ?? ""} onChange={(e) => set("custom_material", { ...f.custom_material, price_per_kg: e.target.value })} /></div>
+          <div className="field"><label>kg単価（円）</label><input aria-label="kg単価" type="number" className={f.custom_material.price_per_kg ? "" : "missing"} value={f.custom_material.price_per_kg ?? ""} onChange={(e) => set("custom_material", { ...f.custom_material, price_per_kg: e.target.value })} /></div>
           <div className="field"><label>密度（kg/m³）</label><input aria-label="密度" type="number" className={f.custom_material.density_kg_m3 ? "" : "missing"} value={f.custom_material.density_kg_m3 ?? ""} onChange={(e) => set("custom_material", { ...f.custom_material, density_kg_m3: e.target.value })} /></div>
         </div>
       )}
@@ -384,14 +383,14 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
               <td><select aria-label="追加加工" value={p.code} onChange={(e) => { const ps = [...f.processes]; ps[i] = { ...p, code: e.target.value }; set("processes", ps); }}>
                 {(meta?.processes || []).map((m) => <option key={m.code} value={m.code}>{m.name}</option>)}</select></td>
               <td><input aria-label="箇所数" type="number" min={0} className={p.quantity ? "" : "missing"} value={p.quantity ?? ""} onChange={(e) => { const ps = [...f.processes]; ps[i] = { ...p, quantity: e.target.value }; set("processes", ps); }} /></td>
-              <td className="small muted">マスターの単価</td>
+              <td className="small muted">マスタの単価</td>
               <td><button className="btn link" onClick={() => set("processes", f.processes.filter((_: any, j: number) => j !== i))}>外す</button></td>
             </tr>
           ))}
           {(f.custom_processes || []).map((p: any, i: number) => (
             <tr key={`c${i}`}>
               <td><input aria-label="未登録の加工の名前" value={p.name} onChange={(e) => { const ps = [...f.custom_processes]; ps[i] = { ...p, name: e.target.value }; set("custom_processes", ps); }} />
-                <span className="sub">マスター未登録（この見積だけの単価）</span></td>
+                <span className="sub">マスタ未登録（この見積だけの単価）</span></td>
               <td><input aria-label="未登録の加工の箇所数" type="number" min={0} className={p.quantity ? "" : "missing"} value={p.quantity ?? ""} onChange={(e) => { const ps = [...f.custom_processes]; ps[i] = { ...p, quantity: e.target.value }; set("custom_processes", ps); }} /></td>
               <td><input aria-label="未登録の加工の単価" type="number" min={0} className={p.unit_price === null || p.unit_price === "" || p.unit_price === undefined ? "missing" : ""} value={p.unit_price ?? ""} onChange={(e) => { const ps = [...f.custom_processes]; ps[i] = { ...p, unit_price: e.target.value }; set("custom_processes", ps); }} /></td>
               <td><button className="btn link" onClick={() => set("custom_processes", f.custom_processes.filter((_: any, j: number) => j !== i))}>外す</button></td>
@@ -400,17 +399,17 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
         </tbody>
       </table>
       <div className="row" style={{ marginTop: 6 }}>
-        <button className="btn small" onClick={() => set("processes", [...(f.processes || []), { code: meta?.processes[0]?.code, quantity: 1, source: "user" }])}>＋ マスターの加工</button>
-        <button className="btn small" onClick={() => set("custom_processes", [...(f.custom_processes || []), { name: "", quantity: 1, unit_price: null, source: "user" }])}>＋ マスターにない加工</button>
+        <button className="btn small" onClick={() => set("processes", [...(f.processes || []), { code: meta?.processes[0]?.code, quantity: 1, source: "user" }])}>＋ マスタの加工</button>
+        <button className="btn small" onClick={() => set("custom_processes", [...(f.custom_processes || []), { name: "", quantity: 1, unit_price: null, source: "user" }])}>＋ マスタにない加工</button>
       </div>
 
       {shapeNeeded.length > 0 && (
         <>
-          <h3 style={{ margin: "16px 0 6px" }}>形状の値（形状解析で求められなかった値を入力）</h3>
+          <h3 style={{ margin: "16px 0 6px" }}>寸法の値（CADデータから求められなかった値）</h3>
           <div className="grid3">
             {shapeNeeded.map(([k, label, unit]) => (
               <div className="field" key={k}><label>{label}{unit && `（${unit}）`}</label>
-                <input aria-label={`形状 ${label}`} type="number" min={0} className={shape[k].value === null ? "missing" : ""} value={f.shape?.[k] ?? ""}
+                <input aria-label={`寸法 ${label}`} type="number" min={0} className={shape[k].value === null ? "missing" : ""} value={f.shape?.[k] ?? ""}
                   onChange={(e) => set("shape", { ...(f.shape || {}), [k]: e.target.value })} /></div>
             ))}
           </div>
@@ -419,18 +418,17 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
       {kind === "step" && (
         <div className="row" style={{ marginTop: 10 }}>
           <div className="field" style={{ width: 160 }}><label>Kファクター</label><input type="number" step="0.01" min={0} max={1} value={f.k_factor} onChange={(e) => set("k_factor", e.target.value)} /></div>
-          <label className="check"><input type="checkbox" checked={f.k_factor_confirmed} onChange={(e) => set("k_factor_confirmed", e.target.checked)} />指定済み加工条件として扱う</label>
+          <label className="check"><input type="checkbox" checked={f.k_factor_confirmed} onChange={(e) => set("k_factor_confirmed", e.target.checked)} />自社の加工条件で決まった値</label>
         </div>
       )}
       {kind === "dxf" && (
         <div className="row" style={{ marginTop: 10 }}>
-          <div className="field" style={{ width: 160 }}><label>板厚 mm（DXF）</label><input aria-label="DXFの板厚" type="number" step="0.1" value={f.thickness_mm ?? ""} onChange={(e) => set("thickness_mm", e.target.value)} /></div>
+          <div className="field" style={{ width: 160 }}><label>板厚（mm）</label><input aria-label="DXFの板厚" type="number" step="0.1" value={f.thickness_mm ?? ""} onChange={(e) => set("thickness_mm", e.target.value)} /></div>
           <label className="check"><input type="checkbox" checked={f.flat_confirmed} onChange={(e) => set("flat_confirmed", e.target.checked)} />曲げなし（平板）</label>
         </div>
       )}
       <div className="row" style={{ marginTop: 14 }}>
         <button className="btn primary" onClick={submit}>保存して計算し直す</button>
-        <span className="small muted">ほかの人が先に保存していた場合は、上書きせずにお知らせします。</span>
       </div>
     </section>
   );

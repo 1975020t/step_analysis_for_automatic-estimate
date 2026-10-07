@@ -107,14 +107,15 @@ def run_screens(browser, port: int) -> None:
             ("21_staff.png", "/settings/staff", 700), ("22_import.png", "/settings/import", 700)):
         page.goto(base + path)
         if name == "05_estimate_shape_input.png":
-            page.get_by_text("形状の値（形状解析で").wait_for()
+            page.get_by_text("寸法の値（CADデータから").wait_for()
         shot(page, name, height)
     page.goto(f"{base}/estimates/{main['id']}")
     page.get_by_role("button", name="顧客提示モード").click()
     shot(page, "05_estimate_customer.png", 900)
     page.get_by_role("button", name="顧客提示モード").click()
-    page.get_by_role("tab", name="形状解析").click()
-    page.wait_for_timeout(3000)
+    page.get_by_role("tab", name="CADデータ").click()
+    page.wait_for_function("!document.querySelector(\"main aside\").innerText.includes(\"読み込み中\")", timeout=60_000)
+    page.wait_for_timeout(1500)
     box = page.locator("main aside").bounding_box()
     page.screenshot(path=str(OUT / "05_estimate_shape.png"), clip={"x": box["x"] - 8, "y": box["y"], "width": box["width"] + 16,
                                                                     "height": min(box["height"], 1500)}, full_page=True)

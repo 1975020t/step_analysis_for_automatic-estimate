@@ -62,7 +62,7 @@ def register(pf: Platform, items: list[RegisterItem], actor: str) -> list[dict]:
             pdf = _meta(pf, item.pdf_file_id, "pdf") if item.pdf_file_id else None
             shape = _meta(pf, item.shape_file_id, ("step", "dxf")) if item.shape_file_id else None
             if not pdf and not shape:
-                raise ServiceError(f"図番 {item.drawing_no}：図面PDFか形状ファイルのどちらかが必要です。")
+                raise ServiceError(f"図番 {item.drawing_no}：図面PDFかCADデータのどちらかが必要です。")
             if item.new_revision_of:
                 drawing = s.get(Drawing, item.new_revision_of)
                 if drawing is None:
@@ -118,7 +118,7 @@ def run_register_job(pf: Platform, payload: dict) -> dict:
             raise JobError("図面の版が見つかりません。")
         result: dict = {}
         if revision.shape_file_id:
-            report_progress(stage="形状解析")
+            report_progress(stage="CADデータの解析")
             if revision.shape_kind == "dxf" and not revision.thickness_mm:
                 result["analysis"] = "板厚がないため未解析（見積のときに板厚を入力）"
             else:
@@ -130,7 +130,7 @@ def run_register_job(pf: Platform, payload: dict) -> dict:
                     result["analysis"] = analysis.status
                 except Exception:  # noqa: BLE001 - recorded as a failed analysis; the quote asks for the values
                     revision.analysis = {"status": "error", "file_name": revision.shape_name,
-                                         "message": "形状ファイルを解析できませんでした。"}
+                                         "message": "CADデータを解析できませんでした。"}
                     result["analysis"] = "error"
         if revision.pdf_file_id:
             report_progress(stage="図面の読み取り")

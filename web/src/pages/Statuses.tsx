@@ -33,7 +33,7 @@ export default function StatusesPage() {
   return (
     <div style={{ maxWidth: 1080 }}>
       <div className="row between" style={{ marginBottom: 12 }}>
-        <span className="muted">自社の業務の流れに合わせて、名前・順番・色・表示グループを設定します。</span>
+        <span />
         <div className="row">
           <button className="btn" onClick={() => setRows([...rows, { id: null, name: "", color: "blue", group: "見積・受注", visible: true, count: 0, role: "" }])}>＋ ステータスを追加</button>
           <Marked><button className="btn primary" disabled={!dirty} onClick={save}>変更を保存</button></Marked>
@@ -60,7 +60,7 @@ export default function StatusesPage() {
           ))}
         </tbody>
       </table>
-      <p className="small muted">全{rows.length}件 ・ 名前を変えても、過去の履歴は変更時点の名前で残ります。案件のあるステータスと、見積の作成・発行・受注・失注に使うステータスは削除できません。</p>
+      <p className="small muted">全{rows.length}件 ・ 案件のあるステータスと、見積の作成・発行・受注・失注に使うステータスは削除できません。</p>
     </div>
   );
 }

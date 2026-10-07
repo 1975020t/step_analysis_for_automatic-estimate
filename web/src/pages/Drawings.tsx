@@ -127,7 +127,6 @@ export default function DrawingsPage() {
           <span className="small muted">{shown ? `${shown.length}件` : ""}</span>
           <Tabs value={view} onChange={setView} options={[{ value: "preview", label: "プレビュー" }, { value: "list", label: "リスト" }]} />
         </div>
-        {mode === "similar" && <p className="small muted" style={{ marginTop: -6 }}>材料が同じ・曲げ数の差1以内・穴数の差2以内（見積結果の「類似実績」と同じ条件）。差の小さい順。形状ファイルのない図面は対象外です。</p>}
         <ErrorBox error={error} />
         {!shown ? (mode === "similar" && !base ? <div className="empty">基準にする図面を選んでください。</div> : <Loading />) : shown.length === 0 ? (
           <div className="empty">{total === 0 ? <>図面がまだありません。<Link to="/drawings/register">図面を登録</Link>してください。</> : "条件に合う図面はありません。"}</div>

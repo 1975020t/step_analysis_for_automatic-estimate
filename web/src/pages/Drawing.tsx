@@ -108,7 +108,7 @@ export default function DrawingPage() {
               <button className="btn" onClick={() => setPlacing(null)}>やめる</button>
             </div>
           )}
-          {rev?.processing && <p className="small muted">形状ファイルを解析中です…</p>}
+          {rev?.processing && <p className="small muted">CADデータを解析中です…</p>}
         </div>
 
         <div>
@@ -145,18 +145,17 @@ export default function DrawingPage() {
             </div>
           )}
           {tab === "memos" && <Memos d={d} onChanged={(x: any) => setD(x)} onError={setError} />}
-          <p className="small muted">項目は「設定 ＞ 分類・属性項目」で追加・変更できます。</p>
         </div>
       </div>
 
-      <div ref={similarRef} className="section-title"><h2>似た図面の過去実績と比べる</h2><span className="small muted">材料が同じ・曲げ数の差1以内・穴数の差2以内（差の小さい順）</span></div>
+      <div ref={similarRef} className="section-title"><h2>似た図面の過去実績と比べる</h2></div>
       {!similar ? <Loading /> : (
         <table className="rule" data-testid="drawing-similar">
           <thead><tr><th>図番</th><th>品名・顧客</th><th>材質</th><th>穴・曲げ</th><th>今回との差</th><th className="right">数量</th><th className="right">単価</th><th>結果</th><th>日付</th></tr></thead>
           <tbody>
             <tr className="total"><td>{d.drawing_no} {rev?.revision && `Rev.${rev.revision}`}</td><td>{d.name}</td><td>{d.material}</td>
               <td>{d.metrics.hole_count ?? "—"}・{d.metrics.bend_count ?? "—"}</td><td>基準</td><td className="right">{d.quantity ?? "—"}</td><td className="right">{d.unit_price ? yen(d.unit_price) : "—"}</td><td><span className="tag">今回</span></td><td /></tr>
-            {similar.length === 0 && <tr><td colSpan={9} className="empty">{d.metrics.hole_count === null ? "形状の値がないため、類似は探せません。" : "条件に合う図面・実績はありません。"}</td></tr>}
+            {similar.length === 0 && <tr><td colSpan={9} className="empty">{d.metrics.hole_count === null ? "CADデータの寸法がないため、類似は探せません。" : "条件に合う図面・実績はありません。"}</td></tr>}
             {similar.map((s, i) => (
               <tr key={i}>
                 <td>{s.drawing_id ? <Link to={`/drawings/${s.drawing_id}`}>{s.drawing_no}</Link> : s.drawing_no || s.quote_no}</td>
@@ -194,7 +193,7 @@ function Info({ d, rev, meta, onSaved, onError }: any) {
   const categories = (meta?.categories || []).flatMap((g: any) => g.children.map((c: any) => ({ ...c, group: g.name })));
   return (
     <div>
-      <div className="row between"><span className="small muted">図面PDFから読み取った値は「読取」と表示。編集できます。</span>
+      <div className="row between"><span className="small muted">「読取」は図面から読み取った値です。</span>
         {editing ? <div className="row"><button className="btn small primary" onClick={save}>保存</button><button className="btn small" onClick={() => setEditing(false)}>やめる</button></div>
           : <button className="btn small" onClick={() => setEditing(true)}>属性を編集</button>}</div>
       <table className="rule">
@@ -209,7 +208,7 @@ function Info({ d, rev, meta, onSaved, onError }: any) {
             <option value="">—</option>{(meta?.surface_treatments || []).map((s: any) => <option key={s.code} value={s.code}>{s.name}</option>)}</select>, readMark("surface_treatment"))}
           {row("加工", d.processes.join("・"))}
           {row("板厚", m.thickness_mm ? `${m.thickness_mm} mm` : "—")}
-          {row("穴数・曲げ数", m.hole_count !== null && m.hole_count !== undefined ? `穴 ${m.hole_count} ・ 曲げ ${m.bend_count}` : "—（形状ファイルなし・解析不可）")}
+          {row("穴数・曲げ数", m.hole_count !== null && m.hole_count !== undefined ? `穴 ${m.hole_count} ・ 曲げ ${m.bend_count}` : "—")}
           {row("展開面積・切断長", m.blank_area_mm2 ? `${num(m.blank_area_mm2, 0)} mm² ・ ${num(m.cut_length_mm, 0)} mm` : "—")}
           {row("最大寸法", d.max_dimension_mm ? `${d.max_dimension_mm} mm` : "—")}
           {row("登録日", day(d.created_at))}

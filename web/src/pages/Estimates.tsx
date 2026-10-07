@@ -8,7 +8,7 @@ export default function EstimatesPage() {
   return (
     <div>
       <div className="row between" style={{ marginBottom: 14 }}>
-        <span className="muted">見積は登録済みの図面から作成します。</span>
+        <span />
         <div className="row">
           <button className="btn" onClick={() => navigate("/review")}>振り返り分析</button>
           <Marked><button className="btn primary" onClick={() => navigate("/estimates/new")}>＋ 新規見積作成</button></Marked>
