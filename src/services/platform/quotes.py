@@ -5,6 +5,7 @@ edit history. Every amount comes from src/services/platform/pricing.compute (Quo
 from __future__ import annotations
 
 from datetime import date, datetime
+from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
@@ -16,9 +17,10 @@ from src.db.models import (Case, CaseStatus, CaseStatusLog, Drawing, DrawingRevi
                            QuoteEditLog, now)
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
+from src.services.platform.cases import next_action, status_brief
 from src.services.platform.core import Platform, bump, check_version, iso
 from src.services.platform.drawings import reading_for_pricing, sync_revision
-from src.services.platform.pricing import QuoteInputs, compute, inputs_from_reading
+from src.services.platform.pricing import QuoteInputs, compute, evidence_texts, inputs_from_reading
 from src.services.platform.similar import similar
 from src.services.platform.wording import failure, notes
 
@@ -38,6 +40,9 @@ class EstimateCreate(BaseModel):
     custom_material: dict | None = None
     surface_treatment: str | None = None
     custom_finish: dict | None = None
+    rush: bool | None = None
+    processes: list[dict] | None = None
+    custom_processes: list[dict] | None = None
     k_factor: float = Field(0.33, ge=0, le=1)
     k_factor_confirmed: bool = False
     thickness_mm: float | None = Field(None, gt=0)
@@ -74,7 +79,8 @@ def create(pf: Platform, body: EstimateCreate, actor: str) -> dict:
         if revision is None:
             raise ServiceError("図面の版が見つかりません。", 404, "NOT_FOUND")
         sync_revision(pf, s, revision)
-        given = body.model_dump(exclude_unset=True, exclude={"drawing_id", "revision_id"})
+        given = {k: v for k, v in body.model_dump(exclude_unset=True, exclude={"drawing_id", "revision_id"}).items()
+                 if v is not None}
         if "material" not in given and "custom_material" not in given and revision.material in masters.materials:
             given["material"] = revision.material
         if "surface_treatment" not in given and revision.surface_treatment in masters.surface_treatments:
@@ -100,10 +106,11 @@ def create(pf: Platform, body: EstimateCreate, actor: str) -> dict:
         quote.inputs["_given"] = sorted(inputs.model_fields_set)
         s.add(quote)
         s.flush()
-        job = pf.submit("estimate", {"quote_id": quote.id})
+        job = pf.submit("estimate", {"quote_id": quote.id}, start=False)
         quote.job_id = job["job_id"]
         s.commit()
-        return {"estimate_id": quote.id, "number": number, "job_id": job["job_id"]}
+    pf.start(job["job_id"])  # only after the commit: the job reads the quote
+    return {"estimate_id": quote.id, "number": number, "job_id": job["job_id"]}
 
 
 def _inputs(quote: Quote) -> QuoteInputs:
@@ -220,13 +227,12 @@ def detail(pf: Platform, quote_id: int) -> dict:
                for e in s.scalars(select(QuoteEditLog).where(QuoteEditLog.quote_id == quote.id).order_by(QuoteEditLog.id.desc()))]
         docs = [document_out(d) for d in s.scalars(select(IssuedDocument).where(IssuedDocument.case_id == case.id)
                                                    .order_by(IssuedDocument.id.desc()))]
+        found = similar(pf, inputs.material, _metric(result, "bend_count"), _metric(result, "hole_count"), quote.drawing_id)
         a = quote.analysis or {}
         out = {
             "id": quote.id, "number": quote.number, "version": quote.version, "case_id": case.id,
             "case_version": case.version, "customer": case.customer, "title": case.title, "staff": case.staff,
-            "due_date": iso(case.due_date), "status": {"id": case.status.id, "name": case.status.name,
-                                                       "color": case.status.color, "group": case.status.group,
-                                                       "role": case.status.role},
+            "due_date": iso(case.due_date), "status": status_brief(case.status), "phase": case.status.phase,
             "outcome": case.outcome, "created_at": iso(quote.created_at), "updated_at": iso(quote.updated_at),
             "inputs": inputs.model_dump(mode="json"),
             "drawing": {"id": drawing.id, "drawing_no": drawing.drawing_no, "name": drawing.name,
@@ -243,10 +249,41 @@ def detail(pf: Platform, quote_id: int) -> dict:
                     "progress": job.get("progress")} if job else None,
             "result": result, "edit_log": log, "documents": docs, "chat": quote.chat or [],
             "blockers": blockers(result, case, docs),
-            "similar": similar(pf, inputs.material, _metric(result, "bend_count"), _metric(result, "hole_count"),
-                               quote.drawing_id),
+            "similar": found,
+            "similar_compare": compare(found, result, drawing.drawing_no if drawing else ""),
+            "next_action": next_action(case, quote, drawing, len(result["missing"]), pending, {d["kind"] for d in docs}),
+            "flow_step": flow_step(case.status.phase, pending),
+            "outcome_statuses": {role: {"id": st.id, "name": st.name} for role in ("won", "lost")
+                                 if (st := status_by_role_only(s, role)) is not None},
         }
     return out
+
+
+FLOW = ["図面", "条件", "解析・計算", "内容確認", "見積書発行", "受注・失注の登録"]
+
+
+def flow_step(phase: str, pending: bool) -> int:
+    """Where the estimate is in the six steps of FLOW (1-based; 7 = all done)."""
+    if pending:
+        return 3
+    return {"drafting": 4, "checking": 4, "waiting": 6}.get(phase, 7)
+
+
+def status_by_role_only(s, role: str) -> CaseStatus | None:
+    return s.scalars(select(CaseStatus).where(CaseStatus.role == role).order_by(CaseStatus.sort)).first()
+
+
+def compare(found: list[dict], result: dict, drawing_no: str) -> dict | None:
+    """This quote's unit price against the closest similar result with a price (the same drawing number first):
+    {item, rate} with rate = this / that - 1, and `rates`: the same for every similar item (in their order)."""
+    unit = (result.get("price") or {}).get("unit_price")
+    rates = [(unit / x["unit_price"] - 1) if unit and x.get("unit_price") else None for x in found]
+    priced = [i for i, x in enumerate(found) if x.get("unit_price")]
+    if not priced:
+        return {"item": None, "same_drawing": False, "rate": None, "count": len(found), "rates": rates}
+    same = [i for i in priced if drawing_no and found[i].get("drawing_no") == drawing_no]
+    i = (same or priced)[0]
+    return {"item": found[i], "same_drawing": bool(same), "rate": rates[i], "count": len(found), "rates": rates}
 
 
 def shape_state(a: dict) -> str:
@@ -266,9 +303,9 @@ def blockers(result: dict, case: Case, docs: list[dict]) -> dict:
     quote = [m["message"] for m in result["missing"]]
     trade = []
     if case.outcome != "受注":
-        trade.append(f"受注した見積から作ります（今の状態：{case.status.name}）")
+        trade.append(f"受注登録が必要です（ステータス：{case.status.name}）")
     if not any(d["kind"] == "quote" for d in docs):
-        trade.append("先に見積書を発行してください（同じ金額で作ります）")
+        trade.append("先に見積書を発行してください（同じ金額で発行します）")
     return {"quote": quote, "delivery": list(trade), "invoice": list(trade)}
 
 
@@ -296,7 +333,7 @@ def list_estimates(pf: Platform, limit: int = 200) -> list[dict]:
                         "title": q.case.title, "name": d.name if d else "", "drawing_no": d.drawing_no if d else "",
                         "revision": r.revision if r else "", "revision_id": r.id if r else None,
                         "has_pdf": bool(r and r.pdf_file_id),
-                        "status": {"name": q.case.status.name, "color": q.case.status.color},
+                        "status": {"name": q.case.status.name, "color": q.case.status.color, "phase": q.case.status.phase},
                         "quantity": (q.inputs or {}).get("quantity"), "subtotal": price["subtotal"] if price else None,
                         "due_date": iso(q.case.due_date), "staff": q.case.staff, "warnings": warnings_of(q.case),
                         "missing": len((q.result or {}).get("missing") or []), "updated_at": iso(q.updated_at)})
@@ -419,3 +456,114 @@ def chat(pf: Platform, quote_id: int, message: str, version: int, actor: str, ll
         quote.chat = history[-40:]
         s.commit()
     return detail(pf, quote_id)
+
+
+# ---------------------------------------------------------------- the conditions screen of a new estimate
+MARK_OF = {"確定": "read", "要確認": "review", "未登録": "unregistered", "記載なし": "none"}
+
+
+def draft(pf: Platform, drawing_id: int | None = None, reading_job_id: str = "", file_name: str = "") -> dict:
+    """The draft conditions of a new estimate (the 条件入力 step), with where each value comes from:
+    mark "read" (読取), "review" (要確認, with the reasons), "unregistered" (マスタ未登録, the drawing's words),
+    "none" (記載なし: left empty, never guessed), "drawing" (the registered drawing's own value) or "".
+    The values are those the estimate job would take (inputs_from_reading), so a draft left as it is gives
+    the same estimate."""
+    from src.pdf_quote import condition_items
+    from src.services.platform.drawings import reading_of_job
+    from src.services.platform.wording import review_reason
+
+    masters = pf.masters()
+    reading, drawing_info, reader = None, {}, "none"
+    revision_material = revision_finish = ""
+    if drawing_id:
+        with pf.session() as s:
+            d = s.get(Drawing, drawing_id, options=[selectinload(Drawing.revisions)])
+            if d is None:
+                raise ServiceError("図面が見つかりません。", 404, "NOT_FOUND")
+            rev = next((r for r in d.revisions if r.id == d.current_revision_id), d.revisions[-1] if d.revisions else None)
+            if rev is not None:
+                sync_revision(pf, s, rev)
+                reading = reading_for_pricing(rev)
+                revision_material, revision_finish = rev.material, rev.surface_treatment
+            drawing_info = {"drawing_no": d.drawing_no, "revision": rev.revision if rev else "", "name": d.name,
+                            "customer": d.customer, "shape_kind": rev.shape_kind if rev else "",
+                            "thickness_mm": (rev.thickness_mm if rev else None) or (reading or {}).get("thickness_mm"),
+                            "has_pdf": bool(rev and rev.pdf_file_id)}
+        reader = "done" if reading else ("none" if not drawing_info["has_pdf"] else "later")
+    elif reading_job_id:
+        job = pf.job(reading_job_id)
+        if job is None:
+            raise ServiceError("図面の読み取りが見つかりません。", 404, "NOT_FOUND")
+        if job["status"] in ("queued", "running"):
+            reader = "pending"
+        elif job["status"] == "failed":
+            reader = "failed"
+        done = reading_of_job(pf, reading_job_id)
+        if done:
+            reading = dict(done.get("reading") or {})
+            reading["unregistered_texts"] = (done.get("drawing") or {}).get("unregistered_texts") or []
+            reader = "done"
+    inputs = inputs_from_reading(reading, masters, QuoteInputs())
+    items = {i.field: i for i in condition_items(reading, masters)} if reading else {}
+
+    def mark(field: str) -> tuple[str, str]:
+        item = items.get(field)
+        if item is None:
+            return "", ""
+        m = MARK_OF.get(item.status, "")
+        reasons = "・".join(dict.fromkeys(review_reason(r) for r in item.reasons))
+        return m, reasons
+
+    fields: dict = {}
+    stem = Path(file_name).stem if file_name else ""
+    if drawing_id:
+        for key in ("drawing_no", "revision", "name", "customer"):
+            fields[key] = {"value": drawing_info[key], "mark": "drawing" if drawing_info[key] else "", "note": ""}
+    else:
+        r = reading or {}
+        fields["drawing_no"] = ({"value": r["drawing_no"], "mark": "read", "note": ""} if r.get("drawing_no")
+                                else {"value": stem, "mark": "", "note": "ファイル名" if stem else ""})
+        fields["revision"] = ({"value": r["revision"], "mark": "read", "note": ""} if r.get("revision")
+                              else {"value": "", "mark": "none" if reading else "", "note": "記載なし" if reading else ""})
+        fields["name"] = {"value": "", "mark": "", "note": ""}
+        fields["customer"] = {"value": "", "mark": "", "note": ""}
+    texts = evidence_texts(reading) if reading else {}
+
+    # material: the registered drawing's master material wins (as in create), else the reading
+    m, why = mark("material")
+    if revision_material in masters.materials and (not reading or revision_material != inputs.material):
+        fields["material"] = {"value": revision_material, "mark": "drawing", "note": ""}
+    elif m == "unregistered" or (not reading and revision_material):
+        fields["material"] = {"value": None, "mark": "unregistered",
+                              "note": f"マスタ未登録：{texts.get('material') or revision_material or '図面の材質'}"}
+    elif m == "none":
+        fields["material"] = {"value": None, "mark": "none", "note": "記載なし"}
+    else:
+        fields["material"] = {"value": inputs.material, "mark": m, "note": why}
+    m, why = mark("surface_treatment")
+    if revision_finish in masters.surface_treatments and (not reading or revision_finish != inputs.surface_treatment):
+        fields["surface_treatment"] = {"value": revision_finish, "mark": "drawing", "note": ""}
+    elif m == "unregistered" or (not reading and revision_finish):
+        fields["surface_treatment"] = {"value": None, "mark": "unregistered",
+                                       "note": f"マスタ未登録：{texts.get('surface_treatment') or revision_finish or '図面の表面処理'}"}
+    elif m == "none":
+        fields["surface_treatment"] = {"value": None, "mark": "none", "note": "記載なし（表面処理なしで計算）"}
+    else:
+        fields["surface_treatment"] = {"value": inputs.surface_treatment if reading else None, "mark": m, "note": why}
+    m, why = mark("quantity")
+    fields["quantity"] = {"value": inputs.quantity if m in ("read", "review") else None, "mark": m,
+                          "note": "記載なし" if m == "none" else why}
+    m, why = mark("rush")
+    fields["rush"] = {"value": bool(inputs.rush), "mark": m, "note": why}
+    m, why = mark("processes")
+    if m == "read" and not inputs.processes and not inputs.custom_processes:
+        m = "none"
+    unregistered = [p.name for p in inputs.custom_processes]
+    note = why if m == "review" else ("記載なし" if m == "none" else
+                                      (f"マスタ未登録：{'、'.join(unregistered)}" if unregistered else ""))
+    fields["processes"] = {"mark": m, "note": note,
+                           "processes": [{"code": p.code, "quantity": p.quantity} for p in inputs.processes],
+                           "custom_processes": [{"name": p.name, "quantity": p.quantity} for p in inputs.custom_processes]}
+    return {"reader": reader, "fields": fields, "shape_kind": drawing_info.get("shape_kind", ""),
+            "thickness_mm": drawing_info.get("thickness_mm") if drawing_id else (reading or {}).get("thickness_mm"),
+            "drawing_id": drawing_id}

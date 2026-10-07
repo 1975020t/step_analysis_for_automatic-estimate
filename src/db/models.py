@@ -45,7 +45,9 @@ class CaseStatus(Versioned, Base):
     name: Mapped[str] = mapped_column(String(40))
     sort: Mapped[int] = mapped_column(Integer, default=0)
     color: Mapped[str] = mapped_column(String(20), default="blue")       # light / blue / dark / grey
-    group: Mapped[str] = mapped_column("group_name", String(20), default="見積・受注")  # 見積・受注 / 製造・出荷 / 保留・失注
+    # フェーズ（画面の進捗・絞り込みの単位）: drafting 見積作成中 / checking 見積確認中 / waiting 回答待ち /
+    # production 製造・出荷 / closed 完了分. Held by the status so renamed or added statuses keep their phase.
+    phase: Mapped[str] = mapped_column(String(20), default="drafting")
     visible: Mapped[bool] = mapped_column(Boolean, default=True)
     role: Mapped[str] = mapped_column(String(20), default="")            # "" / issued / won / lost / hold / done
 

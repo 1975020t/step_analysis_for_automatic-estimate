@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { get, num, yen } from "../api";
-import { ErrorBox, Marked } from "../ui";
+import { ErrorBox, Flow } from "../ui";
+import { WIZARD } from "./NewEstimate";
 
 const STAGES = ["CADデータの解析", "図面の読み取り", "マスタ照合", "見積計算", "類似実績の検索"];
 
@@ -49,6 +50,7 @@ export default function ProgressPage() {
   const shape = v.shape || {};
   return (
     <div>
+      <Flow steps={WIZARD} now={done ? 4 : 3} />
       <p className="small muted">
         {estimate?.number} ・ {estimate?.customer} ・ 数量 {estimate?.inputs?.quantity ?? "—"}個 ・ 希望納期 {estimate?.due_date?.replace(/-/g, "/") || "—"}
       </p>
@@ -56,7 +58,7 @@ export default function ProgressPage() {
         {estimate?.drawing?.name} <span className="num" style={{ fontSize: 26, marginLeft: 12 }}>{estimate?.drawing?.drawing_no} {estimate?.drawing?.revision ? `Rev.${estimate.drawing.revision}` : ""}</span>
       </h1>
       <ErrorBox error={error || (job?.status === "failed" ? job.error : null)} />
-      <Marked className="panel" style={{ padding: "22px 28px" }}>
+      <div className="panel" style={{ padding: "22px 28px" }}>
         <div className="row" style={{ alignItems: "flex-end", gap: 34 }}>
           <div className="num" style={{ fontSize: 76, lineHeight: 0.95, color: "var(--accent-dark)" }} data-testid="progress-pct">{pct}%</div>
           <div className="spacer">
@@ -72,8 +74,8 @@ export default function ProgressPage() {
         <div className="stepnames" style={{ gridTemplateColumns: `repeat(${STAGES.length}, 1fr)` }}>
           {STAGES.map((s, i) => <span key={s} className={i <= step ? "" : "off"}>{String(i + 1).padStart(2, "0")} {s}</span>)}
         </div>
-      </Marked>
-      <div className="section-title"><h2>ここまでに分かったこと</h2></div>
+      </div>
+      <div className="section-title"><h2>解析・計算の結果（途中経過）</h2></div>
       <div className="figures" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
         <div>
           <span className="label">CADデータ</span>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { put, session } from "../api";
-import { ErrorBox, Field, Loading, Marked, useLoad, useMeta, useToast } from "../ui";
+import { ErrorBox, Field, Loading, useLoad, useMeta, useToast } from "../ui";
 
 export default function StaffPage() {
   const toast = useToast();
@@ -39,7 +39,7 @@ export default function StaffPage() {
         </table>
         <div className="row" style={{ marginTop: 10 }}>
           <button className="btn" onClick={() => setRows([...rows, { id: null, name: "" }])}>＋ 担当者を追加</button>
-          <Marked><button className="btn primary" onClick={save}>保存</button></Marked>
+          <button className="btn primary" onClick={save}>保存</button>
         </div>
         <ErrorBox error={error} />
       </section>

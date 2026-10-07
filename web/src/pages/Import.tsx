@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { upload } from "../api";
-import { ErrorBox, Field, Marked, useToast } from "../ui";
+import { ErrorBox, Field, useToast } from "../ui";
 
 export default function ImportPage() {
   const toast = useToast();
@@ -39,7 +39,7 @@ export default function ImportPage() {
   }
   return (
     <div style={{ maxWidth: 1000 }}>
-      <p className="lead">今までの見積を記録したCSVを取り込みます。取り込んだ見積は、類似実績と振り返り分析に使われます。同じ見積番号・日付・顧客の行は二重に取り込みません。</p>
+      <p className="lead">今までの見積を記録したCSVを取り込みます。取り込んだ見積は、類似実績と実績分析に使われます。同じ見積番号・日付・顧客の行は二重に取り込みません。</p>
       <Field label="CSVファイル"><input type="file" accept=".csv" aria-label="CSVファイル" onChange={(e) => choose(e.target.files?.[0] || null)} /></Field>
       <ErrorBox error={error} />
       {cols && (
@@ -58,7 +58,7 @@ export default function ImportPage() {
               ))}
             </tbody>
           </table>
-          <Marked style={{ display: "inline-block", marginTop: 14 }}><button className="btn primary" disabled={busy} onClick={run}>取り込む</button></Marked>
+          <div style={{ marginTop: 14 }}><button className="btn primary" disabled={busy} onClick={run}>取り込む</button></div>
         </>
       )}
       {result && (

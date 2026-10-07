@@ -1,7 +1,8 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { get } from "./api";
+import { get, session } from "./api";
 import { Icon, MetaProvider, ToastProvider } from "./ui";
+import HomePage from "./pages/Home";
 import RegisterPage from "./pages/Register";
 import NewEstimatePage from "./pages/NewEstimate";
 import ProgressPage from "./pages/Progress";
@@ -9,7 +10,6 @@ import EstimatePage from "./pages/Estimate";
 import CasesPage from "./pages/Cases";
 import DrawingsPage from "./pages/Drawings";
 import DrawingPage from "./pages/Drawing";
-import EstimatesPage from "./pages/Estimates";
 import CategoriesPage from "./pages/Categories";
 import SearchPage from "./pages/Search";
 import ReviewPage from "./pages/Review";
@@ -21,40 +21,19 @@ import TemplatesPage from "./pages/Templates";
 import StatusesPage from "./pages/Statuses";
 import StaffPage from "./pages/Staff";
 import ImportPage from "./pages/Import";
-
-type Group = { label: string; icon: () => JSX.Element; items: { to: string; label: string }[] };
-
-const GROUPS: Group[] = [
-  { label: "図面", icon: Icon.tree, items: [{ to: "/drawings", label: "図面一覧" }, { to: "/drawings/register", label: "図面を登録" }, { to: "/settings/categories", label: "分類・属性項目" }] },
-  { label: "見積作業", icon: Icon.doc, items: [{ to: "/estimates/new", label: "新規見積作成" }, { to: "/estimates", label: "見積" }, { to: "/review", label: "振り返り分析" }, { to: "/settings/import", label: "過去見積の取り込み" }] },
-  { label: "書類", icon: Icon.files, items: [{ to: "/search", label: "書類・ナレッジ検索" }, { to: "/documents", label: "帳票発行" }] },
-  { label: "取引先", icon: Icon.building, items: [{ to: "/partners", label: "取引先管理" }] },
-  {
-    label: "設定",
-    icon: Icon.gear,
-    items: [
-      { to: "/settings/masters", label: "マスタ" },
-      { to: "/settings/logic", label: "見積ロジック" },
-      { to: "/settings/templates", label: "見積書テンプレート" },
-      { to: "/settings/statuses", label: "案件ステータス" },
-      { to: "/settings/categories", label: "分類・属性項目" },
-      { to: "/settings/staff", label: "担当者" },
-    ],
-  },
-];
+import SettingsPage from "./pages/Settings";
 
 const TITLES: [RegExp, string][] = [
-  [/^\/drawings\/register/, "図面を登録"],
+  [/^\/$/, "ホーム"],
+  [/^\/drawings\/register/, "図面登録"],
   [/^\/drawings\/\d+/, "図面詳細"],
-  [/^\/drawings/, "図面一覧"],
-  [/^\/estimates\/new/, "新規見積作成"],
-  [/^\/estimates\/\d+\/progress/, "解析の進み具合"],
+  [/^\/drawings/, "図面"],
+  [/^\/estimates\/new/, "新規見積"],
+  [/^\/estimates\/\d+\/progress/, "新規見積"],
   [/^\/estimates\/\d+/, "見積結果"],
-  [/^\/estimates/, "見積"],
-  [/^\/cases/, "案件・進捗"],
-  [/^\/search/, "書類・ナレッジ検索"],
-  [/^\/review/, "振り返り分析"],
-  [/^\/partners/, "取引先管理"],
+  [/^\/cases/, "見積・案件"],
+  [/^\/search/, "検索"],
+  [/^\/review/, "実績分析"],
   [/^\/documents/, "帳票発行"],
   [/^\/settings\/masters/, "マスタ"],
   [/^\/settings\/logic/, "見積ロジック"],
@@ -63,15 +42,18 @@ const TITLES: [RegExp, string][] = [
   [/^\/settings\/categories/, "分類・属性項目"],
   [/^\/settings\/staff/, "担当者"],
   [/^\/settings\/import/, "過去見積の取り込み"],
+  [/^\/settings\/partners/, "取引先管理"],
+  [/^\/settings/, "設定"],
 ];
 
+/** The menu: each item once (ホーム／見積・案件／図面／帳票発行／実績分析, and 設定 at the bottom). */
 function Sidebar() {
   const location = useLocation();
-  const [open, setOpen] = useState<string | null>(() => GROUPS.find((g) => g.items.some((i) => location.pathname.startsWith(i.to)))?.label || null);
-  const [recent, setRecent] = useState<any[]>([]);
+  const [counts, setCounts] = useState<{ active: number; drawings: number } | null>(null);
   useEffect(() => {
-    get("/api/recent").then(setRecent).catch(() => setRecent([]));
+    get("/api/home").then((h) => setCounts(h.counts)).catch(() => setCounts(null));
   }, [location.pathname]);
+  const inEstimate = /^\/estimates\/\d+/.test(location.pathname);
   return (
     <aside className="side">
       <div className="brand">
@@ -84,55 +66,41 @@ function Sidebar() {
         </div>
       </div>
       <nav className="nav" aria-label="メニュー">
-        <NavLink to="/drawings/register" className={({ isActive }) => `primary marked ${isActive ? "active" : ""}`}>
-          <i className="cm tl" />
-          <i className="cm tr" />
-          <i className="cm bl" />
-          <i className="cm br" />
-          <Icon.upload />
-          図面を登録
+        <NavLink to="/estimates/new" className={({ isActive }) => `primary ${isActive ? "active" : ""}`}>
+          ＋ 新規見積
         </NavLink>
-        <NavLink to="/drawings" end>
-          <Icon.layers />
-          図面一覧
+        <NavLink to="/" end>
+          <Icon.home />
+          ホーム
         </NavLink>
-        <NavLink to="/cases">
+        <NavLink to="/cases" className={({ isActive }) => (isActive || inEstimate ? "active" : "")}>
           <Icon.board />
-          案件・進捗
+          見積・案件
+          {counts && <span className="count">{counts.active}</span>}
         </NavLink>
-        <NavLink to="/estimates" end>
+        <NavLink to="/drawings">
+          <Icon.layers />
+          図面
+          {counts && <span className="count">{counts.drawings}</span>}
+        </NavLink>
+        <NavLink to="/documents">
+          <Icon.doc />
+          帳票発行
+        </NavLink>
+        <NavLink to="/review">
           <Icon.calc />
-          見積
+          実績分析
         </NavLink>
-        <hr />
-        {GROUPS.map((g) => (
-          <div key={g.label} className={open === g.label ? "open" : ""}>
-            <button className="navbtn" onClick={() => setOpen(open === g.label ? null : g.label)} aria-expanded={open === g.label}>
-              <g.icon />
-              {g.label}
-              <span className="chev">›</span>
-            </button>
-            {open === g.label && (
-              <div className="sub">
-                {g.items.map((i) => (
-                  <NavLink key={i.to + i.label} to={i.to} end>
-                    {i.label}
-                  </NavLink>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+        <span className="grow" />
+        <div className="settings">
+          <NavLink to="/settings">
+            <Icon.gear />
+            設定
+          </NavLink>
+        </div>
       </nav>
-      <div className="recent">
-        <h4>最近の見積</h4>
-        {recent.map((r) => (
-          <Link key={r.case_id} to={r.quote_id ? `/estimates/${r.quote_id}` : "/cases"}>
-            {r.drawing_no} {r.name}
-            <small>{r.status}</small>
-          </Link>
-        ))}
-        {recent.length === 0 && <span className="small muted" style={{ padding: "0 6px" }}>まだありません</span>}
+      <div className="who">
+        <Link to="/settings/staff">担当者：{session.actor() || "未設定"}</Link>
       </div>
     </aside>
   );
@@ -149,7 +117,9 @@ const GLOSSARY: [string, string][] = [
   ["未入力の項目", "金額に必要なのに入っていない項目。1つでもあると見積書は発行できません。"],
   ["希望納期", "記録・見積書の表示・進捗の警告に使います。金額は変わりません（特急は担当者が指定します）。"],
   ["マスタにない材質", "入力したkg単価と密度で計算します。歩留まり係数1.15を掛けます。"],
-  ["類似実績・似た図面", "材料が同じで、曲げ数の差が1以内、穴数の差が2以内のもの。差が小さい順に並びます。CADデータのない図面は対象外です。"],
+  ["類似実績・類似形状", "材料が同じで、曲げ数の差が1以内、穴数の差が2以内のもの。差が小さい順に並びます。CADデータのない図面は対象外です。"],
+  ["フェーズ", "案件のステータスを 1 見積作成中／2 見積確認中／3 回答待ち／4 製造・出荷／完了分 にまとめたもの。どのステータスがどのフェーズかは設定の「案件ステータス」で決めます。"],
+  ["To Doリスト", "納期超過・未入力あり・納期まで3日以内・回答待ち3日以上の案件。急ぐ順に並びます。"],
   ["顧客提示モード", "見積結果の原価の内訳（材料費・加工費・粗利）を隠して、単価と合計だけを表示します。"],
   ["受注率", "受注 ÷（受注＋失注）。結果の出ていない見積は数えません。"],
   ["書類の検索", "文字の入ったPDF・Excelと、登録済みの図面・見積が対象です。スキャンした画像の文字は検索できません。"],
@@ -210,14 +180,17 @@ function Layout({ children }: { children: ReactNode }) {
             }}
           >
             <Icon.search />
-            <input type="search" placeholder="図番・品名・書類（Enterで検索）" value={q} onChange={(e) => setQ(e.target.value)} aria-label="検索" />
+            <input type="search" placeholder="図番・品名・顧客・書類（Enterで検索）" value={q} onChange={(e) => setQ(e.target.value)} aria-label="検索" />
           </form>
           <button className="btn" onClick={() => setHelp(true)}>
             <Icon.help />
             用語・計算式
           </button>
         </header>
-        <main className="content">{children}</main>
+        <main className="content">
+          {/^\/settings\/./.test(location.pathname) && <Link to="/settings" className="back">← 設定</Link>}
+          {children}
+        </main>
       </div>
       {help && <Help onClose={() => setHelp(false)} />}
     </div>
@@ -230,19 +203,19 @@ export default function App() {
       <MetaProvider>
         <Layout>
           <Routes>
-            <Route path="/" element={<Navigate to="/drawings" replace />} />
+            <Route path="/" element={<HomePage />} />
             <Route path="/drawings/register" element={<RegisterPage />} />
             <Route path="/drawings/:id" element={<DrawingPage />} />
             <Route path="/drawings" element={<DrawingsPage />} />
             <Route path="/estimates/new" element={<NewEstimatePage />} />
             <Route path="/estimates/:id/progress" element={<ProgressPage />} />
             <Route path="/estimates/:id" element={<EstimatePage />} />
-            <Route path="/estimates" element={<EstimatesPage />} />
+            <Route path="/estimates" element={<Navigate to="/cases" replace />} />
             <Route path="/cases" element={<CasesPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/review" element={<ReviewPage />} />
-            <Route path="/partners" element={<PartnersPage />} />
             <Route path="/documents" element={<DocumentsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/settings/masters" element={<MastersPage />} />
             <Route path="/settings/logic" element={<LogicPage />} />
             <Route path="/settings/templates" element={<TemplatesPage />} />
@@ -250,6 +223,8 @@ export default function App() {
             <Route path="/settings/categories" element={<CategoriesPage />} />
             <Route path="/settings/staff" element={<StaffPage />} />
             <Route path="/settings/import" element={<ImportPage />} />
+            <Route path="/settings/partners" element={<PartnersPage />} />
+            <Route path="/partners" element={<Navigate to="/settings/partners" replace />} />
             <Route path="*" element={<div className="empty">ページが見つかりません。</div>} />
           </Routes>
         </Layout>

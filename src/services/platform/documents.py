@@ -114,12 +114,12 @@ def _render(pf: Platform, s, quote: Quote, kind: str, template: Template | None,
                    "tax_rate": document.tax_rate, "tax": document.tax, "total": document.total}
         return data, amounts, snapshot, document
     if quote.case.outcome != "受注":
-        raise NotIssuable(f"{KINDS[kind]}は受注した見積から作ります（今の状態: {quote.case.status.name}）。",
+        raise NotIssuable(f"{KINDS[kind]}は受注登録済みの見積から発行します（ステータス: {quote.case.status.name}）。",
                           [{"field": "outcome", "label": "受注", "message": "案件が受注になっていません"}])
     issued = s.scalars(select(IssuedDocument).where(IssuedDocument.quote_id == quote.id, IssuedDocument.kind == "quote")
                        .order_by(IssuedDocument.id.desc())).first()
     if issued is None:
-        raise NotIssuable("先に見積書を発行してください（納品書・請求書は発行した見積書と同じ金額で作ります）。",
+        raise NotIssuable("先に見積書を発行してください（納品書・請求書は発行した見積書と同じ金額で発行します）。",
                           [{"field": "quote_document", "label": "見積書", "message": "見積書が発行されていません"}])
     snap = issued.snapshot or {}
     company = pf.company()
@@ -167,7 +167,7 @@ def issue(pf: Platform, quote_id: int, kind: str, template_id: int | None, actor
             if case.first_issued_at is None:
                 case.first_issued_at = issued_at
             issued_status = s.scalars(select(CaseStatus).where(CaseStatus.role == "issued")).first()
-            if issued_status and case.status.group == "見積・受注" and case.status.sort < issued_status.sort:
+            if issued_status and case.status.phase in ("drafting", "checking") and case.status.sort < issued_status.sort:
                 case.status, case.status_changed_at = issued_status, issued_at
                 s.add(CaseStatusLog(case_id=case.id, status_name=issued_status.name, actor=actor))
         case.updated_at, case.updated_by = issued_at, actor

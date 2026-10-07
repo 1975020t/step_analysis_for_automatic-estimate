@@ -283,7 +283,7 @@ def _status(quote: Quote | None) -> dict | None:
     if quote is None:
         return None
     st = quote.case.status
-    return {"id": st.id, "name": st.name, "color": st.color, "group": st.group}
+    return {"id": st.id, "name": st.name, "color": st.color, "phase": st.phase}
 
 
 def processes_of(revision: DrawingRevision | None, masters) -> list[str]:
@@ -328,6 +328,8 @@ def _has(value: str, needle: str) -> bool:
 
 
 def matches(c: dict, f: dict) -> bool:
+    if f.get("keyword") and not (_has(c["drawing_no"], f["keyword"]) or _has(c["name"], f["keyword"])):
+        return False
     if f.get("drawing_no") and not _has(c["drawing_no"], f["drawing_no"]):
         return False
     if f.get("name") and not _has(c["name"], f["name"]):

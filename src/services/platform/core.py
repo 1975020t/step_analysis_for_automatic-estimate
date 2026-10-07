@@ -180,10 +180,13 @@ class Platform:
             return load_company_db(s)
 
     # ------------------------------------------------------------ jobs
-    def submit(self, kind: str, payload: dict) -> dict:
+    def submit(self, kind: str, payload: dict, start: bool = True) -> dict:
         if self.queue is None:
             raise ServiceError("処理の受付が起動していません。", 503, "NOT_READY")
-        return self.queue.submit(kind, payload)
+        return self.queue.submit(kind, payload, start)
+
+    def start(self, job_id: str) -> None:
+        self.queue.start(job_id)
 
     def job(self, job_id: str) -> dict | None:
         if not job_id:

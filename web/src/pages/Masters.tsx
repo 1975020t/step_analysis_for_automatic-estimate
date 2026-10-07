@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { day, post, put } from "../api";
 import { ErrorBox, Loading, Tabs, useLoad, useMeta, useToast } from "../ui";
 
@@ -32,7 +33,10 @@ function shown(table: string, r: any, k: string): string {
 export default function MastersPage() {
   const toast = useToast();
   const { reload: reloadMeta } = useMeta();
-  const [table, setTable] = useState("materials");
+  const [params, setParams] = useSearchParams();
+  const initial = params.get("tab") || "materials";
+  const [table, setTableState] = useState(TABLES[initial] ? initial : "materials");
+  const setTable = (t: string) => { setTableState(t); setParams({ tab: t }, { replace: true }); };
   const { data, error, setData } = useLoad<any[]>(`/api/master-tables/${table}`);
   const [edit, setEdit] = useState<any>(null);
   const [saveError, setSaveError] = useState<any>(null);
@@ -104,7 +108,7 @@ function EditRow({ spec, edit, setEdit, save, isNew }: any) {
         )}</td>
       ))}
       <td />
-      <td className="nowrap"><button className="btn small primary" onClick={save}>保存</button><button className="btn link small" onClick={() => setEdit(null)}>やめる</button></td>
+      <td className="nowrap"><button className="btn small primary" onClick={save}>保存</button><button className="btn link small" onClick={() => setEdit(null)}>キャンセル</button></td>
     </tr>
   );
 }

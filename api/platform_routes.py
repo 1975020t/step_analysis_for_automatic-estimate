@@ -104,13 +104,18 @@ def build_router(pf: Platform, guarded: list) -> APIRouter:
             "staff": [s for s in admin.staff(pf) if s["active"]], "statuses": cases.statuses(pf),
             "categories": admin.categories(pf), "attributes": admin.attributes(pf), "templates": admin.templates(pf),
             "drawing_reader": pf.service.drawing_reader_available(), "lost_reasons": cases.LOST_REASONS,
-            "document_kinds": library.KINDS, "groups": cases.GROUPS, "colors": cases.COLORS,
+            "document_kinds": library.KINDS, "phases": cases.PHASES, "colors": cases.COLORS,
             "policy": {k: m.policy(k, 0) for k in ("margin_rate", "rush_surcharge_rate", "tax_rate")},
         }
 
     @r.get("/recent", tags=["screens"])
     def recent() -> list[dict]:
         return library.recent_cases(pf)
+
+    @r.get("/home", tags=["screens"])
+    def home() -> dict:
+        """ホーム：To Doリスト（理由と次のアクションつき、急ぐ順）、フェーズごとの件数と注意の件数、メニューの件数。"""
+        return cases.home(pf)
 
     @r.get("/files/{file_id}/raw", tags=["files"])
     def raw_file(file_id: str) -> Response:
@@ -154,7 +159,7 @@ def build_router(pf: Platform, guarded: list) -> APIRouter:
 
     @r.get("/drawings/{drawing_id}/similar", tags=["drawings", "similar"])
     def drawing_similar(drawing_id: int) -> list[dict]:
-        """似た図面（材料が同じ・曲げ数の差1以内・穴数の差2以内、差の小さい順）。見積の類似実績と同じ規則。"""
+        """類似形状の図面（材料が同じ・曲げ数の差1以内・穴数の差2以内、差の小さい順）。見積の類似実績と同じ規則。"""
         d = drawings.drawing_detail(pf, drawing_id)
         m = d["metrics"]
         return similar(pf, d["material"], m["bend_count"], m["hole_count"], drawing_id)
@@ -183,6 +188,11 @@ def build_router(pf: Platform, guarded: list) -> APIRouter:
     def create_estimate(body: quotes.EstimateCreate, who: str = actor) -> dict:
         """登録済みの図面から見積を作る（案件も作る）。解析・読み取り・照合・計算・類似検索は受付番号で進む。"""
         return quotes.create(pf, body, who)
+
+    @r.get("/estimate-draft", tags=["estimates"])
+    def estimate_draft(drawing_id: int | None = None, reading_job_id: str = "", file_name: str = "") -> dict:
+        """新規見積の条件入力の下書き：図面の読み取り結果（読取・要確認・マスタ未登録・記載なし）と図面の値。"""
+        return quotes.draft(pf, drawing_id, reading_job_id, file_name)
 
     @r.get("/estimates", tags=["estimates"])
     def estimate_list() -> list[dict]:
@@ -222,12 +232,13 @@ def build_router(pf: Platform, guarded: list) -> APIRouter:
 
     # ------------------------------------------------------------ cases and review
     @r.get("/cases", tags=["cases"])
-    def case_list(q: str = "", staff: str = "") -> dict:
-        return cases.list_cases(pf, q, staff)
+    def case_list(q: str = "", staff: str = "", phase: str = "") -> dict:
+        """案件（見積）の一覧：急ぐ順、フェーズ・次のアクション・To Doの理由つき。phase はフェーズのキーか active。"""
+        return cases.list_cases(pf, q, staff, phase)
 
     @r.put("/cases/{case_id}/status", tags=["cases"])
     def case_status(case_id: int, body: cases.StatusMove, who: str = actor) -> dict:
-        """進捗を変える。失注は理由（と他社価格）が必要。受注・失注は履歴（類似実績・振り返り）にも反映。"""
+        """進捗を変える。失注は理由（と他社価格）が必要。受注・失注は履歴（類似実績・実績分析）にも反映。"""
         return cases.move(pf, case_id, body, who)
 
     @r.get("/cases/{case_id}/history", tags=["cases"])

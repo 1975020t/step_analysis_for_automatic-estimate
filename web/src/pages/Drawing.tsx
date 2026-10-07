@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { day, del, get, num, post, put, stamp, yen } from "../api";
-import { ApiImage, ErrorBox, LineTabs, Loading, Marked, StatusTag, useMeta, useToast } from "../ui";
+import { ApiImage, ErrorBox, LineTabs, Loading, StatusTag, useMeta, useToast } from "../ui";
 import { FlatPattern, Model3D } from "../viewers";
 
 export default function DrawingPage() {
@@ -54,16 +54,16 @@ export default function DrawingPage() {
 
   return (
     <div>
-      <Link to="/drawings" className="small"><b>← 図面一覧</b></Link>
+      <Link to="/drawings" className="back">← 図面</Link>
       <div className="row between" style={{ alignItems: "flex-end", margin: "6px 0 16px" }}>
         <div>
           <h1 style={{ fontSize: 30 }}>{d.name || "（品名未設定）"}<span className="num" style={{ fontSize: 26, marginLeft: 14 }}>{d.drawing_no} {rev?.revision && `Rev.${rev.revision}`}</span></h1>
-          <div className="small muted">{d.customer || "顧客未設定"} ／ {d.material || "材質未設定"} ／ {d.processes.join("・") || "—"} ／ 状態 {d.status?.name || "未作成"}</div>
+          <div className="small muted">{d.customer || "顧客未設定"} ／ {d.material || "材質未設定"} ／ {d.processes.join("・") || "—"} ／ ステータス {d.status?.name || "見積未作成"}</div>
         </div>
         <div className="row">
-          <button className="btn" onClick={() => similarRef.current?.scrollIntoView({ behavior: "smooth" })}>似た図面を探す</button>
+          <button className="btn" onClick={() => similarRef.current?.scrollIntoView({ behavior: "smooth" })}>類似形状の実績</button>
           <button className="btn" onClick={() => navigate(`/drawings/register`)}>新しい版を登録</button>
-          <Marked><button className="btn primary" onClick={() => navigate(`/estimates/new?drawing=${d.id}`)}>この図面で見積を作成</button></Marked>
+          <button className="btn primary" onClick={() => navigate(`/estimates/new?drawing=${d.id}`)}>新規見積</button>
         </div>
       </div>
       <ErrorBox error={error} />
@@ -79,7 +79,7 @@ export default function DrawingPage() {
             {current === "pdf" && <button className="btn link" onClick={() => setShowNotes(!showNotes)}>{showNotes ? "書き込みを隠す" : "書き込みを表示"}</button>}
             {current === "pdf" && <button className="btn small" onClick={() => setPlacing("armed")}>書き込みを追加</button>}
           </div>
-          <Marked className="hatch" style={{ position: "relative", minHeight: 360, background: current === "pdf" ? "#fff" : undefined }}>
+          <div className="hatch" style={{ position: "relative", minHeight: 360, background: current === "pdf" ? "#fff" : undefined }}>
             {current === "pdf" && (
               <div style={{ position: "relative", cursor: placing === "armed" ? "crosshair" : "default" }}
                 onClick={(e) => {
@@ -99,13 +99,13 @@ export default function DrawingPage() {
             {current === "3d" && <Model3D fileId={rev.shape_file_id} height={380} />}
             {current === "flat" && <FlatPattern flat={rev.analysis.flat_pattern} height={380} />}
             {!current && <div className="empty">プレビューがありません。</div>}
-          </Marked>
+          </div>
           {placing === "armed" && <p className="small">図面上の書き込みたい位置をクリックしてください。</p>}
           {placing && placing !== "armed" && (
             <div className="row" style={{ marginTop: 8 }}>
               <input aria-label="書き込み" placeholder="書き込む内容" value={noteText} onChange={(e) => setNoteText(e.target.value)} style={{ flex: 1, width: "auto" }} />
               <button className="btn primary" onClick={addNote}>書き込む</button>
-              <button className="btn" onClick={() => setPlacing(null)}>やめる</button>
+              <button className="btn" onClick={() => setPlacing(null)}>キャンセル</button>
             </div>
           )}
           {rev?.processing && <p className="small muted">CADデータを解析中です…</p>}
@@ -148,7 +148,7 @@ export default function DrawingPage() {
         </div>
       </div>
 
-      <div ref={similarRef} className="section-title"><h2>似た図面の過去実績と比べる</h2></div>
+      <div ref={similarRef} className="section-title"><h2>類似形状の過去実績と比較</h2></div>
       {!similar ? <Loading /> : (
         <table className="rule" data-testid="drawing-similar">
           <thead><tr><th>図番</th><th>品名・顧客</th><th>材質</th><th>穴・曲げ</th><th>今回との差</th><th className="right">数量</th><th className="right">単価</th><th>結果</th><th>日付</th></tr></thead>
@@ -194,7 +194,7 @@ function Info({ d, rev, meta, onSaved, onError }: any) {
   return (
     <div>
       <div className="row between"><span className="small muted">「読取」は図面から読み取った値です。</span>
-        {editing ? <div className="row"><button className="btn small primary" onClick={save}>保存</button><button className="btn small" onClick={() => setEditing(false)}>やめる</button></div>
+        {editing ? <div className="row"><button className="btn small primary" onClick={save}>保存</button><button className="btn small" onClick={() => setEditing(false)}>キャンセル</button></div>
           : <button className="btn small" onClick={() => setEditing(true)}>属性を編集</button>}</div>
       <table className="rule">
         <tbody>

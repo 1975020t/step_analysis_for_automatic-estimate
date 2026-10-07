@@ -65,7 +65,7 @@ export default function CategoriesPage() {
           <h2>図面の属性・検索項目</h2>
           <button className="btn" onClick={() => setAttrs([...attrs, { id: null, label: "", input_type: "text", options: [], unit: "", searchable: true, builtin: false }])}>＋ 項目を追加</button>
         </div>
-        <p className="small muted">「検索に使う」をオンにした項目が、図面一覧の検索条件に並びます。</p>
+        <p className="small muted">「検索に使う」をオンにした項目が、「図面」画面の検索条件に並びます。</p>
         <table className="rule">
           <thead><tr><th>順番</th><th>項目名</th><th>入力の種類</th><th>選択肢・単位</th><th>検索</th></tr></thead>
           <tbody>
@@ -87,7 +87,7 @@ export default function CategoriesPage() {
         </table>
         <div className="row" style={{ marginTop: 12 }}>
           <button className="btn primary" onClick={() => act(() => put("/api/attributes", { attributes: attrs.map((a) => ({ id: a.id, label: a.label, input_type: a.input_type, options: a.builtin ? [] : (a.options || []), unit: a.unit, searchable: a.searchable })) }))}>項目を保存</button>
-          <button className="btn" onClick={() => navigate("/drawings")}>図面一覧で検索条件を確認</button>
+          <button className="btn" onClick={() => navigate("/drawings")}>「図面」で検索条件を確認</button>
         </div>
       </section>
     </div>

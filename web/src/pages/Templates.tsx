@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { del, post, put } from "../api";
-import { ApiImage, ErrorBox, Field, Marked, useMeta, useToast } from "../ui";
+import { ApiImage, ErrorBox, Field, useMeta, useToast } from "../ui";
 
 const OPTIONS: [string, string][] = [["breakdown", "費目の内訳を表示（項目名と数量のみ。金額は出しません）"], ["unit_and_quantity", "単価・数量を表示"], ["drawing_no", "図番・改訂を表示"],
   ["validity", "有効期限を表示"], ["remarks", "備考欄を表示"], ["seal", "社印（押印欄）を表示"]];
@@ -59,7 +59,7 @@ export default function TemplatesPage() {
             </div>
             <ErrorBox error={error} />
             <div className="row" style={{ marginTop: 14 }}>
-              <Marked><button className="btn primary" onClick={() => save()}>保存</button></Marked>
+              <button className="btn primary" onClick={() => save()}>保存</button>
               {!f.is_default && <button className="btn link" onClick={async () => { try { await del(`/api/templates/${f.id}`); setSel(null); reload(); } catch (e) { setError(e); } }}>削除</button>}
             </div>
           </>

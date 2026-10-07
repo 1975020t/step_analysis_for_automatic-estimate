@@ -18,13 +18,13 @@ from src.db.models import (AttributeDef, CaseStatus, Category, CompanyRow, Finis
                            PastQuoteRow, PolicyRow, ProcessRow, Staff, Template)
 from src.past_quotes import HistoryStore
 
-STATUSES = [  # name, color, group, role
-    ("見積依頼受付", "light", "見積・受注", ""), ("見積前", "light", "見積・受注", ""),
-    ("見積作成中", "blue", "見積・受注", "drafting"), ("見積確認中", "blue", "見積・受注", ""),
-    ("見積提出済", "dark", "見積・受注", "issued"), ("受注", "dark", "見積・受注", "won"),
-    ("製造準備", "light", "製造・出荷", ""), ("製造中", "blue", "製造・出荷", ""), ("検査", "blue", "製造・出荷", ""),
-    ("出荷待ち", "blue", "製造・出荷", ""), ("出荷済", "dark", "製造・出荷", "shipped"), ("完了", "grey", "製造・出荷", "done"),
-    ("失注", "grey", "保留・失注", "lost"), ("保留", "grey", "保留・失注", "hold"),
+STATUSES = [  # name, color, phase, role
+    ("見積依頼受付", "light", "drafting", ""), ("見積前", "light", "drafting", ""),
+    ("見積作成中", "blue", "drafting", "drafting"), ("見積確認中", "blue", "checking", ""),
+    ("見積提出済", "dark", "waiting", "issued"), ("受注", "dark", "production", "won"),
+    ("製造準備", "light", "production", ""), ("製造中", "blue", "production", ""), ("検査", "blue", "production", ""),
+    ("出荷待ち", "blue", "production", ""), ("出荷済", "dark", "closed", "shipped"), ("完了", "grey", "closed", "done"),
+    ("失注", "grey", "closed", "lost"), ("保留", "grey", "closed", "hold"),
 ]
 ATTRIBUTES = [  # key, label, type, unit, builtin
     ("drawing_no", "図番", "text", "", True), ("name", "品名", "text", "", True), ("customer", "顧客名", "text", "", True),
@@ -83,8 +83,8 @@ def seed(session: Session, data_dir: str | Path = "data", history_path: str | Pa
                 session.add(CompanyRow(key=r["key"].strip(), value=(r.get("value") or "").strip(),
                                        description=r.get("description") or "", sort=i))
     if _empty(session, CaseStatus):
-        for i, (name, color, group, role) in enumerate(STATUSES):
-            session.add(CaseStatus(name=name, sort=i, color=color, group=group, visible=True, role=role))
+        for i, (name, color, phase, role) in enumerate(STATUSES):
+            session.add(CaseStatus(name=name, sort=i, color=color, phase=phase, visible=True, role=role))
     if _empty(session, AttributeDef):
         for i, (key, label, kind, unit, builtin) in enumerate(ATTRIBUTES):
             session.add(AttributeDef(key=key, label=label, input_type=kind, unit=unit, sort=i, searchable=True,

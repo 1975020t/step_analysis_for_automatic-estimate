@@ -1,5 +1,5 @@
 """Similar drawings and similar past quotes with ONE rule (src/similar_quotes.is_similar): same material, bends
-within 1, holes within 2, smallest difference first. The drawing list (「似た形」), the drawing detail and the
+within 1, holes within 2, smallest difference first. The drawing list (「類似形状検索」), the drawing detail and the
 estimate screen (「類似実績」) all call `similar`, so the same part gives the same results everywhere.
 
 The pool: the registered drawings (their material and the bends / holes of their shape analysis, with their

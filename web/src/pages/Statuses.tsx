@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { put } from "../api";
-import { ErrorBox, Loading, Marked, useLoad, useMeta, useToast } from "../ui";
+import { ErrorBox, Loading, useLoad, useMeta, useToast } from "../ui";
 
 export default function StatusesPage() {
   const { meta, reload: reloadMeta } = useMeta();
@@ -21,7 +21,7 @@ export default function StatusesPage() {
   const dirty = JSON.stringify(rows) !== JSON.stringify(data);
   async function save() {
     try {
-      await put("/api/statuses", { statuses: rows!.map((r) => ({ id: r.id, name: r.name, color: r.color, group: r.group, visible: r.visible })) });
+      await put("/api/statuses", { statuses: rows!.map((r) => ({ id: r.id, name: r.name, color: r.color, phase: r.phase, visible: r.visible })) });
       setError(null);
       reload();
       reloadMeta();
@@ -32,16 +32,17 @@ export default function StatusesPage() {
   }
   return (
     <div style={{ maxWidth: 1080 }}>
+      <p className="lead">フェーズは、ホームの進捗・To Doリストと「見積・案件」の絞り込みに使います（1 見積作成中／2 見積確認中／3 回答待ち／4 製造・出荷／完了分）。</p>
       <div className="row between" style={{ marginBottom: 12 }}>
         <span />
         <div className="row">
-          <button className="btn" onClick={() => setRows([...rows, { id: null, name: "", color: "blue", group: "見積・受注", visible: true, count: 0, role: "" }])}>＋ ステータスを追加</button>
-          <Marked><button className="btn primary" disabled={!dirty} onClick={save}>変更を保存</button></Marked>
+          <button className="btn" onClick={() => setRows([...rows, { id: null, name: "", color: "blue", phase: "drafting", visible: true, count: 0, role: "" }])}>＋ ステータスを追加</button>
+          <button className="btn primary" disabled={!dirty} onClick={save}>変更を保存</button>
         </div>
       </div>
       <ErrorBox error={error} />
       <table className="rule">
-        <thead><tr><th>順番</th><th>ステータス名</th><th>色</th><th>表示グループ</th><th>表示</th><th className="right">案件数</th><th /></tr></thead>
+        <thead><tr><th>順番</th><th>ステータス名</th><th>色</th><th>フェーズ</th><th>表示</th><th className="right">案件数</th><th /></tr></thead>
         <tbody>
           {rows.map((r, i) => (
             <tr key={r.id ?? `n${i}`}>
@@ -52,7 +53,8 @@ export default function StatusesPage() {
               <td className="nowrap"><i className={`dot ${r.color}`} />
                 <select aria-label="色" value={r.color} onChange={(e) => set(i, "color", e.target.value)} style={{ width: 110 }}>
                   {Object.entries(meta?.colors || {}).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></td>
-              <td><select aria-label="表示グループ" value={r.group} onChange={(e) => set(i, "group", e.target.value)}>{(meta?.groups || []).map((g) => <option key={g}>{g}</option>)}</select></td>
+              <td><select aria-label="フェーズ" value={r.phase} onChange={(e) => set(i, "phase", e.target.value)}>
+                {(meta?.phases || []).map((p) => <option key={p.key} value={p.key}>{p.number ? `${p.number} ` : ""}{p.label}</option>)}</select></td>
               <td><input type="checkbox" aria-label="表示" checked={r.visible} onChange={(e) => set(i, "visible", e.target.checked)} /></td>
               <td className="right">{r.count ? `${r.count}件` : "—"}</td>
               <td><button className="btn link small" disabled={!!r.count || ["drafting", "issued", "won", "lost"].includes(r.role)} onClick={() => setRows(rows.filter((_, j) => j !== i))}>削除</button></td>

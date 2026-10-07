@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { get, upload } from "../api";
-import { ErrorBox, Field, Marked, Modal, useMeta, useToast } from "../ui";
+import { ErrorBox, Field, Modal, useMeta, useToast } from "../ui";
 
 function highlight(text: string, q: string) {
   const words = q.split(/\s+/).filter(Boolean);
@@ -18,7 +18,7 @@ export default function SearchPage() {
   const [kind, setKind] = useState("");
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState<any>(null);
-  const [adding, setAdding] = useState(false);
+  const [adding, setAdding] = useState(params.get("add") === "1");
   const query = params.get("q") || "";
   useEffect(() => {
     setQ(query);
@@ -43,7 +43,7 @@ export default function SearchPage() {
       <p className="small muted">{results.length}件</p>
       <ErrorBox error={error} />
       {query && results.length === 0 && <div className="empty">見つかりませんでした。</div>}
-      {!query && <div className="empty">キーワードを入れて Enter を押してください。</div>}
+      {!query && <div className="empty">キーワードを入力して Enter を押してください。</div>}
       {results.map((r: any, i: number) => (
         <div key={i} className="row" style={{ alignItems: "flex-start", borderTop: "1px solid var(--line)", padding: "14px 0", flexWrap: "nowrap" }}>
           <span className={`tag ${r.type === "drawing" ? "soft" : "plain"}`} style={{ width: 70, justifyContent: "center" }}>{r.kind}</span>
@@ -74,7 +74,7 @@ function AddDocument({ onClose, onDone }: { onClose: () => void; onDone: () => v
   }, []);
   async function submit() {
     const f = file.current?.files?.[0];
-    if (!f) return setError("ファイルを選んでください（PDF・Excel）。");
+    if (!f) return setError("ファイルを選択してください（PDF・Excel）。");
     try {
       await upload("/api/library", f, { kind, title, customer, drawing_ids: JSON.stringify(drawingIds.map(Number)) });
       onDone();
@@ -96,7 +96,7 @@ function AddDocument({ onClose, onDone }: { onClose: () => void; onDone: () => v
         </select>
       </Field>
       <ErrorBox error={error} />
-      <Marked><button className="btn primary" onClick={submit}>登録する</button></Marked>
+      <button className="btn primary" onClick={submit}>登録する</button>
     </Modal>
   );
 }

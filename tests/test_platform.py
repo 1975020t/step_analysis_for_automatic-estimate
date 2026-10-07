@@ -258,3 +258,86 @@ def test_a_save_based_on_an_older_version_is_refused_not_overwritten(client):
     assert stale.status_code == 409
     log = client.get(f"/api/cases/{case['id']}/history").json()
     assert [x["status_name"] for x in log] == ["見積作成中", "見積確認中"]
+
+
+# ---------------------------------------------------------------- phases, To Do list and next action
+def test_phases_to_do_and_next_action_are_decided_by_the_api(client):
+    phase = {s["name"]: s["phase"] for s in client.get("/api/statuses").json()}
+    assert phase == {"見積依頼受付": "drafting", "見積前": "drafting", "見積作成中": "drafting", "見積確認中": "checking",
+                     "見積提出済": "waiting", "受注": "production", "製造準備": "production", "製造中": "production",
+                     "検査": "production", "出荷待ち": "production", "出荷済": "closed", "完了": "closed",
+                     "失注": "closed", "保留": "closed"}
+
+    # a missing item puts the case on the To Do list with the input as next action; entering it takes it off
+    q = estimate(client, register(client, "TD-001", step=DRAWING_STEP))
+    home = client.get("/api/home").json()
+    row = next(c for c in home["todo"] if c["quote_id"] == q["id"])
+    assert [t["kind"] for t in row["todo"]] == ["missing"] and row["next_action"]["kind"] == "input"
+    assert next(p for p in home["phases"] if p["key"] == "drafting")["attention"]["count"] == 1
+    q = change(client, q, material="SPCC")
+    assert q["next_action"]["kind"] == "issue" and q["flow_step"] == 4
+    assert not any(c["quote_id"] == q["id"] for c in client.get("/api/home").json()["todo"])
+
+    # issued: phase 回答待ち, next the outcome; accepted: the delivery note, then the invoice
+    assert issue(client, q).status_code == 201
+    q = client.get(f"/api/estimates/{q['id']}").json()
+    assert q["phase"] == "waiting" and q["next_action"]["kind"] == "outcome" and q["flow_step"] == 6
+    won = q["outcome_statuses"]["won"]
+    assert client.put(f"/api/cases/{q['case_id']}/status", json={"status_id": won["id"], "version": q["case_version"]}).status_code == 200
+    cases = client.get("/api/cases?phase=production").json()
+    row = next(c for c in cases["cases"] if c["quote_id"] == q["id"])
+    assert row["next_action"] == {**row["next_action"], "kind": "documents", "doc_kind": "delivery"}
+    assert all(c["phase"] == "production" for c in cases["cases"])
+
+    # a renamed or added status keeps the phase it is given; an unknown phase is refused
+    rows = client.get("/api/statuses").json()
+    rows[3]["name"] = "社内確認中"
+    body = [{k: r[k] for k in ("id", "name", "color", "phase", "visible")} for r in rows]
+    body.insert(5, {"name": "回答督促中", "color": "blue", "phase": "waiting", "visible": True})
+    saved = {s["name"]: s["phase"] for s in client.put("/api/statuses", json={"statuses": body}).json()}
+    assert saved["社内確認中"] == "checking" and saved["回答督促中"] == "waiting"
+    body[0]["phase"] = "somewhere"
+    assert client.put("/api/statuses", json={"statuses": body}).status_code == 400
+
+
+def test_the_draft_of_a_new_estimate_marks_where_each_value_comes_from(client):
+    pdf = upload(client, DRAWING_PDF)
+    job = client.post("/api/drawings/readings", json={"file_id": pdf}).json()["job_id"]
+    assert wait(client, job)["status"] == "done"
+    d = client.get(f"/api/estimate-draft?reading_job_id={job}&file_name=Lv3_0043.pdf").json()
+    f = d["fields"]
+    assert (f["drawing_no"]["value"], f["drawing_no"]["mark"]) == ("DB-25-0367", "read")
+    assert (f["material"]["value"], f["material"]["mark"]) == ("SPHC", "read")
+    assert (f["quantity"]["value"], f["quantity"]["mark"]) == (50, "read")
+    assert f["surface_treatment"]["mark"] == "review" and f["surface_treatment"]["note"]  # with the reason
+    assert f["processes"]["mark"] == "unregistered" and "M10タップ" in f["processes"]["note"]
+    assert f["processes"]["custom_processes"][0]["name"] == "M10タップ"  # its unit price is entered later
+
+    # a drawing without a reading: nothing is guessed
+    plain = client.get(f"/api/estimate-draft?drawing_id={register(client, 'DR-001')}").json()["fields"]
+    assert plain["material"]["value"] is None and plain["quantity"]["value"] is None
+    assert plain["drawing_no"] == {"value": "DR-001", "mark": "drawing", "note": ""}
+
+
+def test_the_phase_migration_keeps_the_meaning_of_existing_statuses(tmp_path):
+    from alembic import command
+    from alembic.config import Config
+    from sqlalchemy import create_engine, text
+
+    url = f"sqlite:///{tmp_path / 'old.db'}"
+    config = Config(str(ROOT / "alembic.ini"))
+    config.set_main_option("script_location", str(ROOT / "migrations"))
+    config.set_main_option("sqlalchemy.url", url)
+    command.upgrade(config, "0001")
+    engine = create_engine(url)
+    with engine.begin() as c:  # a database of the previous version, with a renamed and an added status
+        for i, (name, group, role) in enumerate([("依頼受付", "見積・受注", ""), ("見積確認中", "見積・受注", ""),
+                                                 ("見積提出済", "見積・受注", "issued"), ("塗装待ち", "製造・出荷", ""),
+                                                 ("失注", "保留・失注", "lost")]):
+            c.execute(text("INSERT INTO case_statuses (name, sort, color, group_name, visible, role, version) "
+                           "VALUES (:n, :s, 'blue', :g, 1, :r, 1)"), {"n": name, "s": i, "g": group, "r": role})
+    command.upgrade(config, "head")
+    with engine.begin() as c:
+        got = dict(c.execute(text("SELECT name, phase FROM case_statuses")).all())
+    assert got == {"依頼受付": "drafting", "見積確認中": "checking", "見積提出済": "waiting", "塗装待ち": "production",
+                   "失注": "closed"}

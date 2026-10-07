@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { get, post, upload, waitJob } from "../api";
-import { ErrorBox, Marked, useMeta, useToast } from "../ui";
+import { ErrorBox, useMeta, useToast } from "../ui";
 
 type Row = {
   key: string;
@@ -134,7 +134,8 @@ export default function RegisterPage() {
 
   return (
     <div>
-      <Marked
+      <p className="lead">図面のみを登録します（見積は後から作成可能）。見積まで続けて行う場合は <Link to="/estimates/new">新規見積</Link> から。</p>
+      <div
         className={`drop ${over ? "over" : ""}`}
         onDragOver={(e: any) => {
           e.preventDefault();
@@ -161,7 +162,7 @@ export default function RegisterPage() {
           <input ref={input} type="file" multiple accept={ACCEPT.join(",")} hidden data-testid="file-input"
             onChange={(e) => { addFiles(Array.from(e.target.files || [])); e.target.value = ""; }} />
         </div>
-      </Marked>
+      </div>
       {skipped.length > 0 && <div className="error">取り込めない種類のファイルは除きました：{skipped.join("、")}（図面PDF・STEP・DXFのみ）</div>}
       <ErrorBox error={error} />
 
@@ -178,7 +179,7 @@ export default function RegisterPage() {
                 {done.map((d) => (
                   <li key={d.revision_id}>
                     <Link to={`/drawings/${d.drawing_id}`}>{d.drawing_no} {d.name}</Link>
-                    <Link to={`/estimates/new?drawing=${d.drawing_id}`}>この図面で見積を作成 →</Link>
+                    <Link to={`/estimates/new?drawing=${d.drawing_id}`} style={{ marginLeft: 10 }}>新規見積 →</Link>
                   </li>
                 ))}
               </ul>
@@ -254,12 +255,10 @@ export default function RegisterPage() {
       <div className="row between" style={{ marginTop: 16 }}>
         <span className="small muted">図番が未入力の行は登録されません。</span>
         <div className="row">
-          <button className="btn" onClick={() => navigate("/drawings")}>図面一覧へ</button>
-          <Marked>
-            <button className="btn primary" disabled={busy || ready.length === 0 || rows.some((r) => r.reading === "reading")} onClick={submit}>
-              確認済み {ready.length} 件を登録
-            </button>
-          </Marked>
+          <button className="btn" onClick={() => navigate("/drawings")}>図面へ</button>
+          <button className="btn primary" disabled={busy || ready.length === 0 || rows.some((r) => r.reading === "reading")} onClick={submit}>
+            確認済み {ready.length} 件を登録
+          </button>
         </div>
       </div>
     </div>

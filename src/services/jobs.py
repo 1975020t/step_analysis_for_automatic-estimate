@@ -99,13 +99,19 @@ class JobQueue:
         self.autostart = autostart
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="job") if autostart else None
 
-    def submit(self, kind: str, payload: dict) -> dict:
+    def submit(self, kind: str, payload: dict, start: bool = True) -> dict:
+        """Record a job and run it. start=False only records it (queued): call start() once whatever the job
+        reads has been committed."""
         if kind not in self.handlers:
             raise KeyError(kind)
         job = self.store.create(kind, payload)
-        if self._pool:
-            self._pool.submit(self.execute, job["job_id"])
+        if start:
+            self.start(job["job_id"])
         return job
+
+    def start(self, job_id: str) -> None:
+        if self._pool:
+            self._pool.submit(self.execute, job_id)
 
     def add_handlers(self, handlers: dict[str, Callable[[dict], dict]]) -> None:
         self.handlers.update(handlers)

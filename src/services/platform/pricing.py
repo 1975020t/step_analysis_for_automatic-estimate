@@ -274,7 +274,8 @@ def compute(inputs: QuoteInputs, masters: MasterLoader, analysis: dict | None, r
     effective, shape_detail = effective_analysis(analysis, inputs.shape, file_name)
     missing = missing_items(inputs, masters, shape_detail, analysis_pending)
     out: dict = {"missing": [m.model_dump() for m in missing], "issuable": not missing, "shape": shape_detail,
-                 "hints": hints(inputs, analysis, reading, masters), "items": drawing_items(reading, inputs, masters, analysis),
+                 "hints": hints(inputs, analysis, reading, masters),
+                 "hint_items": hint_items(inputs, analysis, reading, masters), "items": drawing_items(reading, inputs, masters, analysis),
                  "lines": [], "price": None, "condition": None}
     if missing:
         return out
@@ -329,6 +330,12 @@ def priced(inputs: QuoteInputs, masters: MasterLoader, analysis: dict | None, fi
 # ---------------------------------------------------------------- hints and the drawing items
 def hints(inputs: QuoteInputs, analysis: dict | None, reading: dict | None, masters: MasterLoader) -> list[str]:
     """Points worth a look before issuing (they never block issuing)."""
+    return [h["message"] for h in hint_items(inputs, analysis, reading, masters)]
+
+
+def hint_items(inputs: QuoteInputs, analysis: dict | None, reading: dict | None, masters: MasterLoader) -> list[dict]:
+    """The hints with the condition each one is about (`field`, None when nothing on the screen fixes it), so the
+    screen can link each to the place to change it."""
     from src.services.platform.wording import notes, review_reason
 
     out = []
@@ -338,20 +345,26 @@ def hints(inputs: QuoteInputs, analysis: dict | None, reading: dict | None, mast
               "processes": "追加加工", "rush": "特急"}
     for name in sorted(review):
         why = "・".join(dict.fromkeys(review_reason(r) for r in reasons.get(name) or []))
-        out.append(f"図面の{labels.get(name, name)}は要確認です" + (f"（{why}）" if why else ""))
+        out.append({"message": f"図面の{labels.get(name, name)}は要確認です" + (f"（{why}）" if why else ""),
+                    "field": name, "label": labels.get(name, name)})
     if analysis:
         a = SheetMetalAnalysis.model_validate(analysis)
         estimated = a.status == "partial" or a.assumptions or any(
             q.confidence in {"medium", "low"} for q in a.metric_quality.values())
         if a.status in ("success", "partial") and estimated:
             why = "／".join(notes(analysis))
-            out.append("展開寸法は概算です" + (f"（{why}）" if why else ""))
+            kfactor = any("Kファクター" in (t or "") for t in list(a.assumptions or []))
+            out.append({"message": "展開寸法は概算です" + (f"（{why}）" if why else ""),
+                        "field": "k_factor" if kfactor and not inputs.k_factor_confirmed else None,
+                        "label": "Kファクター（曲げの伸び）"})
         drawn = (reading or {}).get("thickness_mm")
         if drawn is not None and a.thickness_mm is not None and abs(float(drawn) - float(a.thickness_mm)) > 1e-6:
-            out.append(f"板厚が図面（{float(drawn):g} mm）とCADデータ（{a.thickness_mm:g} mm）で違います。CADデータの板厚で計算しています")
+            out.append({"message": f"板厚が図面（{float(drawn):g} mm）とCADデータ（{a.thickness_mm:g} mm）で違います。"
+                                   "CADデータの板厚で計算しています", "field": "shape", "label": "CADデータ"})
     flags = {"inspection": "検査成績書の指定があります", "tolerance": "厳しい公差の指定があります",
              "appearance": "外観の指定があります"}
-    out += [f"図面の注記：{flags[f]}" for f in (reading or {}).get("flags") or [] if f in flags]
+    out += [{"message": f"図面の注記：{flags[f]}", "field": None, "label": ""}
+            for f in (reading or {}).get("flags") or [] if f in flags]
     return out
 
 

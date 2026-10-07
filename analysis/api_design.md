@@ -1,6 +1,6 @@
 # API の設計
 
-2026-09-28（段階1：サーバー部分の切り出し、[handoff_api.md](handoff_api.md)）、2026-10-05（画面とデータベース、[handoff_ui.md](handoff_ui.md)）。仕様書は API を起動して `http://localhost:8000/docs`（OpenAPI は `/openapi.json`）で見られる。
+2026-09-28（段階1：サーバー部分の切り出し、[handoff_api.md](handoff_api.md)）、2026-10-05（画面とデータベース、[handoff_ui.md](handoff_ui.md)）、2026-10-07（画面の改修：ホーム・新規見積の4ステップ・次のアクション・フェーズ）。仕様書は API を起動して `http://localhost:8000/docs`（OpenAPI は `/openapi.json`）で見られる。
 
 ## 構成
 
@@ -16,7 +16,7 @@ React の画面（web/、Vite。npm run build で web/dist）
    quotes.py    見積の作成（受付番号で段階を進める）・読み出し・変更・チャット・修正履歴
    drawings.py  図面の登録と版・登録時の解析と読み取り・検索・プレビュー・書き込み
    documents.py 見積書・納品書・請求書の発行とプレビュー（未入力があれば 409）
-   cases.py     案件・進捗・警告・ステータス設定・振り返り
+   cases.py     案件・進捗・警告・フェーズ・次のアクション・To Doリスト（ホーム）・ステータス設定・実績分析
    similar.py   類似の図面と実績（src/similar_quotes.is_similar）
    library.py   書類と検索、admin.py 設定とマスター編集と見積ロジック、masters.py DB のマスター
    core.py      Platform（DB・マスターと履歴の読み込み直し・受付）
@@ -31,7 +31,7 @@ React の画面（web/、Vite。npm run build で web/dist）
             quote_pdf・quote_log・past_quotes・similar_quotes（解析と金額の計算は変えていない）
 ```
 
-- **処理を2か所に書かない**：画面は API だけを呼ぶ。金額（費目ごとの小計を含む）、未入力の項目、発行できるか（帳票の種類ごとの理由）、類似かどうかは API が返し、画面は表示するだけ。画面・API・帳票PDFで金額が一致することをテストで確かめている（`tests/test_platform.py`、`tests/test_e2e_flow.py`）
+- **処理を2か所に書かない**：画面は API だけを呼ぶ。金額（費目ごとの小計を含む）、未入力の項目、発行できるか（帳票の種類ごとの理由）、類似かどうか（今回との単価の差も）、フェーズ、To Doリストに載せるか（理由と急ぐ順）、次のアクション、見積の手順の現在地は API が返し、画面は表示するだけ。画面・API・帳票PDFで金額が一致することをテストで確かめている（`tests/test_platform.py`、`tests/test_e2e_flow.py`）
 - **解析と金額の計算は変えていない**：変えたのは見積の条件の扱い（未登録の単価・解析不可のときの形状の値の入力、発行できる条件、希望納期）と類似の条件だけ。入力した単価・形状の値でも `QuoteEngine` がルールで計算する
 - **今までの API**（`/api/quotes`・`/api/documents`・`/api/similar-quotes`・`/api/history`）も動く。マスターと履歴はデータベースのものを使う
 
@@ -39,15 +39,21 @@ React の画面（web/、Vite。npm run build で web/dist）
 
 | 機能 | メソッドとパス | 説明 |
 |---|---|---|
-| 選択肢 | `GET /api/meta`、`GET /api/recent` | 材質・表面処理・追加加工・担当者・ステータス・分類・属性・テンプレート・読み取りの可否／最近の見積 |
+| 選択肢 | `GET /api/meta`、`GET /api/recent` | 材質・表面処理・追加加工・担当者・ステータス（フェーズつき）・フェーズの一覧・分類・属性・テンプレート・読み取りの可否／最近の見積（今の画面は使っていない） |
+| ホーム | `GET /api/home` | To Doリスト（`todo`：理由 `todo`・一言 `todo_note`・次のアクション `next_action`、急ぐ順）、フェーズごとの件数と注意（`phases`）、メニューの件数（`counts`） |
 | 図面 | `POST /api/drawings/register`（202） | 1件＝図面PDF・形状ファイル（片方でもよい）と図番・品名・顧客・改訂・分類・版の指定。形状解析・PDFの文字・読み取り結果の保存は受付番号（register）で |
 | | `GET /api/drawings`（条件はクエリ。自社の属性は `attrs` に JSON）、`GET /api/drawings/same-number`、`GET/PUT /api/drawings/{id}`、`PUT /api/drawings/{id}/current-revision`、`GET /api/drawings/{id}/similar`、`POST /api/drawings/{id}/memos`、`POST /api/revisions/{id}/notes`、`DELETE /api/notes/{id}`、`GET /api/revisions/{id}/preview.png`、`GET /api/files/{id}/raw` | |
-| 見積 | `POST /api/estimates`（202） | 案件と見積を作り、受付番号（estimate）で 形状解析 → 図面の読み取り → マスタ照合 → 見積計算 → 類似実績の検索。`GET /api/jobs/{id}` の `progress` に段階と途中の値 |
-| | `GET /api/estimates`、`GET /api/estimates/{id}`、`PUT /api/estimates/{id}`（`version` 必須）、`POST /api/estimates/{id}/chat` | 詳細は条件・解析（確定／概算／解析不可）・`result`（明細・費目ごとの小計・price・missing・hints・items・shape）・`blockers`（帳票の種類ごとの発行できない理由）・類似実績・修正履歴・発行した帳票 |
+| 見積 | `GET /api/estimate-draft?drawing_id=` または `?reading_job_id=&file_name=` | 新規見積の条件入力の下書き。項目ごとに値と印 `mark`（read 読取・review 要確認・unregistered マスタ未登録・none 記載なし・drawing 図面情報）と `note`。値は見積の受付が図面の読み取りから入れる値と同じ（`inputs_from_reading`） |
+| | `POST /api/estimates`（202。`rush`・`processes`・`custom_processes` も受ける） | 案件と見積を作り、受付番号（estimate）で 形状解析 → 図面の読み取り → マスタ照合 → 見積計算 → 類似実績の検索。`GET /api/jobs/{id}` の `progress` に段階と途中の値 |
+| | `GET /api/estimates`、`GET /api/estimates/{id}`、`PUT /api/estimates/{id}`（`version` 必須）、`POST /api/estimates/{id}/chat` | 詳細は条件・解析（確定／概算／解析不可）・`result`（明細・費目ごとの小計・price・missing・hints・items・shape）・`hint_items`（確認事項と直す場所 `field`）・`blockers`（帳票の種類ごとの発行できない理由）・類似実績と `similar_compare`（今回との単価の差）・`next_action`・`flow_step`（6つの手順の現在地）・`outcome_statuses`（受注・失注のステータス）・`phase`・修正履歴・発行した帳票 |
 | 帳票 | `GET /api/estimates/{id}/documents/preview.png?kind=&template_id=`、`POST /api/estimates/{id}/documents`（201、未入力・未受注は 409 `NOT_ISSUABLE` と `details`）、`GET /api/issued`、`GET /api/issued/{id}/file.pdf` | |
-| 案件 | `GET /api/cases`（一覧・ステータス・警告の数）、`PUT /api/cases/{id}/status`（`version` 必須、失注は理由）、`GET /api/cases/{id}/history`、`GET/PUT /api/statuses`、`GET /api/review?months=` | |
+| 案件 | `GET /api/cases?q=&staff=&phase=`（一覧＝急ぐ順・フェーズ・警告・To Doの理由・次のアクション、フェーズごとの件数、警告の数。`phase` はフェーズのキーか `active`）、`PUT /api/cases/{id}/status`（`version` 必須、失注は理由）、`GET /api/cases/{id}/history`、`GET/PUT /api/statuses`、`GET /api/review?months=` | |
 | 検索・書類・取引先 | `GET /api/search?q=&kind=`、`GET/POST /api/library`、`GET /api/library/{id}/file`、`DELETE /api/library/{id}`、`GET/POST/PUT /api/partners` | |
 | 設定 | `GET/PUT /api/staff`、`GET/POST/PUT/DELETE /api/categories`、`GET/PUT /api/attributes`、`GET/POST/PUT/DELETE /api/templates`、`GET /api/templates/{id}/preview.png`、`GET/POST/PUT /api/master-tables/{table}`、`GET /api/logic`、`POST /api/history/columns` | |
+
+**フェーズ**：ステータスの属性 `phase`（`drafting` 見積作成中・`checking` 見積確認中・`waiting` 回答待ち・`production` 製造・出荷・`closed` 完了分）。名前を変えても追加しても、属するフェーズはステータスが持つ（マイグレーション `0002` が、改修前の表示グループ・役割・名前から決めて移す）。受注かどうか（`outcome`）は、役割が受注・出荷済・完了か、フェーズが製造・出荷のステータスで決まる。**To Do・注意の判定** は案件の警告（`cases.warnings_of`）と同じ基準で、二重に作らない。
+
+**受付の開始**：見積の受付は、見積の行を保存してから始める（`JobQueue.submit(..., start=False)` → コミット → `start`）。保存前に受付が見積を読みに行って「見積が見つかりません」となることを防ぐ。
 
 **同時利用**：更新は開いたときの `version` を送る。違えば 409 `CONFLICT`（上書きしない）。データベース側でも版を照合して更新する。**操作者**：`X-Actor`（画面で選んだ担当者、URL エンコード）を `*_by`・修正履歴・ステータスの履歴に残す。ログインを足すときは `api/security.py` の `current_actor` と `token_guard` を差し替える。
 

@@ -57,14 +57,14 @@ export type Meta = {
   surface_treatments: { code: string; name: string }[];
   processes: { code: string; name: string; unit: string }[];
   staff: { id: number; name: string; active: boolean }[];
-  statuses: { id: number; name: string; color: string; group: string; visible: boolean; role: string; count: number }[];
+  statuses: { id: number; name: string; color: string; phase: string; visible: boolean; role: string; count: number }[];
   categories: { id: number; name: string; children: { id: number; name: string; count: number }[] }[];
   attributes: { id: number; key: string; label: string; input_type: string; options: any[]; unit: string; searchable: boolean; builtin: boolean }[];
   templates: { id: number; name: string; customers: string[]; options: Record<string, boolean>; is_default: boolean }[];
   drawing_reader: boolean;
   lost_reasons: string[];
   document_kinds: string[];
-  groups: string[];
+  phases: { key: string; number: number | null; label: string }[];
   colors: Record<string, string>;
   policy: Record<string, number>;
 };
@@ -96,15 +96,58 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 // ---------------------------------------------------------------- small parts
-export function Marked({ children, className, ...rest }: { children: ReactNode; className?: string } & Record<string, any>) {
+/** The steps of a flow with the current one (新規見積の4ステップ、見積結果の6ステップ). `now` is 1-based;
+ * steps before it are done; `now` past the last step marks every step done. */
+export function Flow({ steps, now }: { steps: { label: string; note?: string }[]; now: number }) {
   return (
-    <div className={`marked ${className || ""}`} {...rest}>
-      <i className="cm tl" />
-      <i className="cm tr" />
-      <i className="cm bl" />
-      <i className="cm br" />
-      {children}
-    </div>
+    <ol className="flow" aria-label="手順">
+      {steps.map((st, i) => {
+        const n = i + 1;
+        const state = n < now ? "done" : n === now ? "now" : "";
+        return (
+          <li key={st.label} className={state} aria-current={state === "now" ? "step" : undefined}>
+            <small>{state === "done" ? "完了" : state === "now" ? "現在" : st.note || (n === now + 1 ? "次" : "")}</small>
+            <b>{n} {st.label}</b>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/** Where a value comes from (読取・要確認・図面情報・マスタ未登録・記載なし), from the API's `mark`. */
+const MARK_LABEL: Record<string, string> = { read: "読取", review: "要確認", drawing: "図面情報", unregistered: "マスタ未登録", none: "記載なし" };
+export function Mark({ mark }: { mark?: string }) {
+  if (!mark || !MARK_LABEL[mark]) return null;
+  return <span className={`mark ${mark}`}>{MARK_LABEL[mark]}</span>;
+}
+
+/** The screen that opens the next action the API chose for a case or an estimate. */
+export function actionHref(a: { kind: string; quote_id?: number | null; drawing_id?: number | null; doc_kind?: string } | null | undefined): string {
+  if (!a) return "/cases";
+  switch (a.kind) {
+    case "new_estimate":
+      return a.drawing_id ? `/estimates/new?drawing=${a.drawing_id}` : "/estimates/new";
+    case "progress":
+      return `/estimates/${a.quote_id}/progress`;
+    case "input":
+      return `/estimates/${a.quote_id}?tab=conditions`;
+    case "outcome":
+      return `/estimates/${a.quote_id}#outcome`;
+    case "documents":
+      return `/documents?quote=${a.quote_id}&kind=${a.doc_kind || "delivery"}`;
+    default:
+      return `/estimates/${a.quote_id}`;
+  }
+}
+
+export function Reasons({ items }: { items: { kind: string; label: string }[] }) {
+  return (
+    <span className="row" style={{ gap: 4 }}>
+      {items.map((w) => (
+        <span key={w.kind} className={`reason ${w.kind}`}>{w.label}</span>
+      ))}
+    </span>
   );
 }
 
@@ -196,6 +239,12 @@ export function Modal({ title, children, onClose }: { title: string; children: R
 }
 
 export const Icon = {
+  home: () => (
+    <svg className="ico" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4">
+      <path d="M2 7.5 8 2.5l6 5" />
+      <path d="M3.5 6.5v7h9v-7M6.5 13.5v-4h3v4" />
+    </svg>
+  ),
   search: () => (
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
       <circle cx="7" cy="7" r="5" />

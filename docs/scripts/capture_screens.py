@@ -58,73 +58,92 @@ def api(port: int, path: str):
 
 def shot(page, name: str, max_height: int = 1900) -> None:
     page.wait_for_timeout(1800)
+    page.evaluate("document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0)")
+    page.wait_for_timeout(200)
     height = min(max_height, page.evaluate("document.documentElement.scrollHeight"))
     page.screenshot(path=str(OUT / name), clip={"x": 0, "y": 0, "width": VIEW["width"], "height": height}, full_page=True)
     print("saved", name)
 
 
+def loaded(page) -> None:
+    """Wait until the 3D view (and the rest of the page) has finished loading."""
+    page.wait_for_function("!document.querySelector('main').innerText.includes('読み込み中')", timeout=60_000)
+
+
 def run_screens(browser, port: int) -> None:
     base = f"http://127.0.0.1:{port}"
     page = browser.new_page(viewport=VIEW, locale="ja-JP")
+    page.goto(base + "/settings/staff")
+    page.evaluate("localStorage.setItem('actor', '佐藤')")  # the operator of this PC (shown at the bottom of the menu)
     estimates = api(port, "/api/estimates")
     drawings = api(port, "/api/drawings")
     by_no = {e["drawing_no"]: e for e in estimates}
     main = by_no["DB-25-0367"]
     drawing = next(d for d in drawings if d["drawing_no"] == "DB-25-0367")
+    files = [str(ROOT / "pdf_data" / "pdf" / "Lv3_0043.pdf"), str(ROOT / "pdf_data" / "step" / "Lv3_0043.step")]
 
-    page.goto(base + "/drawings/register")  # 02: the same pair again: the reading fills the draft, a new version is offered
-    page.get_by_test_id("file-input").set_input_files([str(ROOT / "pdf_data" / "pdf" / "Lv3_0043.pdf"),
-                                                      str(ROOT / "pdf_data" / "step" / "Lv3_0043.step")])
+    page.goto(base + "/")  # A home
+    shot(page, "01_home.png", 900)
+
+    page.goto(base + "/drawings/register")  # the drawing-only registration: the reading fills the draft
+    page.get_by_test_id("file-input").set_input_files(files)
     page.get_by_text("読み取り結果を下書きに入れました").wait_for(timeout=60_000)
     page.get_by_label("品名").fill("ベースブラケット")
     page.get_by_label("顧客").fill("株式会社サンプル機工")
     page.get_by_label("改訂").fill("B")
-    shot(page, "02_register.png")
+    shot(page, "02_register.png", 900)
 
-    page.goto(f"{base}/estimates/new?drawing={drawing['id']}")  # 03
-    page.get_by_label("数量").fill("100")
+    page.goto(base + "/estimates/new")  # B step 1: a drawing PDF + STEP of a new drawing
+    page.get_by_test_id("file-input").set_input_files(files)
+    page.get_by_test_id("selected-files").wait_for()
+    shot(page, "03_new_estimate.png", 900)
+    page.get_by_role("button", name="次へ：条件入力 →").click()  # C step 2: the reading fills the draft
+    page.get_by_label("図番", exact=True).wait_for(timeout=60_000)
+    page.wait_for_function("document.querySelector('[aria-label=図番]').value !== ''")
+    page.get_by_label("品名").fill("ベースブラケット")
+    page.get_by_label("顧客").fill("株式会社サンプル機工")
     page.get_by_label("希望納期").fill("2026-11-20")
-    shot(page, "03_new_estimate.png")
-    page.get_by_role("button", name="見積を開始").click()  # 04: photographed while the stages run
+    page.get_by_label("担当").select_option("佐藤")
+    shot(page, "03_new_estimate_conditions.png", 1300)
+
+    page.goto(f"{base}/estimates/new?drawing={drawing['id']}")  # step 3: photographed while the stages run
+    page.get_by_label("数量").wait_for()
+    page.get_by_label("数量").fill("100")
+    page.get_by_label("Kファクター").fill("0.4")  # a K factor of the company: the shape is analysed again
+    page.get_by_role("button", name="解析・計算を実行 →").click()
     page.wait_for_url("**/progress**")
-    page.wait_for_timeout(700)
+    page.wait_for_timeout(400)
     page.screenshot(path=str(OUT / "04_progress.png"))
     print("saved 04_progress.png")
     page.wait_for_function("/^\\/estimates\\/\\d+$/.test(location.pathname)", timeout=120_000)
 
     for name, path, height in (
-            ("05_estimate.png", f"/estimates/{main['id']}", 2450),
-            ("05_estimate_missing.png", f"/estimates/{by_no['AB-22-3449']['id']}", 1300),
-            ("05_estimate_shape_input.png", f"/estimates/{by_no['KA421-2456']['id']}", 1500),
-            ("06_cases.png", "/cases", 900), ("07_drawings.png", "/drawings", 1300),
-            ("08_drawing.png", f"/drawings/{drawing['id']}", 1500), ("11_estimates.png", "/estimates", 900),
+            ("05_estimate.png", f"/estimates/{by_no['BP475-8564']['id']}", 1500),
+            ("05_estimate_missing.png", f"/estimates/{by_no['AB-22-3449']['id']}", 1000),
+            ("05_estimate_outcome.png", f"/estimates/{by_no['BR448-5321']['id']}", 820),
+            ("05_estimate_conditions.png", f"/estimates/{main['id']}?tab=conditions", 1900),
+            ("05_estimate_shape_input.png", f"/estimates/{by_no['KA421-2456']['id']}?tab=conditions", 1900),
+            ("05_estimate_shape.png", f"/estimates/{main['id']}?tab=shape", 1250),
+            ("06_cases.png", "/cases", 900), ("06_cases_kanban.png", "/cases?view=kanban", 900),
+            ("07_drawings.png", "/drawings", 1300), ("08_drawing.png", f"/drawings/{drawing['id']}", 1500),
             ("12_categories.png", "/settings/categories", 1000), ("13_search.png", "/search?q=DB-25-0367", 900),
-            ("14_review.png", "/review", 900), ("15_partners.png", "/partners", 800),
-            ("16_documents.png", f"/documents?quote={main['id']}&kind=invoice", 1000),
-            ("16_documents_blocked.png", f"/documents?quote={by_no['AB-22-3449']['id']}&kind=quote", 800),
+            ("14_review.png", "/review", 900), ("15_partners.png", "/settings/partners", 800),
+            ("16_documents.png", f"/documents?quote={main['id']}&kind=invoice", 1500),
+            ("16_documents_blocked.png", f"/documents?quote={by_no['AB-22-3449']['id']}&kind=quote", 900),
             ("17_masters.png", "/settings/masters", 800), ("18_logic.png", "/settings/logic", 800),
-            ("19_templates.png", "/settings/templates", 1000), ("20_statuses.png", "/settings/statuses", 1100),
-            ("21_staff.png", "/settings/staff", 700), ("22_import.png", "/settings/import", 700)):
+            ("19_templates.png", "/settings/templates", 1000), ("20_statuses.png", "/settings/statuses", 1200),
+            ("21_staff.png", "/settings/staff", 700), ("22_import.png", "/settings/import", 700),
+            ("23_settings.png", "/settings", 900)):
         page.goto(base + path)
-        if name in ("05_estimate.png", "05_estimate_customer.png"):
-            page.wait_for_function("!document.querySelector('main').innerText.includes('読み込み中')", timeout=60_000)
+        if name.startswith("05_"):
+            loaded(page)
         if name == "05_estimate_shape_input.png":
             page.get_by_text("寸法の値（CADデータから").wait_for()
         shot(page, name, height)
     page.goto(f"{base}/estimates/{main['id']}")
-    page.wait_for_function("!document.querySelector('main').innerText.includes('読み込み中')", timeout=60_000)
-    page.get_by_role("button", name="顧客提示モード").click()
+    loaded(page)
+    page.get_by_label("顧客提示モード").check()
     shot(page, "05_estimate_customer.png", 1250)
-    page.get_by_role("button", name="顧客提示モード").click()
-    page.get_by_role("tab", name="CADデータ").click()
-    page.wait_for_timeout(1000)
-    box = page.locator("main aside").bounding_box()
-    page.screenshot(path=str(OUT / "05_estimate_shape.png"), clip={"x": box["x"] - 8, "y": box["y"], "width": box["width"] + 16,
-                                                                    "height": min(box["height"], 1500)}, full_page=True)
-    print("saved 05_estimate_shape.png")
-    page.goto(base + "/cases")
-    page.get_by_role("tab", name="一覧").click()
-    shot(page, "06_cases_list.png", 900)
     page.close()
 
 
