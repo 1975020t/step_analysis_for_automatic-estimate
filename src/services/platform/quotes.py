@@ -98,7 +98,7 @@ def create(pf: Platform, body: EstimateCreate, actor: str) -> dict:
                       inputs=inputs.model_dump(mode="json", exclude_unset=False), updated_by=actor)
         quote.inputs["_given"] = sorted(inputs.model_fields_set)
         s.add(quote)
-        s.flush()
+        s.commit()  # the job runs in another thread: the quote must be visible to it before it starts
         job = pf.submit("estimate", {"quote_id": quote.id})
         quote.job_id = job["job_id"]
         s.commit()
