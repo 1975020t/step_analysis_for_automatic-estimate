@@ -201,8 +201,9 @@ class OutcomeInput(BaseModel):
 
 class JobOut(BaseModel):
     job_id: str
-    kind: Literal["analysis", "drawing"]
+    kind: Literal["analysis", "drawing", "register", "estimate"]
     status: Literal["queued", "running", "done", "failed"]
+    progress: dict | None = Field(None, description="実行中の段階と、途中で分かった値（estimate / register）")
     created_at: str
     started_at: str | None = None
     finished_at: str | None = None

@@ -1,4 +1,4 @@
-"""Operations of the estimating system, shared by the API and the Streamlit demo (no web framework here).
+"""Operations of the estimating system, shared by the API and the screens (no web framework here).
 
     service = EstimateService(Settings.from_env())
     analysis = service.analyze_bytes(data, "part.step")
@@ -67,6 +67,9 @@ class IssuedDocument:
 
 def default_reader_factory():
     from src.pdf_reader import PdfConditionReader
+    from src.services.pdfium_lock import guard_reader
+
+    guard_reader()  # readings run in parallel jobs; pdfium must not
 
     return PdfConditionReader()
 
@@ -141,6 +144,14 @@ class EstimateService:
                                "条件は手入力してください。", status=503, code="DRAWING_READER_UNAVAILABLE")
         reading = dict(self.reader_factory().read(str(path)))
         evidence = reading.pop("evidence", None)
+        texts = {}
+        for raw in evidence or []:  # the drawing's wording of the material and finish (names of unregistered ones)
+            for key in ("material", "surface_treatment"):
+                text = ((raw or {}).get(key) or {}).get("text") if isinstance((raw or {}).get(key), dict) else None
+                if text and key not in texts:
+                    texts[key] = str(text).strip()
+        if texts:
+            reading["source_texts"] = texts
         return reading, self.drawing_context(reading, file_name, unregistered_process_texts(evidence, self.masters))
 
     def drawing_context(self, reading: dict, file_name: str = "", unregistered: list[str] | None = None) -> DrawingContext:

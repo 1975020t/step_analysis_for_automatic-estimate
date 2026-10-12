@@ -1,35 +1,67 @@
-# API の設計（段階1：サーバー部分の切り出し）
+# API の設計
 
-2026-09-28。受入条件は [handoff_api.md](handoff_api.md)。仕様書は API を起動して `http://localhost:8000/docs`（OpenAPI は `/openapi.json`）で見られる。
+2026-09-28（段階1：サーバー部分の切り出し、[handoff_api.md](handoff_api.md)）、2026-10-05（画面とデータベース、[handoff_ui.md](handoff_ui.md)）、2026-10-07（画面の改修：ホーム・新規見積の4ステップ・次のアクション・フェーズ）。仕様書は API を起動して `http://localhost:8000/docs`（OpenAPI は `/openapi.json`）で見られる。
 
 ## 構成
 
 ```
-React の画面（段階2）       Streamlit のデモ（app.py）
-        │ HTTP（JSON）                │ 関数呼び出し（同じプロセス）
-        ▼                             │
-  api/main.py（FastAPI）              │
-   入出力の型・認証・制限・エラー     │
-        │                             │
-        └──────────┬──────────────────┘
-                   ▼
+React の画面（web/、Vite。npm run build で web/dist）
+        │ HTTP（JSON）。docker compose では nginx が /api を API に中継。Docker なしでは API が web/dist も配信
+        ▼
+  api/main.py（FastAPI）・api/platform_routes.py（画面用）・api/security.py（合言葉と操作者）
+   入出力の型・認証・制限・エラー
+        ▼
+  src/services/platform/（画面の業務。データベースを使う）
+   pricing.py   見積の条件（QuoteInputs）・未入力の項目・金額（QuoteEngine と price_summary）
+   quotes.py    見積の作成（受付番号で段階を進める）・読み出し・変更・チャット・修正履歴
+   drawings.py  図面の登録と版・登録時の解析と読み取り・検索・プレビュー・書き込み
+   documents.py 見積書・納品書・請求書の発行とプレビュー（未入力があれば 409）
+   cases.py     案件・進捗・警告・フェーズ・次のアクション・To Doリスト（ホーム）・ステータス設定・実績分析
+   similar.py   類似の図面と実績（src/similar_quotes.is_similar）
+   library.py   書類と検索、admin.py 設定とマスター編集と見積ロジック、masters.py DB のマスター
+   core.py      Platform（DB・マスターと履歴の読み込み直し・受付）
+        ▼
   src/services/（処理の層。Web の枠組みに依存しない）
-   estimate.py  EstimateService：解析・図面の読み取り・条件の組み立て・見積・見積書・類似見積・履歴・3D表示
-   schemas.py   入出力の型（pydantic）。src/models.py の既存モデルはそのまま使う
-   jobs.py      受付（JobStore：状態をファイルに保存）と実行（JobQueue：プロセス内のスレッド）
-   storage.py   アップロードしたファイルの置き場（LocalFileStore）
-   settings.py  置き場所と制限（環境変数）
-   gltf.py      STEP → GLB（3D表示用）
-                   ▼
+   estimate.py  EstimateService：解析・図面の読み取り・見積・見積書・類似見積・履歴・3D表示（今までの API もこれを呼ぶ）
+   jobs.py      受付（状態をファイルに保存、スレッドで実行、途中の進み具合）
+   storage.py   ファイルの置き場（LocalFileStore）、settings.py 置き場所と制限、pdfium_lock.py
+        ▼
+  src/db/（SQLAlchemy のモデル・接続・初期データ）、migrations/（Alembic）
   既存の処理：sheetmetal_analyzer・dxf_analyzer・pdf_reader・pdf_quote・quote_engine・quote_document・
-            quote_pdf・quote_log・past_quotes・similar_quotes（中身は変えていない）
+            quote_pdf・quote_log・past_quotes・similar_quotes（解析と金額の計算は変えていない）
 ```
 
-- **処理を2か所に書かない**：`app.py` にあった処理の組み立て（解析器の選択、図面の条件から見積条件を作る、見積と金額、見積書の採番・描画・保存・履歴への記録、類似見積、受注・失注）は `EstimateService` に移した。画面と API は同じメソッドを呼ぶ
-- **金額**：`EstimateService.price` だけが計算する（`QuoteEngine` の最終価格 → 単価は1円未満切り上げ、消費税は切り捨て）。画面の表示、`POST /api/quotes`、見積書PDFが同じ値になることをテストで確かめている（`tests/test_api.py::test_api_screen_and_document_show_the_same_amounts`）
-- 解析・見積の結果は変えていない（処理の場所を移しただけ）。STEP・DXFの評価は合格のまま
+- **処理を2か所に書かない**：画面は API だけを呼ぶ。金額（費目ごとの小計を含む）、未入力の項目、発行できるか（帳票の種類ごとの理由）、類似かどうか（今回との単価の差も）、フェーズ、To Doリストに載せるか（理由と急ぐ順）、次のアクション、見積の手順の現在地は API が返し、画面は表示するだけ。画面・API・帳票PDFで金額が一致することをテストで確かめている（`tests/test_platform.py`、`tests/test_e2e_flow.py`）
+- **解析と金額の計算は変えていない**：変えたのは見積の条件の扱い（未登録の単価・解析不可のときの形状の値の入力、発行できる条件、希望納期）と類似の条件だけ。入力した単価・形状の値でも `QuoteEngine` がルールで計算する
+- **今までの API**（`/api/quotes`・`/api/documents`・`/api/similar-quotes`・`/api/history`）も動く。マスターと履歴はデータベースのものを使う
 
-## エンドポイント
+## 画面用のエンドポイント
+
+| 機能 | メソッドとパス | 説明 |
+|---|---|---|
+| 選択肢 | `GET /api/meta`、`GET /api/recent` | 材質・表面処理・追加加工・担当者・ステータス（フェーズつき）・フェーズの一覧・分類・属性・テンプレート・読み取りの可否／最近の見積（今の画面は使っていない） |
+| ホーム | `GET /api/home` | To Doリスト（`todo`：理由 `todo`・一言 `todo_note`・次のアクション `next_action`、急ぐ順）、フェーズごとの件数と注意（`phases`）、メニューの件数（`counts`） |
+| 図面 | `POST /api/drawings/register`（202） | 1件＝図面PDF・形状ファイル（片方でもよい）と図番・品名・顧客・改訂・分類・版の指定。形状解析・PDFの文字・読み取り結果の保存は受付番号（register）で |
+| | `GET /api/drawings`（条件はクエリ。自社の属性は `attrs` に JSON）、`GET /api/drawings/same-number`、`GET/PUT /api/drawings/{id}`、`PUT /api/drawings/{id}/current-revision`、`GET /api/drawings/{id}/similar`、`POST /api/drawings/{id}/memos`、`POST /api/revisions/{id}/notes`、`DELETE /api/notes/{id}`、`GET /api/revisions/{id}/preview.png`、`GET /api/files/{id}/raw` | |
+| 見積 | `GET /api/estimate-draft?drawing_id=` または `?reading_job_id=&file_name=` | 新規見積の条件入力の下書き。項目ごとに値と印 `mark`（read 読取・review 要確認・unregistered マスタ未登録・none 記載なし・drawing 図面情報）と `note`。値は見積の受付が図面の読み取りから入れる値と同じ（`inputs_from_reading`） |
+| | `POST /api/estimates`（202。`rush`・`processes`・`custom_processes` も受ける） | 案件と見積を作り、受付番号（estimate）で 形状解析 → 図面の読み取り → マスタ照合 → 見積計算 → 類似実績の検索。`GET /api/jobs/{id}` の `progress` に段階と途中の値 |
+| | `GET /api/estimates`、`GET /api/estimates/{id}`、`PUT /api/estimates/{id}`（`version` 必須）、`POST /api/estimates/{id}/chat` | 詳細は条件・解析（確定／概算／解析不可）・`result`（明細・費目ごとの小計・price・missing・hints・items・shape）・`hint_items`（確認事項と直す場所 `field`）・`blockers`（帳票の種類ごとの発行できない理由）・`notices`（発行は止めない注意。見積書の発行後に条件が変わったとき、納品書・請求書は発行済みの見積書の金額で作る旨）・類似実績と `similar_compare`（今回との単価の差）・`next_action`・`flow_step`（6つの手順の現在地）・`outcome_statuses`（受注・失注のステータス）・`phase`・修正履歴・発行した帳票 |
+| 帳票 | `GET /api/estimates/{id}/documents/preview.png?kind=&template_id=`、`POST /api/estimates/{id}/documents`（201、未入力・未受注は 409 `NOT_ISSUABLE` と `details`）、`GET /api/issued`、`GET /api/issued/{id}/file.pdf` | |
+| 案件 | `GET /api/cases?q=&staff=&phase=`（一覧＝急ぐ順・フェーズ・警告・To Doの理由・次のアクション、フェーズごとの件数、警告の数。`phase` はフェーズのキーか `active`）、`PUT /api/cases/{id}/status`（`version` 必須、失注は理由）、`GET /api/cases/{id}/history`、`GET/PUT /api/statuses`、`GET /api/review?months=` | |
+| 検索・書類・取引先 | `GET /api/search?q=&kind=`、`GET/POST /api/library`、`GET /api/library/{id}/file`、`DELETE /api/library/{id}`、`GET/POST/PUT /api/partners` | |
+| 設定 | `GET/PUT /api/staff`、`GET/POST/PUT/DELETE /api/categories`、`GET/PUT /api/attributes`、`GET/POST/PUT/DELETE /api/templates`、`GET /api/templates/{id}/preview.png`、`GET/POST/PUT /api/master-tables/{table}`、`GET /api/logic`、`POST /api/history/columns` | |
+
+**フェーズ**：ステータスの属性 `phase`（`drafting` 見積作成中・`checking` 見積確認中・`waiting` 回答待ち・`production` 製造・出荷・`closed` 完了分）。名前を変えても追加しても、属するフェーズはステータスが持つ（マイグレーション `0002` が、改修前の表示グループ・役割・名前から決めて移す）。受注かどうか（`outcome`）は、役割が受注・出荷済・完了か、フェーズが製造・出荷のステータスで決まる。完了分の役割のないステータス（利用者が追加した「納品済」など）は、それまでの結果を引き継ぐ。納品書・請求書は結果が受注で見積書を発行済みのときだけ発行できる。**To Do・注意の判定** は案件の警告（`cases.warnings_of`）と同じ基準で、二重に作らない。
+
+**入力の誤り**：422（`INVALID_INPUT`）と見積の条件の誤り（400）は、欄の名前と直し方を日本語で返す（`wording.input_errors`）。マスタの計算のしかた・単位は決まった値だけ、価格方針の率は 0〜1 だけを受け付ける。展開図DXFに板厚がないときの未入力の項目は、寸法5つではなく `dxf_thickness`（板厚）1つにする。
+
+**連番**：案件番号・納品書・請求書の番号と、見積書の再発行の枝番は、データベースが `value = value + 1` で数える（`core.bump`）。以前は値を読んで足した値を書いていたため、同時に保存すると同じ番号になり、後の保存がサーバーエラーで失敗していた（同じデータでも失敗したりしなかったりした原因）。
+
+**受付の開始**：見積の受付は、見積の行を保存してから始める（`JobQueue.submit(..., start=False)` → コミット → `start`）。保存前に受付が見積を読みに行って「見積が見つかりません」となることを防ぐ。
+
+**同時利用**：更新は開いたときの `version` を送る。違えば 409 `CONFLICT`（上書きしない）。データベース側でも版を照合して更新する。**操作者**：`X-Actor`（画面で選んだ担当者、URL エンコード）を `*_by`・修正履歴・ステータスの履歴に残す。ログインを足すときは `api/security.py` の `current_actor` と `token_guard` を差し替える。
+
+## 今までのエンドポイント（画面を使わない呼び出し）
 
 | 機能 | メソッドとパス | 説明 |
 |---|---|---|
@@ -97,33 +129,33 @@ GET  /api/history?customer=...&limit=50&offset=0
 
 | 変数 | 既定 | 内容 |
 |---|---|---|
-| `ESTIMATE_DATA_DIR` | `data` | マスター（材料・工程・表面処理・価格方針・自社情報） |
+| `DATABASE_URL` | なし（SQLite `<ESTIMATE_STORAGE_DIR>/app.db`） | データベース |
+| `ESTIMATE_DATA_DIR` | `data` | 初期データのマスター（材料・工程・表面処理・価格方針・自社情報） |
 | `ESTIMATE_STORAGE_DIR` | `output` | アップロード（uploads/）、受付（jobs/）、見積書（documents/）、3D表示（viewer/） |
-| `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 見積履歴（コミットする） |
+| `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴（コミットする。データベースに取り込んだ後は書き換えない） |
 | `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 見積書の出力記録 |
 | `API_TOKEN` | なし | 設定すると API の利用に `Authorization: Bearer <token>` か `X-API-Token` が必要（`/api/health` を除く） |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限 |
 | `JOB_WORKERS` | 2 | 受付を処理するスレッド数 |
-| `ANALYSIS_ANTHROPIC_API_KEY` | なし | 図面PDFの読み取りにだけ使う（このPhaseで LLM を使う機能は増やしていない） |
+| `ANALYSIS_ANTHROPIC_API_KEY` | なし | 図面PDFの読み取りにだけ使う（LLM を使う機能は増やしていない） |
+| `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・撮影・通しのテスト用） |
+| `WEB_DIST` | `web/dist` | API が配信する画面 |
 
 アップロードは拡張子（.step .stp .dxf .pdf、履歴の取り込みは .csv）と中身の先頭（STEP は `ISO-10303-21`、PDF は `%PDF-`、DXF は `SECTION`）の両方を確かめる。ファイル名は正規化し、保存場所は受付側で決める（利用者の入力からパスを作らない）。
 
-## 段階2・3で差し替える部分
+## 差し替えられる部分
 
-| 部分 | 今（段階1） | 差し替え先 | 差し替え方 |
+| 部分 | 今 | 差し替え先 | 差し替え方 |
 |---|---|---|---|
-| 画面 | Streamlit（`app.py`、処理の層を直接呼ぶ） | React（Next.js、TypeScript）が API を呼ぶ（段階2） | OpenAPI から型を生成できる（`/openapi.json`）。Streamlit は段階3で廃止 |
-| 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ。ハンドラ（`EstimateService.run_analysis_job` など）はそのまま |
-| 受付の状態 | `JobStore`（JSONファイル） | PostgreSQL の表（段階3） | `create / read / update / unfinished` の4つを実装し直す |
-| アップロード・見積書・3D表示のファイル | `LocalFileStore`、`output/documents/` | オブジェクトストレージ（S3互換など。社内なら MinIO） | `FileStore`（`save / get / path`）を実装し直す。見積書の保存も同じ形に寄せる |
-| 見積履歴 | `data/past_quotes/history.csv`（`HistoryStore`） | PostgreSQL（段階3） | `HistoryStore`（`load / append / set_outcome`）を実装し直す。検索の索引（`SimilarQuoteSearch`）はそのまま使える |
-| 見積番号の採番 | `output/quote_log.csv` ＋ ロックファイル | データベースの連番（段階3） | `QuoteLog.issue` を置き換える |
-| 認証 | 共通の合言葉（`API_TOKEN`） | ログイン（利用者ごとの権限、段階3） | `require_token` を置き換える。利用者ごとのデータの分離は、各ストアに利用者（工場）を持たせる |
-| マスター・自社情報 | `data/*.csv`（`ESTIMATE_DATA_DIR`） | 工場ごとの設定（段階3） | `MasterLoader` と `load_company` の読み込み元を替える |
-| 置き方 | Docker（API とデモ） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの Dockerfile で動く。クラウド固有のサービスには依存していない |
+| 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ |
+| 受付の状態 | `JobStore`（JSONファイル） | データベースの表 | `create / read / update / unfinished` を実装し直す |
+| ファイル | `LocalFileStore`（`ESTIMATE_STORAGE_DIR`） | オブジェクトストレージ（S3互換、社内なら MinIO） | `FileStore`（`save / get / path / meta`）を実装し直す |
+| 認証 | 共通の合言葉（`API_TOKEN`）と、画面で選んだ担当者 | ログイン・権限・利用者の招待 | `api/security.py` の2つの関数を差し替える。`*_by` の列はそのまま使う |
+| データベース | SQLite（既定）／PostgreSQL（`DATABASE_URL`） | 管理サービスの PostgreSQL | `DATABASE_URL` を替えるだけ |
+| 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの構成で動く。クラウド固有のサービスには依存していない |
 
 ## 今の制限
 
-- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列（段階3）が要る
-- 履歴の CSV は、API とデモがまったく同時に書くと、先の書き込みが失われることがある（ファイル自体は一時ファイルからの置き換えなので壊れない）。複数人での利用はデータベース（段階3）で扱う
-- 図面PDFの読み取りは今の読み取り器を呼ぶだけ（LLM の呼び出しの中身は変えていない）
+- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列が要る（受付の状態もファイルなので、複数台では共有のディスクかデータベースに移す）
+- 図面PDFの読み取りは今の読み取り器を呼ぶだけ（LLM の呼び出しの中身は変えていない）。pdfium は同時に使えないため、ページの読み込みとプレビュー・文字の取り出しは1つずつ行う
+- 図面の検索・類似の候補は、図面をすべて読んでから絞り込む（数千件までを想定）。それ以上はデータベースの索引と検索に移す

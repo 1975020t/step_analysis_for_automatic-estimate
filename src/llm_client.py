@@ -20,7 +20,7 @@ class BaseLLMClient(Protocol):
 
 
 def _extract_quantity(text: str, default: float = 1) -> float:
-    patterns = [r"(\d+(?:\.\d+)?)\s*(?:箇所|個|穴|つ)", r"数量\s*(\d+(?:\.\d+)?)"]
+    patterns = [r"(\d+(?:\.\d+)?)\s*(?:箇所|か所|ヶ所|ケ所|カ所|個|穴|つ|点)", r"数量\s*(\d+(?:\.\d+)?)"]
     for pattern in patterns:
         match = re.search(pattern, text)
         if match:
@@ -66,7 +66,7 @@ class MockLLMClient:
         elif "SUS" in text.upper() or "ステンレス" in text:
             operations.append(QuoteOperation(action="update", field="material", value="SUS304"))
 
-        quantity_match = re.search(r"(?:数量\s*)?(\d+)\s*個", text)
+        quantity_match = re.search(r"(?:数量\s*)?(\d+)\s*個", text) or re.search(r"数量\s*(?:を|は)?\s*(\d+)", text)
         if quantity_match and not any(word in text for word in ("皿", "穴", "バフ", "研磨")):
             operations.append(
                 QuoteOperation(

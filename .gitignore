@@ -38,3 +38,8 @@ dxf_holdout/
 pdf_holdout/
 golden_seed*/
 dxf_seed*/
+
+# Python virtual environment and the screens build
+web/node_modules/
+web/dist/
+web/test-results/

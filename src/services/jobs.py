@@ -23,6 +23,17 @@ from src.services.storage import new_id
 QUEUED, RUNNING, DONE, FAILED = "queued", "running", "done", "failed"
 
 
+_CURRENT = threading.local()
+
+
+def report_progress(**progress) -> None:
+    """Called from inside a job handler: store how far the job got (stage, values found so far) in the job, so
+    that GET /api/jobs/{id} shows it while the job runs. Does nothing outside a job."""
+    store, job_id = getattr(_CURRENT, "store", None), getattr(_CURRENT, "job_id", None)
+    if store is not None and job_id:
+        store.update(job_id, progress=progress)
+
+
 class JobError(Exception):
     """A failure whose message is safe to show to the user (no paths, no secrets)."""
 
@@ -88,13 +99,22 @@ class JobQueue:
         self.autostart = autostart
         self._pool = ThreadPoolExecutor(max_workers=workers, thread_name_prefix="job") if autostart else None
 
-    def submit(self, kind: str, payload: dict) -> dict:
+    def submit(self, kind: str, payload: dict, start: bool = True) -> dict:
+        """Record a job and run it. start=False only records it (queued): call start() once whatever the job
+        reads has been committed."""
         if kind not in self.handlers:
             raise KeyError(kind)
         job = self.store.create(kind, payload)
-        if self._pool:
-            self._pool.submit(self.execute, job["job_id"])
+        if start:
+            self.start(job["job_id"])
         return job
+
+    def start(self, job_id: str) -> None:
+        if self._pool:
+            self._pool.submit(self.execute, job_id)
+
+    def add_handlers(self, handlers: dict[str, Callable[[dict], dict]]) -> None:
+        self.handlers.update(handlers)
 
     def resume(self) -> int:
         """Queue again the jobs a previous run left unfinished. Returns how many."""
@@ -107,6 +127,7 @@ class JobQueue:
 
     def execute(self, job_id: str) -> dict:
         job = self.store.update(job_id, status=RUNNING, started_at=_now())
+        _CURRENT.store, _CURRENT.job_id = self.store, job_id
         try:
             result = self.handlers[job["kind"]](job["input"])
             return self.store.update(job_id, status=DONE, finished_at=_now(), result=result)
@@ -116,6 +137,8 @@ class JobQueue:
             traceback.print_exc()
             return self.store.update(job_id, status=FAILED, finished_at=_now(),
                                      error="処理中にエラーが発生しました。入力ファイルを確認してください。")
+        finally:
+            _CURRENT.store, _CURRENT.job_id = None, None
 
     def shutdown(self, wait: bool = True) -> None:
         if self._pool:
