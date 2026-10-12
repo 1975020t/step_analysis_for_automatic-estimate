@@ -10,10 +10,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 import tests.test_platform as platform_tests
-from src.db.models import DrawingRevision, Quote
+from src.db.models import DrawingRevision, Quote, QuoteEditLog
 from src.services.extraction import Extractor, extract
 from src.services.platform.drawings import finish_register, prepare_register
-from src.services.platform.quotes import finish_estimate, prepare_estimate
+from src.services.platform.quotes import finish_estimate, finish_reanalysis, prepare_estimate, prepare_reanalysis
 from src.services.storage import FileStore, LocalBlobStore
 
 ROOT = platform_tests.ROOT
@@ -84,3 +84,50 @@ def test_the_steps_passed_as_json_give_what_the_job_gave(tmp_path, _history_copy
         with pf.session() as s:
             quote = s.get(Quote, q["id"])
             assert (quote.analysis, quote.result) == quote_before
+
+
+def test_changed_conditions_are_analysed_in_a_job_not_in_the_api(tmp_path, _history_copy):
+    """A new K factor needs a new analysis: the API saves the conditions and answers at once (the amount waits for
+    the analysis), the analysis runs as a job in the same three steps, and its amount goes to the edit history."""
+    with TestClient(platform_tests.make_app(tmp_path / "storage", _history_copy)) as client:
+        pf, queue = client.app.state.platform, client.app.state.queue
+        q = platform_tests.estimate(client, platform_tests.register(client, "REAN-1", step=platform_tests.DRAWING_STEP),
+                                    material="SPCC")
+        started: list[str] = []
+        queue.start = started.append  # hold the jobs: the API must not analyse by itself
+        r = client.put(f"/api/estimates/{q['id']}", json={"version": q["version"], "inputs": {"k_factor": 0.4}})
+        assert r.status_code == 200
+        pending = r.json()
+        assert pending["job"]["status"] == "queued" and started == [pending["job"]["job_id"]]
+        assert not pending["result"]["issuable"] and "analysis" in [m["field"] for m in pending["result"]["missing"]]
+        with pf.session() as s:
+            assert s.get(Quote, q["id"]).analysis is None
+            assert s.scalars(select(QuoteEditLog)).one().total_after is None
+
+        # the steps as a state machine would run them, passed as JSON
+        payload = roundtrip(pf.job(pending["job"]["job_id"])["input"])
+        plan = roundtrip(prepare_reanalysis(pf, payload))
+        assert plan["analysis"]["k_factor"] == 0.4 and plan["read"] is False
+        extracted = roundtrip(extract(pf.service.extractor(), plan))
+        subtotal = finish_reanalysis(pf, payload, plan, extracted)["subtotal"]
+        queue.execute(pending["job"]["job_id"])  # the same job run by the queue gives the same
+        assert pf.job(pending["job"]["job_id"])["result"]["subtotal"] == subtotal
+        done = client.get(f"/api/estimates/{q['id']}").json()
+        area = lambda d: d["analysis"]["blank_area_mm2"]  # noqa: E731 - the K factor changes the unfolded area
+        assert done["result"]["issuable"] and area(done) != area(q)
+        log = done["edit_log"][0]
+        assert log["total_after"] == done["result"]["price"]["subtotal"] and "Kファクター" in log["summary"]
+
+        # changed again before the job ran: the older job leaves the quote to the newer one
+        r = client.put(f"/api/estimates/{q['id']}", json={"version": done["version"], "inputs": {"k_factor": 0.45}})
+        old = roundtrip(pf.job(r.json()["job"]["job_id"])["input"])
+        old_plan = roundtrip(prepare_reanalysis(pf, old))
+        q2 = client.get(f"/api/estimates/{q['id']}").json()
+        r = client.put(f"/api/estimates/{q['id']}", json={"version": q2["version"], "inputs": {"k_factor": 0.5}})
+        assert finish_reanalysis(pf, old, old_plan, extract(pf.service.extractor(), old_plan)) == {
+            "quote_id": q["id"], "superseded": True}
+        newest = r.json()["job"]["job_id"]
+        queue.execute(newest)
+        assert pf.job(newest)["status"] == "done"
+        latest = client.get(f"/api/estimates/{q['id']}").json()
+        assert latest["job"]["status"] == "done" and area(latest) not in (area(q), area(done))

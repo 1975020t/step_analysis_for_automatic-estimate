@@ -123,7 +123,8 @@ GET  /api/history?customer=...&limit=50&offset=0
 
 - 受付はデータベースの `jobs` 表に1行ずつ持つ（`DbJobStore`。種類、入力、状態、時刻、進み具合、結果か失敗の理由）。以前の版の `<ESTIMATE_STORAGE_DIR>/jobs/*.json` は起動時に1回だけ取り込む。SQLite のときは受付だけ別のファイル（`jobs.db`）に置く（処理中の見積が `app.db` の書き込みの鍵を持ったままでも、進み具合を書けるように）。受け付けたら書いてすぐ返す（テストでは処理に3秒かかっても受付は0.5秒以内）
 - `JobQueue` が同じプロセスのスレッドで実行する（`JOB_WORKERS` 本）
-- 画面の受付（登録 `register`・見積 `estimate`）は3つの段に分かれている：**準備**（`prepare_register`・`prepare_estimate`。データベースを読み、どのファイルをどの条件で解析・読み取りするかを JSON の「計画」にする）→ **抽出**（`src/services/extraction.py` の `extract`。ファイルと読み取り器だけを使い、データベースは使わない。結果も JSON）→ **保存**（`finish_register`・`finish_estimate`。マスター照合・金額・類似・保存）。今は1つの受付の中で順に呼ぶ。AWS ではそれぞれを Step Functions の段にでき、抽出の段にはデータベースの権限が要らない（`tests/test_extraction.py` が、抽出がデータベースを読み込まないことと、各段を JSON で受け渡しても同じ結果になることを確かめる）
+- 画面の受付（登録 `register`・見積 `estimate`・条件変更後の再解析 `reanalysis`）は3つの段に分かれている：**準備**（`prepare_register`・`prepare_estimate`・`prepare_reanalysis`。データベースを読み、どのファイルをどの条件で解析・読み取りするかを JSON の「計画」にする）→ **抽出**（`src/services/extraction.py` の `extract`。ファイルと読み取り器だけを使い、データベースは使わない。結果も JSON）→ **保存**（`finish_register`・`finish_estimate`・`finish_reanalysis`。マスター照合・金額・類似・保存）。今は1つの受付の中で順に呼ぶ。AWS ではそれぞれを Step Functions の段にでき、抽出の段にはデータベースの権限が要らない（`tests/test_extraction.py` が、抽出がデータベースを読み込まないことと、各段を JSON で受け渡しても同じ結果になることを確かめる）
+- 見積の条件のうち解析に効くもの（Kファクター・その指定・DXF の板厚・曲げなし）を `PUT /api/estimates/{id}` で変えると、API は条件を保存してすぐ返し、解析し直しは受付 `reanalysis` で行う（API の中では CAD の解析をしない。AWS では API の Lambda に CadQuery を載せない）。返る詳細の `job` が queued / running の間は、未入力の項目に「CADデータの解析がまだ終わっていません」が出て発行できない。画面は終わるまで読み直す。終わると金額を計算し直し、修正履歴の「変更後の金額」を埋める。終わる前に条件をまた変えたときは、古い受付は何もせず新しい受付が解析する。登録時と同じ条件に戻したときは登録時の解析をそのまま使う（受付なし）
 - **再起動**：起動時に queued / running のままの受付を並べ直す（アップロードしたファイルは残っている）。完了した受付の結果はそのまま読める（`tests/test_api.py::test_jobs_survive_a_restart`）
 
 ## 設定（環境変数）

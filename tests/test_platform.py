@@ -80,8 +80,13 @@ def estimate(client, drawing_id: int, **body) -> dict:
 
 
 def change(client, q: dict, **inputs) -> dict:
+    """Change the conditions; a new analysis they need runs as a job, waited for here like the screen does."""
     r = client.put(f"/api/estimates/{q['id']}", json={"version": q["version"], "inputs": inputs})
     assert r.status_code == 200, r.text
+    job = r.json().get("job")
+    if job and job["status"] in ("queued", "running"):
+        assert wait(client, job["job_id"])["status"] == "done"
+        return client.get(f"/api/estimates/{q['id']}").json()
     return r.json()
 
 

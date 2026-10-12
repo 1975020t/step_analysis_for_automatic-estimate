@@ -53,11 +53,12 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         from src.services.platform.drawings import run_register_job
-        from src.services.platform.quotes import run_estimate_job
+        from src.services.platform.quotes import run_estimate_job, run_reanalysis_job
 
         app.state.queue = service.job_queue(autostart=start_jobs)
         app.state.queue.add_handlers({"register": lambda p: run_register_job(platform, p),
-                                      "estimate": lambda p: run_estimate_job(platform, p)})
+                                      "estimate": lambda p: run_estimate_job(platform, p),
+                                      "reanalysis": lambda p: run_reanalysis_job(platform, p)})
         platform.queue = app.state.queue
         app.state.queue.resume()  # jobs a previous run left queued or running
         yield

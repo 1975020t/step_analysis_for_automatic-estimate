@@ -76,7 +76,8 @@ export default function EstimatePage() {
       const d = await put(`/api/estimates/${id}`, { version: q.version, inputs, ...extra });
       setQ(d);
       setError(null);
-      toast("条件を保存し、計算し直しました");
+      const analysing = d.job && (d.job.status === "queued" || d.job.status === "running");
+      toast(analysing ? "条件を保存しました。CADデータを解析し直しています" : "条件を保存し、計算し直しました");
       return true;
     } catch (e) {
       if (e instanceof ApiError && e.status === 409 && e.code === "CONFLICT") {
