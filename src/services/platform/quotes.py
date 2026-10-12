@@ -156,7 +156,8 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
             if revision.pdf_file_id and revision.reading is None and pf.service.drawing_reader_available() and \
                     not (revision.reading_job_id and (pf.job(revision.reading_job_id) or {}).get("status") in ("queued", "running")):
                 try:
-                    r, ctx = pf.service.read_drawing(pf.files.path(revision.pdf_file_id), revision.pdf_name)
+                    with pf.files.local_path(revision.pdf_file_id) as pdf_path:
+                        r, ctx = pf.service.read_drawing(pdf_path, revision.pdf_name)
                     revision.reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
                 except Exception:  # noqa: BLE001 - the conditions are entered by hand then
                     pass

@@ -48,7 +48,11 @@ def add_document(pf: Platform, data: bytes, filename: str, kind: str, title: str
     else:
         raise ServiceError("登録できる書類は PDF と Excel（.xlsx）です。", 415, "UNSUPPORTED_TYPE")
     meta = pf.files.save(data, filename)
-    text = pdf_text(pf.files.path(meta["file_id"])) if file_type == "PDF" else excel_text(data)
+    if file_type == "PDF":
+        with pf.files.local_path(meta["file_id"]) as path:
+            text = pdf_text(path)
+    else:
+        text = excel_text(data)
     with pf.session() as s:
         valid = [d for d in drawing_ids if s.get(Drawing, d) is not None]
         doc = LibraryDocument(kind=kind, title=title.strip() or filename, file_id=meta["file_id"], filename=meta["filename"],
