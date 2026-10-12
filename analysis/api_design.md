@@ -51,7 +51,7 @@ React の画面（web/、Vite。npm run build で web/dist）
 | 検索・書類・取引先 | `GET /api/search?q=&kind=`、`GET/POST /api/library`、`GET /api/library/{id}/file`、`DELETE /api/library/{id}`、`GET/POST/PUT /api/partners` | |
 | 設定 | `GET/PUT /api/staff`、`GET/POST/PUT/DELETE /api/categories`、`GET/PUT /api/attributes`、`GET/POST/PUT/DELETE /api/templates`、`GET /api/templates/{id}/preview.png`、`GET/POST/PUT /api/master-tables/{table}`、`GET /api/logic`、`POST /api/history/columns` | |
 
-**フェーズ**：ステータスの属性 `phase`（`drafting` 見積作成中・`checking` 見積確認中・`waiting` 回答待ち・`production` 製造・出荷・`closed` 完了分）。名前を変えても追加しても、属するフェーズはステータスが持つ（マイグレーション `0002` が、改修前の表示グループ・役割・名前から決めて移す）。受注かどうか（`outcome`）は、役割が受注・出荷済・完了か、フェーズが製造・出荷のステータスで決まる。**To Do・注意の判定** は案件の警告（`cases.warnings_of`）と同じ基準で、二重に作らない。
+**フェーズ**：ステータスの属性 `phase`（`drafting` 見積作成中・`checking` 見積確認中・`waiting` 回答待ち・`production` 製造・出荷・`closed` 完了分）。名前を変えても追加しても、属するフェーズはステータスが持つ（マイグレーション `0002` が、改修前の表示グループ・役割・名前から決めて移す）。受注かどうか（`outcome`）は、役割が受注・出荷済・完了か、フェーズが製造・出荷のステータスで決まる。完了分の役割のないステータス（利用者が追加した「納品済」など）は、それまでの結果を引き継ぐ。納品書・請求書は結果が受注で見積書を発行済みのときだけ発行できる。**To Do・注意の判定** は案件の警告（`cases.warnings_of`）と同じ基準で、二重に作らない。
 
 **受付の開始**：見積の受付は、見積の行を保存してから始める（`JobQueue.submit(..., start=False)` → コミット → `start`）。保存前に受付が見積を読みに行って「見積が見つかりません」となることを防ぐ。
 

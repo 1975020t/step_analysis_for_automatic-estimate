@@ -341,3 +341,37 @@ def test_the_phase_migration_keeps_the_meaning_of_existing_statuses(tmp_path):
         got = dict(c.execute(text("SELECT name, phase FROM case_statuses")).all())
     assert got == {"依頼受付": "drafting", "見積確認中": "checking", "見積提出済": "waiting", "塗装待ち": "production",
                    "失注": "closed"}
+
+
+def test_a_delivery_note_follows_the_status_of_the_case(client):
+    q = estimate(client, register(client, "DL-001"), material="SPCC")
+    st = {s["name"]: s for s in client.get("/api/statuses").json()}
+
+    def move(name, **extra):
+        d = client.get(f"/api/estimates/{q['id']}").json()
+        r = client.put(f"/api/cases/{d['case_id']}/status", json={"status_id": st[name]["id"], "version": d["case_version"], **extra})
+        assert r.status_code == 200, r.text
+        return client.get(f"/api/estimates/{q['id']}").json()
+
+    # accepted before the quotation was issued: the next action is the quotation, the delivery note is refused
+    d = move("受注")
+    assert d["next_action"]["kind"] == "issue" and d["blockers"]["delivery"] and issue(client, d, "delivery").status_code == 409
+    d = move("見積作成中")
+    assert issue(client, d, "quote").status_code == 201
+    d = client.get(f"/api/estimates/{q['id']}").json()
+    assert d["status"]["name"] == "見積提出済" and d["blockers"]["delivery"] and issue(client, d, "delivery").status_code == 409
+    for name in ("受注", "製造中", "出荷済", "完了"):  # every accepted status, also the closed ones
+        assert not move(name)["blockers"]["delivery"]
+    d = move("失注", lost_reason="価格")
+    assert d["blockers"]["delivery"] and issue(client, d, "delivery").status_code == 409
+
+    # a status the user adds to 完了分 (no role of its own) keeps the result: still accepted
+    move("受注")
+    rows = client.get("/api/statuses").json()
+    body = [{k: r[k] for k in ("id", "name", "color", "phase", "visible")} for r in rows]
+    body.append({"name": "納品済", "color": "grey", "phase": "closed", "visible": True})
+    st = {s["name"]: s for s in client.put("/api/statuses", json={"statuses": body}).json()}
+    d = move("納品済")
+    assert d["outcome"] == "受注" and not d["blockers"]["delivery"] and d["next_action"]["doc_kind"] == "delivery"
+    done = issue(client, d, "delivery")
+    assert done.status_code == 201 and done.json()["total"] == d["documents"][0]["total"]  # the quotation's amount

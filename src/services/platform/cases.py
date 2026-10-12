@@ -97,7 +97,9 @@ def next_action(case: Case, quote: Quote | None, drawing: Drawing | None, missin
         return {**base, "kind": "issue", "label": "確認・発行" if phase == "checking" else "見積を表示"}
     if phase == "waiting":
         return {**base, "kind": "outcome", "label": "受注・失注の登録"}
-    if phase == "production":
+    if case.outcome == "受注":
+        if "quote" not in kinds:  # accepted before a quotation was issued: the documents copy its amounts
+            return {**base, "kind": "input" if missing else "issue", "label": "入力" if missing else "見積書の発行"}
         for kind, label in (("delivery", "納品書の発行"), ("invoice", "請求書の発行")):
             if kind not in kinds:
                 return {**base, "kind": "documents", "doc_kind": kind, "label": label}
@@ -262,7 +264,7 @@ def move(pf: Platform, case_id: int, body: StatusMove, actor: str) -> dict:
             if body.lost_reason not in LOST_REASONS:
                 raise ServiceError(f"失注の理由を選択してください（{'・'.join(LOST_REASONS)}）。")
             case.lost_reason, case.competitor_price, case.lost_note = body.lost_reason, body.competitor_price, body.lost_note
-        outcome = outcome_of(status)
+        outcome = outcome_of(status, case.outcome)
         case.status, case.status_changed_at, case.updated_at, case.updated_by = status, now(), now(), actor
         case.outcome = outcome
         if outcome != "失注":
@@ -281,11 +283,15 @@ def move(pf: Platform, case_id: int, body: StatusMove, actor: str) -> dict:
         return case_out(case, quote, drawing, revision, kinds)
 
 
-def outcome_of(status: CaseStatus) -> str:
+def outcome_of(status: CaseStatus, current: str = "未回答") -> str:
+    """受注 / 失注 / 未回答 after moving to `status`. A status of 完了分 without a role of its own (one the user
+    added, e.g. 納品済) keeps the result the case had: it ends the case, it does not answer the quotation."""
     if status.role == "lost":
         return "失注"
     if status.role in ("won", "shipped", "done") or status.phase == "production":
         return "受注"
+    if status.phase == "closed" and status.role == "" and current in ("受注", "失注"):
+        return current
     return "未回答"
 
 
