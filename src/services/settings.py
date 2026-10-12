@@ -2,6 +2,8 @@
 
   ESTIMATE_DATA_DIR      masters (materials, processes, finishes, pricing policy, company)   default: data
   ESTIMATE_STORAGE_DIR   uploads, jobs, documents, 3D view files                              default: output
+  ESTIMATE_STORAGE_URL   s3://bucket/prefix keeps the uploads, documents and 3D view files in S3 instead of
+                         ESTIMATE_STORAGE_DIR (jobs, the quote log and SQLite stay in the folder)   default: none
   PAST_QUOTES_PATH       quote history CSV (committed)                     default: data/past_quotes/history.csv
   QUOTE_LOG_PATH         issued-quote log                                  default: <storage>/quote_log.csv
   API_TOKEN              when set, every API call needs it (Authorization: Bearer ... or X-API-Token)
@@ -32,6 +34,7 @@ class Settings:
     database_url: str = ""
     drawing_reader: str = ""
     web_dist: Path | None = None
+    storage_url: str = ""
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -41,6 +44,7 @@ class Settings:
         return cls(
             data_dir=Path(env.get("ESTIMATE_DATA_DIR") or "data"),
             storage_dir=storage,
+            storage_url=env.get("ESTIMATE_STORAGE_URL", "").strip(),
             history_path=Path(env.get("PAST_QUOTES_PATH") or "data/past_quotes/history.csv"),
             quote_log_path=Path(env.get("QUOTE_LOG_PATH") or storage / "quote_log.csv"),
             api_token=env.get("API_TOKEN", "").strip(),
@@ -57,6 +61,12 @@ class Settings:
             return self.database_url
         self.storage_dir.mkdir(parents=True, exist_ok=True)
         return f"sqlite:///{self.storage_dir.resolve() / 'app.db'}"
+
+    def blob_store(self):
+        """Where the uploads, documents and 3D view files are kept (a folder or S3)."""
+        from src.services.storage import blob_store
+
+        return blob_store(self.storage_url, self.storage_dir)
 
     @property
     def uploads_dir(self) -> Path:

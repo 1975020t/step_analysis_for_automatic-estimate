@@ -134,14 +134,15 @@ def run_register_job(pf: Platform, payload: dict) -> dict:
                     result["analysis"] = "error"
         if revision.pdf_file_id:
             report_progress(stage="図面の読み取り")
-            revision.pdf_text = pdf_text(pf.files.path(revision.pdf_file_id))
-            reading = reading_of_job(pf, revision.reading_job_id)
-            if reading is None and not revision.reading_job_id and pf.service.drawing_reader_available():
-                try:
-                    r, ctx = pf.service.read_drawing(pf.files.path(revision.pdf_file_id), revision.pdf_name)
-                    reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
-                except Exception:  # noqa: BLE001
-                    reading = None
+            with pf.files.local_path(revision.pdf_file_id) as pdf_path:
+                revision.pdf_text = pdf_text(pdf_path)
+                reading = reading_of_job(pf, revision.reading_job_id)
+                if reading is None and not revision.reading_job_id and pf.service.drawing_reader_available():
+                    try:
+                        r, ctx = pf.service.read_drawing(pdf_path, revision.pdf_name)
+                        reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
+                    except Exception:  # noqa: BLE001
+                        reading = None
             if reading:
                 revision.reading = reading
                 apply_reading(revision, reading["reading"])
@@ -182,7 +183,8 @@ def max_dimension(pf: Platform, revision: DrawingRevision, analysis) -> float | 
         try:
             import cadquery as cq
 
-            box = cq.importers.importStep(str(pf.files.path(revision.shape_file_id))).val().BoundingBox()
+            with pf.files.local_path(revision.shape_file_id) as path:
+                box = cq.importers.importStep(str(path)).val().BoundingBox()
             return round(max(box.xlen, box.ylen, box.zlen), 1)
         except Exception:  # noqa: BLE001
             pass
@@ -209,10 +211,8 @@ def pdf_text(path: Path) -> str:
             return ""
 
 
-def render_png(path: Path, cache: Path, width: int = 900) -> bytes:
-    """The first page of a PDF as PNG (cached)."""
-    if cache.exists():
-        return cache.read_bytes()
+def render_png(path: Path, width: int = 900) -> bytes:
+    """The first page of a PDF as PNG."""
     import pypdfium2 as pdfium
 
     with PDFIUM_LOCK:
@@ -224,8 +224,6 @@ def render_png(path: Path, cache: Path, width: int = 900) -> bytes:
         pdf.close()
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_bytes(buffer.getvalue())
     return buffer.getvalue()
 
 
@@ -234,8 +232,16 @@ def revision_preview(pf: Platform, revision_id: int, width: int = 900) -> bytes:
         revision = s.get(DrawingRevision, revision_id)
         if revision is None or not revision.pdf_file_id:
             raise ServiceError("図面PDFがありません。", 404, "NOT_FOUND")
-        path = pf.files.path(revision.pdf_file_id)
-    return render_png(path, pf.settings.viewer_dir / f"rev{revision_id}_{width}.png", width)
+        file_id = revision.pdf_file_id
+    cache = f"viewer/{file_id}_{int(width)}.png"  # the uploaded file never changes: keyed by it
+    try:
+        return pf.service.blobs.get(cache)
+    except KeyError:
+        pass
+    with pf.files.local_path(file_id) as path:
+        data = render_png(path, width)
+    pf.service.blobs.put(cache, data)
+    return data
 
 
 # ---------------------------------------------------------------- reading the drawing objects

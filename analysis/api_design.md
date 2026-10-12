@@ -24,7 +24,7 @@ React の画面（web/、Vite。npm run build で web/dist）
   src/services/（処理の層。Web の枠組みに依存しない）
    estimate.py  EstimateService：解析・図面の読み取り・見積・見積書・類似見積・履歴・3D表示（今までの API もこれを呼ぶ）
    jobs.py      受付（状態をファイルに保存、スレッドで実行、途中の進み具合）
-   storage.py   ファイルの置き場（LocalFileStore）、settings.py 置き場所と制限、pdfium_lock.py
+   storage.py   ファイルの置き場（FileStore。中身はフォルダか S3 の BlobStore）、settings.py 置き場所と制限、pdfium_lock.py
         ▼
   src/db/（SQLAlchemy のモデル・接続・初期データ）、migrations/（Alembic）
   既存の処理：sheetmetal_analyzer・dxf_analyzer・pdf_reader・pdf_quote・quote_engine・quote_document・
@@ -132,6 +132,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 | `DATABASE_URL` | なし（SQLite `<ESTIMATE_STORAGE_DIR>/app.db`） | データベース |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスター（材料・工程・表面処理・価格方針・自社情報） |
 | `ESTIMATE_STORAGE_DIR` | `output` | アップロード（uploads/）、受付（jobs/）、見積書（documents/）、3D表示（viewer/） |
+| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` で uploads/・documents/・viewer/ を S3 に置く（jobs/ と出力記録・SQLite はフォルダのまま） |
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴（コミットする。データベースに取り込んだ後は書き換えない） |
 | `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 見積書の出力記録 |
 | `API_TOKEN` | なし | 設定すると API の利用に `Authorization: Bearer <token>` か `X-API-Token` が必要（`/api/health` を除く） |
@@ -149,7 +150,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 |---|---|---|---|
 | 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ |
 | 受付の状態 | `JobStore`（JSONファイル） | データベースの表 | `create / read / update / unfinished` を実装し直す |
-| ファイル | `LocalFileStore`（`ESTIMATE_STORAGE_DIR`） | オブジェクトストレージ（S3互換、社内なら MinIO） | `FileStore`（`save / get / path / meta`）を実装し直す |
+| ファイル | `FileStore` ＋ `LocalBlobStore`（`ESTIMATE_STORAGE_DIR`）か `S3BlobStore`（`ESTIMATE_STORAGE_URL`） | 済み（S3。S3互換の MinIO も同じ） | `BlobStore`（`put / get / exists / local_file`）。CadQuery・pdfium のようにファイルを自分で開く処理には `FileStore.local_path` が手元のパスを渡す（S3 では一時的な写し） |
 | 認証 | 共通の合言葉（`API_TOKEN`）と、画面で選んだ担当者 | ログイン・権限・利用者の招待 | `api/security.py` の2つの関数を差し替える。`*_by` の列はそのまま使う |
 | データベース | SQLite（既定）／PostgreSQL（`DATABASE_URL`） | 管理サービスの PostgreSQL | `DATABASE_URL` を替えるだけ |
 | 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの構成で動く。クラウド固有のサービスには依存していない |

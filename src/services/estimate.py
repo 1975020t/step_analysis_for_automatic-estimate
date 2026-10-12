@@ -30,7 +30,7 @@ from src.services.jobs import JobError, JobQueue, JobStore
 from src.services.schemas import (ConditionInput, DrawingContext, DrawingItem, MatchOut, PastQuoteOut, PriceSummaryOut,
                                   ReferenceOut)
 from src.services.settings import Settings
-from src.services.storage import LocalFileStore
+from src.services.storage import FileStore
 from src.similar_quotes import Match, Reference, SimilarQuoteSearch, query_for
 
 ReaderFactory = Callable[[], object]  # returns an object with .read(path) -> dict (src.pdf_reader.PdfConditionReader)
@@ -87,7 +87,8 @@ class EstimateService:
                  reader_available: Callable[[], bool] | None = None) -> None:
         self.settings = settings or Settings.from_env()
         self.masters = MasterLoader(self.settings.data_dir)
-        self.files = LocalFileStore(self.settings.uploads_dir)
+        self.blobs = self.settings.blob_store()
+        self.files = FileStore(self.blobs)
         self.job_store = JobStore(self.settings.jobs_dir)
         self.reader_factory = reader_factory or default_reader_factory
         self._reader_available = reader_available or (llm_key_configured if reader_factory is None else (lambda: True))
@@ -166,7 +167,8 @@ class EstimateService:
         except KeyError:
             raise JobError("アップロードしたファイルが見つかりません。") from None
         try:
-            reading, drawing = self.read_drawing(self.files.path(payload["file_id"]), meta["filename"])
+            with self.files.local_path(payload["file_id"]) as path:
+                reading, drawing = self.read_drawing(path, meta["filename"])
         except ServiceError as exc:
             raise JobError(str(exc)) from None
         return {"reading": reading, "drawing": drawing.model_dump(mode="json")}
@@ -312,20 +314,18 @@ class EstimateService:
         files = {"quote": (f"{document.number}_{document.title}.pdf", render_quote(document))}
         if include_internal:
             files["internal"] = (f"{document.number}_見積根拠（社内用）.pdf", render_internal(document))
-        folder = self.settings.documents_dir / document.number
-        folder.mkdir(parents=True, exist_ok=True)
         for kind, (_, data) in files.items():
-            (folder / f"{kind}.pdf").write_bytes(data)
+            self.blobs.put(f"documents/{document.number}/{kind}.pdf", data)
         history.append([from_document(document, self.masters)])
         return IssuedDocument(document, files)
 
     def document_file(self, quote_no: str, kind: str) -> bytes:
         if kind not in ("quote", "internal") or not quote_no.replace("-", "").isalnum():
             raise ServiceError("見積書が見つかりません。", 404, "NOT_FOUND")
-        path = self.settings.documents_dir / quote_no / f"{kind}.pdf"
-        if not path.exists():
-            raise ServiceError("見積書が見つかりません。", 404, "NOT_FOUND")
-        return path.read_bytes()
+        try:
+            return self.blobs.get(f"documents/{quote_no}/{kind}.pdf")
+        except KeyError:
+            raise ServiceError("見積書が見つかりません。", 404, "NOT_FOUND") from None
 
     # ------------------------------------------------------------ history and similar quotes
     def history_store(self) -> HistoryStore:
@@ -410,15 +410,17 @@ class EstimateService:
             raise ServiceError("アップロードしたファイルが見つかりません。", 404, "NOT_FOUND") from None
         if meta["kind"] != "step":
             raise ServiceError("3D表示の形状は STEP ファイルから作ります。")
-        cache = self.settings.viewer_dir / f"{file_id}.glb"
-        if cache.exists():
-            return cache.read_bytes()
+        cache = f"viewer/{file_id}.glb"
+        try:
+            return self.blobs.get(cache)
+        except KeyError:
+            pass
         from src.services.gltf import step_to_glb
 
         try:
-            data = step_to_glb(self.files.path(file_id))
+            with self.files.local_path(file_id) as path:
+                data = step_to_glb(path)
         except Exception:  # noqa: BLE001
             raise ServiceError("STEP を3D表示の形式に変換できませんでした。", 422, "CONVERSION_FAILED") from None
-        cache.parent.mkdir(parents=True, exist_ok=True)
-        cache.write_bytes(data)
+        self.blobs.put(cache, data)
         return data

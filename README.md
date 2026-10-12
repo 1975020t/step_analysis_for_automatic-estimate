@@ -286,6 +286,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | `DATABASE_URL` | なし（SQLite `<保存先>/app.db`） | データベース。PostgreSQL は `postgresql+psycopg://user:pass@host/db` |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスターと自社情報（評価とテストはこの CSV を直接読む） |
 | `ESTIMATE_STORAGE_DIR` | `output` | 図面PDF・形状ファイル・帳票・書類・受付・3D表示のファイル |
+| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` にすると、図面PDF・形状ファイル・帳票・書類・3D表示のファイルを S3 に置く（受付の状態・見積書の出力記録・SQLite は `ESTIMATE_STORAGE_DIR` のまま）。AWS の認証は boto3 の標準の方法（IAM ロールなど） |
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴 |
 | `QUOTE_LOG_PATH` | `output/quote_log.csv` | `POST /api/documents` の見積書の記録 |
 | `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要。守りは `api/security.py` の1か所 |
