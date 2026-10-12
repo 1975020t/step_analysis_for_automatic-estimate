@@ -22,7 +22,7 @@ from src.models import SheetMetalAnalysis
 from src.quote_document import PartInfo, Recipient
 from api.conflict import ConflictRetryMiddleware
 from api.platform_routes import build_router
-from api.security import token_guard
+from api.security import TenantMiddleware, token_guard
 from src.services.estimate import EstimateService, ReaderFactory, ServiceError
 from src.services.platform.core import Platform
 from src.services.platform.documents import NotIssuable
@@ -62,6 +62,7 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
                   description="STEP・DXFの解析、図面PDFの読み取り、見積、見積書、類似見積、過去見積の履歴。"
                               "金額はマスターとルールだけで決まります（LLMは計算しません）。")
     app.add_middleware(ConflictRetryMiddleware)  # Aurora DSQL: a request that met a conflicting write runs again
+    app.add_middleware(TenantMiddleware, tokens=settings.tokens(), prepare=platform.ensure_tenant)  # the company
     app.state.service = service
     app.state.platform = platform
     app.state.settings = settings
@@ -87,7 +88,7 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     async def unexpected(_: Request, exc: Exception):
         return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": "サーバーでエラーが発生しました。"}})
 
-    guarded = [Depends(token_guard(settings.api_token))]
+    guarded = [Depends(token_guard(settings.tokens()))]
 
     def queue() -> JobQueue:
         return app.state.queue
@@ -153,10 +154,10 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     def job(job_id: str) -> JobOut:
         """受付の状態（queued / running / done / failed）と結果。"""
         try:
-            data = service.job_store.read(job_id)
+            data = service.job_of_tenant(job_id)
         except KeyError:
             raise ServiceError("受付番号が見つかりません。", 404, "NOT_FOUND") from None
-        return JobOut(**{k: v for k, v in data.items() if k != "input"})
+        return JobOut(**{k: v for k, v in data.items() if k not in ("input", "tenant_id")})
 
     # ------------------------------------------------------------ quote and document
     @app.post("/api/quotes", tags=["quote"], dependencies=guarded, response_model=QuoteResponse)

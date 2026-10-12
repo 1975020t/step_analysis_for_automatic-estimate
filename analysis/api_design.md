@@ -137,6 +137,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴（コミットする。データベースに取り込んだ後は書き換えない） |
 | `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 以前の版の見積書の出力記録（起動時にデータベースの `quote_log` 表へ取り込む） |
 | `API_TOKEN` | なし | 設定すると API の利用に `Authorization: Bearer <token>` か `X-API-Token` が必要（`/api/health` を除く） |
+| `TENANT_TOKENS` | なし | 会社ID と合言葉（`alpha=合言葉1,beta=合言葉2`）。下の「複数の会社」 |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限 |
 | `JOB_WORKERS` | 2 | 受付を処理するスレッド数 |
 | `ANALYSIS_ANTHROPIC_API_KEY` | なし | 図面PDFの読み取りにだけ使う（LLM を使う機能は増やしていない） |
@@ -152,9 +153,23 @@ GET  /api/history?customer=...&limit=50&offset=0
 | 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ |
 | 受付の状態 | `DbJobStore`（データベースの `jobs` 表） | 済み | `src/services/platform/records.py`。見積書の出力記録も `DbQuoteLog`（`quote_log` 表、番号の重なりは主キーで防ぐ） |
 | ファイル | `FileStore` ＋ `LocalBlobStore`（`ESTIMATE_STORAGE_DIR`）か `S3BlobStore`（`ESTIMATE_STORAGE_URL`） | 済み（S3。S3互換の MinIO も同じ） | `BlobStore`（`put / get / exists / local_file`）。CadQuery・pdfium のようにファイルを自分で開く処理には `FileStore.local_path` が手元のパスを渡す（S3 では一時的な写し） |
-| 認証 | 共通の合言葉（`API_TOKEN`）と、画面で選んだ担当者 | ログイン・権限・利用者の招待 | `api/security.py` の2つの関数を差し替える。`*_by` の列はそのまま使う |
+| 認証 | 会社ごとの合言葉（`API_TOKEN`・`TENANT_TOKENS`）と、画面で選んだ担当者 | ログイン（Cognito）・権限・利用者の招待 | `api/security.py` の会社の決め方と操作者を差し替える。`*_by` の列はそのまま使う |
 | データベース | SQLite（既定）／PostgreSQL／Aurora DSQL（`DATABASE_URL`） | Aurora DSQL | `DATABASE_URL` を替えるだけ。DSQL への対応は下の「Aurora DSQL で動かす」 |
 | 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの構成で動く。クラウド固有のサービスには依存していない |
+
+## 複数の会社（マルチテナント）
+
+1つのデータベースとファイル置き場を、複数の会社で分けて使う（プール型）。
+
+- 会社は合言葉で決まる（`TENANT_TOKENS`、`API_TOKEN` は会社ID `default`）。要求ごとに `TenantMiddleware`（`api/security.py`）が会社を決め、処理の間ずっと `current_tenant()`（`src/tenancy.py`）で参照できる。画面用の API と業務の処理は会社を意識しない
+- 会社のデータの表にはすべて `tenant_id` がある（`TenantScoped`、マイグレーション 0005。今までのデータは `default`）。セッションの読み書きには、今の会社の行だけを対象にする条件が自動で付き（`src/db/tenant_filter.py`）、新しい行には今の会社が入る。ほかの会社の番号を指定しても 404
+- 図番・案件番号・見積番号・帳票番号・担当者名は会社の中で重ならなければよい。番号の数え（`counters`）・マスター・自社情報・見積書の出力記録は、主キーに会社を含む。番号は会社ごとに1から振る
+- ファイルは `tenants/<会社ID>/` の下（S3 でも同じ。`default` は今までの場所のまま）
+- 受付（バックグラウンドの処理）は、受け付けた会社を受付の中に持ち、その会社として動く。受付番号の照会もほかの会社のものは 404
+- 新しい会社は最初に呼ばれたときに、マスター（`data/*.csv`）・ステータス・属性・テンプレートが入る。自社情報は空（画面で入れる）。過去見積・協力会社のお試しデータは入れない
+- マスターと類似見積の索引の作り置きは会社ごと
+
+ログイン（Cognito）にするときは、合言葉の代わりにログインした利用者の会社を `TenantMiddleware` で設定する。
 
 ## Aurora DSQL で動かす
 

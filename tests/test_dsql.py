@@ -82,7 +82,7 @@ def test_the_migrations_and_the_models_give_the_same_schema(tmp_path):
         with engine.connect() as c:
             assert compare_metadata(MigrationContext.configure(c), Base.metadata) == []
             head = c.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-        assert head == "0004"
+        assert head == "0005"
     migrate(from_models, from_models=True)  # a second start: the migrations (none left), not create_all again
     assert set(inspect(migrated).get_table_names()) == set(inspect(from_models).get_table_names())
 

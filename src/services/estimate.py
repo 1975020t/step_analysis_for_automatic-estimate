@@ -32,6 +32,7 @@ from src.services.schemas import (ConditionInput, DrawingContext, DrawingItem, M
 from src.services.settings import Settings
 from src.services.storage import FileStore
 from src.similar_quotes import Match, Reference, SimilarQuoteSearch, query_for
+from src.tenancy import DEFAULT_TENANT, current_tenant
 
 ReaderFactory = Callable[[], object]  # returns an object with .read(path) -> dict (src.pdf_reader.PdfConditionReader)
 
@@ -189,9 +190,16 @@ class EstimateService:
         return JobQueue(self.job_store, {"analysis": self.run_analysis_job, "drawing": self.run_drawing_job},
                         workers=self.settings.job_workers, autostart=autostart)
 
+    def job_of_tenant(self, job_id: str) -> dict:
+        """A job of the current company (KeyError for another company's: it is not found)."""
+        job = self.job_store.read(job_id)
+        if (job.get("tenant_id") or DEFAULT_TENANT) != current_tenant():
+            raise KeyError(job_id)
+        return job
+
     def analysis_from_job(self, job_id: str) -> SheetMetalAnalysis:
         try:
-            job = self.job_store.read(job_id)
+            job = self.job_of_tenant(job_id)
         except KeyError:
             raise ServiceError("解析の受付番号が見つかりません。", 404, "NOT_FOUND") from None
         if job["kind"] != "analysis":
