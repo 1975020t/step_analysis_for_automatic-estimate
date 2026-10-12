@@ -290,6 +290,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴 |
 | `QUOTE_LOG_PATH` | `output/quote_log.csv` | 以前の版の見積書の記録。API の起動時にデータベースへ取り込む（今の記録はデータベース） |
 | `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要。守りは `api/security.py` の1か所 |
+| `TENANT_TOKENS` | なし | 1つのシステムを複数の会社で使うときの、会社IDとその合言葉（`alpha=合言葉1,beta=合言葉2`）。会社の合言葉で呼ぶと、その会社のデータ・番号・マスター・ファイルだけを扱う。`API_TOKEN` は会社ID `default`（今までのデータ）の合言葉。新しい会社は最初に呼ばれたときにマスター・ステータスなどの初期データが入る（過去見積のお試しデータは入らない） |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類と中身の先頭も確認） |
 | `JOB_WORKERS` | 2 | 裏で処理する数 |
 | `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・資料の撮影用。API を呼ばない） |

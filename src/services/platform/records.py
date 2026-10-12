@@ -24,6 +24,7 @@ from src.db.retry import CHUNK, backoff, is_conflict, retry_on_conflict
 from src.quote_log import FIELDS
 from src.services.jobs import QUEUED, RUNNING, _now
 from src.services.storage import new_id
+from src.tenancy import current_tenant
 
 _LOG_COLUMNS = [f for f in FIELDS if f != "quote_no"]
 
@@ -54,7 +55,7 @@ class DbJobStore:
     def create(self, kind: str, payload: dict) -> dict:
         job = {"job_id": new_id("j"), "kind": kind, "status": QUEUED, "input": payload,
                "created_at": _now(),
-               "started_at": None, "finished_at": None, "result": None, "error": None}
+               "started_at": None, "finished_at": None, "result": None, "error": None, "tenant_id": current_tenant()}
         self.write(job)
         return job
 

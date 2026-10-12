@@ -4,6 +4,11 @@ tests). The schema is changed only through migrations (migrations/versions/, Ale
 Rows that people edit together (cases, quotes, drawings, partners, masters, statuses) carry a `version`: an
 update that names an older version is refused (HTTP 409), so a later save never silently overwrites an earlier
 one. `*_by` columns hold who did it (today the chosen staff member; a login can fill them later).
+
+Every table of a company's data is `TenantScoped`: its rows carry the company (`tenant_id`, src/tenancy.py), names
+and numbers are unique within a company, and the session sees only the current company's rows
+(src/db/tenant_filter.py). Keyed tables (masters, counters, company details, quote log) have the company in their
+primary key. `jobs` keeps the company in the job itself (a job runs outside any request).
 """
 from __future__ import annotations
 
@@ -12,6 +17,8 @@ from datetime import date, datetime
 from sqlalchemy import (JSON, BigInteger, Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Table,
                         Text, UniqueConstraint)
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column, relationship
+
+from src.tenancy import DEFAULT_TENANT, current_tenant
 
 
 def now() -> datetime:
@@ -35,16 +42,35 @@ class Versioned:
         return {"version_id_col": cls.__table__.c.version}
 
 
+def tenant_column(primary_key: bool = False):
+    return mapped_column(String(40), default=current_tenant, server_default=DEFAULT_TENANT, nullable=False,
+                         primary_key=primary_key, index=not primary_key)
+
+
+class TenantScoped:
+    """Rows of one company (see the top of this module)."""
+    tenant_id: Mapped[str] = tenant_column()
+
+
+class Tenant(Base):
+    """A company using the system. Its initial data (masters, statuses, ...) is loaded when it is first seen."""
+    __tablename__ = "tenants"
+    tenant_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    name: Mapped[str] = mapped_column(String(120), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
 # ---------------------------------------------------------------- settings
-class Staff(Base):
+class Staff(TenantScoped, Base):
     __tablename__ = "staff"
+    __table_args__ = (UniqueConstraint("tenant_id", "name", name="uq_staff_name"),)
     id: Mapped[int] = mapped_column(ID, primary_key=True)
-    name: Mapped[str] = mapped_column(String(80), unique=True)
+    name: Mapped[str] = mapped_column(String(80))
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     sort: Mapped[int] = mapped_column(Integer, default=0)
 
 
-class CaseStatus(Versioned, Base):
+class CaseStatus(Versioned, TenantScoped, Base):
     __tablename__ = "case_statuses"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
     name: Mapped[str] = mapped_column(String(40))
@@ -57,7 +83,7 @@ class CaseStatus(Versioned, Base):
     role: Mapped[str] = mapped_column(String(20), default="")            # "" / issued / won / lost / hold / done
 
 
-class Category(Base):
+class Category(TenantScoped, Base):
     """A folder of drawings. parent_id NULL: a group (顧客別, 製品別, 部品種別 ...)."""
     __tablename__ = "categories"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
@@ -66,11 +92,12 @@ class Category(Base):
     sort: Mapped[int] = mapped_column(Integer, default=0)
 
 
-class AttributeDef(Base):
+class AttributeDef(TenantScoped, Base):
     """An attribute / search item of drawings. builtin ones map to drawing columns or analysis values."""
     __tablename__ = "attribute_defs"
+    __table_args__ = (UniqueConstraint("tenant_id", "key", name="uq_attribute_defs_key"),)
     id: Mapped[int] = mapped_column(ID, primary_key=True)
-    key: Mapped[str] = mapped_column(String(40), unique=True)
+    key: Mapped[str] = mapped_column(String(40))
     label: Mapped[str] = mapped_column(String(80))
     input_type: Mapped[str] = mapped_column(String(20), default="text")  # text / select / number_range / date_range
     options: Mapped[list] = mapped_column(JSON, default=list)
@@ -80,7 +107,7 @@ class AttributeDef(Base):
     builtin: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
-class Template(Base):
+class Template(TenantScoped, Base):
     """A document template: which items are shown. Costs and margin are never printed (fixed)."""
     __tablename__ = "templates"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
@@ -91,16 +118,18 @@ class Template(Base):
     sort: Mapped[int] = mapped_column(Integer, default=0)
 
 
-class Counter(Base):
+class Counter(TenantScoped, Base):
     """Serial numbers (cases, delivery notes, invoices), taken under a row lock."""
     __tablename__ = "counters"
+    tenant_id: Mapped[str] = tenant_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(40), primary_key=True)
     value: Mapped[int] = mapped_column(Integer, default=0)
 
 
 # ---------------------------------------------------------------- masters (initial rows: data/*.csv)
-class MaterialRow(Versioned, Base):
+class MaterialRow(Versioned, TenantScoped, Base):
     __tablename__ = "master_materials"
+    tenant_id: Mapped[str] = tenant_column(primary_key=True)
     code: Mapped[str] = mapped_column("material", String(40), primary_key=True)
     display_name: Mapped[str] = mapped_column(String(80))
     density_kg_m3: Mapped[str] = mapped_column(String(20))
@@ -112,8 +141,9 @@ class MaterialRow(Versioned, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
-class ProcessRow(Versioned, Base):
+class ProcessRow(Versioned, TenantScoped, Base):
     __tablename__ = "master_processes"
+    tenant_id: Mapped[str] = tenant_column(primary_key=True)
     code: Mapped[str] = mapped_column("process_code", String(40), primary_key=True)
     display_name: Mapped[str] = mapped_column(String(80))
     calculation_type: Mapped[str] = mapped_column(String(20))
@@ -125,8 +155,9 @@ class ProcessRow(Versioned, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
-class FinishRow(Versioned, Base):
+class FinishRow(Versioned, TenantScoped, Base):
     __tablename__ = "master_surface_treatments"
+    tenant_id: Mapped[str] = tenant_column(primary_key=True)
     code: Mapped[str] = mapped_column("treatment_code", String(40), primary_key=True)
     display_name: Mapped[str] = mapped_column(String(80))
     unit_price: Mapped[str] = mapped_column(String(20))
@@ -136,8 +167,9 @@ class FinishRow(Versioned, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
-class PolicyRow(Versioned, Base):
+class PolicyRow(Versioned, TenantScoped, Base):
     __tablename__ = "master_pricing_policy"
+    tenant_id: Mapped[str] = tenant_column(primary_key=True)
     key: Mapped[str] = mapped_column(String(40), primary_key=True)
     value: Mapped[str] = mapped_column(String(40))
     description: Mapped[str] = mapped_column(Text, default="")
@@ -145,8 +177,9 @@ class PolicyRow(Versioned, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
-class CompanyRow(Versioned, Base):
+class CompanyRow(Versioned, TenantScoped, Base):
     __tablename__ = "company"
+    tenant_id: Mapped[str] = tenant_column(primary_key=True)
     key: Mapped[str] = mapped_column(String(40), primary_key=True)
     value: Mapped[str] = mapped_column(Text, default="")
     description: Mapped[str] = mapped_column(Text, default="")
@@ -162,7 +195,7 @@ drawing_categories = Table(
 )
 
 
-class Drawing(Versioned, Base):
+class Drawing(Versioned, TenantScoped, Base):
     __tablename__ = "drawings"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
     drawing_no: Mapped[str] = mapped_column(String(80), index=True)
@@ -178,7 +211,7 @@ class Drawing(Versioned, Base):
     categories: Mapped[list[Category]] = relationship(secondary=drawing_categories)
 
 
-class DrawingRevision(Base):
+class DrawingRevision(TenantScoped, Base):
     """One version of a drawing: a drawing PDF and/or a shape file (STEP / DXF), their analysis and reading."""
     __tablename__ = "drawing_revisions"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
@@ -203,7 +236,7 @@ class DrawingRevision(Base):
     drawing: Mapped[Drawing] = relationship(back_populates="revisions")
 
 
-class DrawingNote(Base):
+class DrawingNote(TenantScoped, Base):
     """A note written on the drawing at a position (x, y: 0..1 of the preview)."""
     __tablename__ = "drawing_notes"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
@@ -215,7 +248,7 @@ class DrawingNote(Base):
     created_by: Mapped[str] = mapped_column(String(80), default="")
 
 
-class DrawingMemo(Base):
+class DrawingMemo(TenantScoped, Base):
     """注意 / 不具合 memo of a drawing."""
     __tablename__ = "drawing_memos"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
@@ -227,10 +260,11 @@ class DrawingMemo(Base):
 
 
 # ---------------------------------------------------------------- cases and quotes
-class Case(Versioned, Base):
+class Case(Versioned, TenantScoped, Base):
     __tablename__ = "cases"
+    __table_args__ = (UniqueConstraint("tenant_id", "number", name="uq_cases_number"),)
     id: Mapped[int] = mapped_column(ID, primary_key=True)
-    number: Mapped[str] = mapped_column(String(40), unique=True)
+    number: Mapped[str] = mapped_column(String(40))
     customer: Mapped[str] = mapped_column(String(120))
     title: Mapped[str] = mapped_column(String(160), default="")
     status_id: Mapped[int] = mapped_column(ID, ForeignKey("case_statuses.id"))
@@ -249,7 +283,7 @@ class Case(Versioned, Base):
     quotes: Mapped[list["Quote"]] = relationship(back_populates="case", order_by="Quote.id")
 
 
-class CaseStatusLog(Base):
+class CaseStatusLog(TenantScoped, Base):
     """Status changes, with the status name as it was then (renaming a status keeps the old name here)."""
     __tablename__ = "case_status_log"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
@@ -259,12 +293,13 @@ class CaseStatusLog(Base):
     actor: Mapped[str] = mapped_column(String(80), default="")
 
 
-class Quote(Versioned, Base):
+class Quote(Versioned, TenantScoped, Base):
     """The estimate of one drawing revision: its inputs, the analysis used and the last computed result."""
     __tablename__ = "quotes"
+    __table_args__ = (UniqueConstraint("tenant_id", "number", name="uq_quotes_number"),)
     id: Mapped[int] = mapped_column(ID, primary_key=True)
     case_id: Mapped[int] = mapped_column(ID, ForeignKey("cases.id", ondelete="CASCADE"), index=True)
-    number: Mapped[str] = mapped_column(String(40), unique=True)
+    number: Mapped[str] = mapped_column(String(40))
     drawing_id: Mapped[int | None] = mapped_column(ID, ForeignKey("drawings.id"), nullable=True, index=True)
     revision_id: Mapped[int | None] = mapped_column(ID, ForeignKey("drawing_revisions.id"), nullable=True)
     inputs: Mapped[dict] = mapped_column(JSON, default=dict)      # see src/services/platform/quotes.py
@@ -279,7 +314,7 @@ class Quote(Versioned, Base):
     case: Mapped[Case] = relationship(back_populates="quotes")
 
 
-class QuoteEditLog(Base):
+class QuoteEditLog(TenantScoped, Base):
     __tablename__ = "quote_edit_log"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
     quote_id: Mapped[int] = mapped_column(ID, ForeignKey("quotes.id", ondelete="CASCADE"), index=True)
@@ -290,12 +325,13 @@ class QuoteEditLog(Base):
     total_after: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
 
-class IssuedDocument(Base):
+class IssuedDocument(TenantScoped, Base):
     """A document issued from a quote: 見積書 / 納品書 / 請求書, with the amounts printed on it."""
     __tablename__ = "issued_documents"
+    __table_args__ = (UniqueConstraint("tenant_id", "number", name="uq_issued_documents_number"),)
     id: Mapped[int] = mapped_column(ID, primary_key=True)
     kind: Mapped[str] = mapped_column(String(20))                 # quote / delivery / invoice
-    number: Mapped[str] = mapped_column(String(40), unique=True)
+    number: Mapped[str] = mapped_column(String(40))
     case_id: Mapped[int] = mapped_column(ID, ForeignKey("cases.id"), index=True)
     quote_id: Mapped[int] = mapped_column(ID, ForeignKey("quotes.id"), index=True)
     template_id: Mapped[int | None] = mapped_column(ID, ForeignKey("templates.id"), nullable=True)
@@ -316,9 +352,9 @@ class IssuedDocument(Base):
 
 
 # ---------------------------------------------------------------- history (initial rows: data/past_quotes/history.csv)
-class PastQuoteRow(Base):
+class PastQuoteRow(TenantScoped, Base):
     __tablename__ = "past_quotes"
-    __table_args__ = (UniqueConstraint("quote_no", "date", "customer", name="uq_past_quote"),)
+    __table_args__ = (UniqueConstraint("tenant_id", "quote_no", "date", "customer", name="uq_past_quote"),)
     id: Mapped[int] = mapped_column(ID, primary_key=True)
     quote_no: Mapped[str] = mapped_column(String(80), index=True)
     date: Mapped[date] = mapped_column(Date, index=True)
@@ -356,7 +392,7 @@ class PastQuoteRow(Base):
 
 
 # ---------------------------------------------------------------- partners and documents
-class Partner(Versioned, Base):
+class Partner(Versioned, TenantScoped, Base):
     __tablename__ = "partners"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
     kind: Mapped[str] = mapped_column(String(20), default="協力会社")   # 協力会社 / 顧客
@@ -371,7 +407,7 @@ class Partner(Versioned, Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
-class LibraryDocument(Base):
+class LibraryDocument(TenantScoped, Base):
     """A registered document (PDF / Excel) for the keyword search: kind and related drawings set by a person."""
     __tablename__ = "documents"
     id: Mapped[int] = mapped_column(ID, primary_key=True)
@@ -400,10 +436,11 @@ class JobRow(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
 
 
-class QuoteLogRow(Base):
+class QuoteLogRow(TenantScoped, Base):
     """The output log of the quotes of POST /api/documents (was output/quote_log.csv). The primary key keeps two
     outputs from sharing a number."""
     __tablename__ = "quote_log"
+    tenant_id: Mapped[str] = tenant_column(primary_key=True)
     quote_no: Mapped[str] = mapped_column(String(40), primary_key=True)
     issued_at: Mapped[str] = mapped_column(String(25))
     customer: Mapped[str] = mapped_column(String(200), default="")

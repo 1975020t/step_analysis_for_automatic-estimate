@@ -93,6 +93,8 @@ def migrate(engine: Engine, from_models: bool | None = None) -> None:
 
 
 def open_database(url: str) -> sessionmaker[Session]:
+    import src.db.tenant_filter  # noqa: F401 - every session sees only the current company's rows
+
     engine = make_engine(url)
     migrate(engine)
     return sessionmaker(engine, expire_on_commit=False)

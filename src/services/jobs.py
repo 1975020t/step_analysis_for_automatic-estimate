@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Callable
 
 from src.services.storage import new_id
+from src.tenancy import DEFAULT_TENANT, current_tenant, tenant_scope
 
 QUEUED, RUNNING, DONE, FAILED = "queued", "running", "done", "failed"
 
@@ -54,7 +55,7 @@ class JobStore:
 
     def create(self, kind: str, payload: dict) -> dict:
         job = {"job_id": new_id("j"), "kind": kind, "status": QUEUED, "input": payload, "created_at": _now(),
-               "started_at": None, "finished_at": None, "result": None, "error": None}
+               "started_at": None, "finished_at": None, "result": None, "error": None, "tenant_id": current_tenant()}
         self.write(job)
         return job
 
@@ -129,7 +130,8 @@ class JobQueue:
         job = self.store.update(job_id, status=RUNNING, started_at=_now())
         _CURRENT.store, _CURRENT.job_id = self.store, job_id
         try:
-            result = self.handlers[job["kind"]](job["input"])
+            with tenant_scope(job.get("tenant_id") or DEFAULT_TENANT):  # the company that asked for the job
+                result = self.handlers[job["kind"]](job["input"])
             return self.store.update(job_id, status=DONE, finished_at=_now(), result=result)
         except JobError as exc:
             return self.store.update(job_id, status=FAILED, finished_at=_now(), error=str(exc))

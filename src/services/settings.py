@@ -8,6 +8,8 @@
   QUOTE_LOG_PATH         issued-quote log of an earlier version (taken into the database on start)
                                                                          default: <storage>/quote_log.csv
   API_TOKEN              when set, every API call needs it (Authorization: Bearer ... or X-API-Token)
+  TENANT_TOKENS          companies and their API tokens, "<company id>=<token>,..." (several companies in one
+                         system; a call with a company's token works on that company's data only)   default: none
   MAX_UPLOAD_MB          largest accepted upload                                              default: 50
   JOB_WORKERS            background workers for analyses and drawing readings                 default: 2
   DATABASE_URL           the database (PostgreSQL: postgresql+psycopg://user:pass@host/db)
@@ -36,6 +38,7 @@ class Settings:
     drawing_reader: str = ""
     web_dist: Path | None = None
     storage_url: str = ""
+    tenant_tokens: str = ""
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -54,7 +57,20 @@ class Settings:
             database_url=env.get("DATABASE_URL", "").strip(),
             drawing_reader=env.get("DRAWING_READER", "").strip(),
             web_dist=Path(env["WEB_DIST"]) if env.get("WEB_DIST") else None,
+            tenant_tokens=env.get("TENANT_TOKENS", "").strip(),
         )
+
+    def tokens(self) -> dict[str, str]:
+        """API token -> company id (API_TOKEN is the token of the `default` company)."""
+        from src.tenancy import DEFAULT_TENANT, check_tenant
+
+        tokens = {self.api_token: DEFAULT_TENANT} if self.api_token else {}
+        for item in filter(None, (p.strip() for p in self.tenant_tokens.split(","))):
+            tenant, sep, token = item.partition("=")
+            if not sep or not token.strip():
+                raise ValueError("TENANT_TOKENS は <会社ID>=<トークン> をカンマで区切って指定してください")
+            tokens[token.strip()] = check_tenant(tenant.strip())
+        return tokens
 
     @property
     def db_url(self) -> str:
@@ -65,9 +81,9 @@ class Settings:
 
     def blob_store(self):
         """Where the uploads, documents and 3D view files are kept (a folder or S3)."""
-        from src.services.storage import blob_store
+        from src.services.storage import TenantBlobStore, blob_store
 
-        return blob_store(self.storage_url, self.storage_dir)
+        return TenantBlobStore(blob_store(self.storage_url, self.storage_dir))
 
     @property
     def uploads_dir(self) -> Path:

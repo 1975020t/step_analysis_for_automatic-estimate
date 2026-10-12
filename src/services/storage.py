@@ -6,6 +6,8 @@ Two layers:
   prefix (`ESTIMATE_STORAGE_URL=s3://bucket/prefix`). `local_file` hands a path on this machine to the tools that
   read files themselves (CadQuery, pdfium): the file itself for a folder, a temporary copy for S3.
 - `FileStore` keeps the uploaded files (a file id, its name, kind and size) in a `BlobStore`.
+- `TenantBlobStore` puts each company's keys under `tenants/<company id>/` (the `default` company keeps the keys of
+  before), so that one bucket holds every company's files apart.
 
 Keys are generated here (never taken from a user) so a key cannot point outside the store.
 """
@@ -20,6 +22,8 @@ import unicodedata
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 from typing import Iterator, Protocol
+
+from src.tenancy import DEFAULT_TENANT, current_tenant
 
 KINDS = {".step": "step", ".stp": "step", ".dxf": "dxf", ".pdf": "pdf", ".csv": "csv"}
 _KEY_PART = re.compile(r"^[\w.\-()（）]+$")
@@ -125,6 +129,30 @@ class S3BlobStore:
             yield path
         finally:
             shutil.rmtree(folder, ignore_errors=True)
+
+
+class TenantBlobStore:
+    """The keys of the current company (src/tenancy.py): `tenants/<id>/<key>`, or `<key>` for `default`."""
+
+    def __init__(self, blobs: BlobStore) -> None:
+        self.blobs = blobs
+
+    @staticmethod
+    def _key(key: str) -> str:
+        tenant = current_tenant()
+        return check_key(key) if tenant == DEFAULT_TENANT else f"tenants/{tenant}/{check_key(key)}"
+
+    def put(self, key: str, data: bytes) -> None:
+        self.blobs.put(self._key(key), data)
+
+    def get(self, key: str) -> bytes:
+        return self.blobs.get(self._key(key))
+
+    def exists(self, key: str) -> bool:
+        return self.blobs.exists(self._key(key))
+
+    def local_file(self, key: str):
+        return self.blobs.local_file(self._key(key))
 
 
 def blob_store(url: str, root: str | Path) -> BlobStore:
