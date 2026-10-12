@@ -19,7 +19,8 @@ from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
 from src.services.platform.cases import next_action, status_brief
 from src.services.platform.core import Platform, bump, check_version, iso
-from src.services.platform.drawings import reading_for_pricing, sync_revision
+from src.services.extraction import analyse as analyse_file, extract
+from src.services.platform.drawings import reading_for_pricing, reading_with_context, sync_revision
 from src.services.platform.pricing import QuoteInputs, compute, evidence_texts, inputs_from_reading
 from src.services.platform.similar import similar
 from src.services.platform.wording import failure, input_errors, notes
@@ -130,37 +131,68 @@ def _store(quote: Quote, inputs: QuoteInputs) -> None:
 
 
 def run_estimate_job(pf: Platform, payload: dict) -> dict:
-    """The stages of an estimate (shown on the progress screen with the values found so far)."""
-    masters = pf.masters()
+    """The stages of an estimate (shown on the progress screen with the values found so far).
+    Three steps (src/services/extraction.py): prepare (database) -> extract (files only) -> finish (database)."""
     values: dict = {}
 
     def stage(i: int, **found) -> None:
         values.update(found)
         report_progress(step=i + 1, steps=len(STAGES), stage=STAGES[i], stages=STAGES, values=dict(values))
 
+    stage(0)
+    plan = prepare_estimate(pf, payload)
+
+    def progress(**p) -> None:
+        if p["stage"] == STAGES[1]:  # the shape is known before the drawing is read
+            stage_shape(values, p.get("analysis") if plan["analysis"] else plan["analysis_done"])
+            stage(1)
+
+    extracted = extract(pf.service.extractor(progress), plan)
+    return finish_estimate(pf, payload, plan, extracted, stage, values)
+
+
+def stage_shape(values: dict, analysis: dict | None) -> None:
+    a = analysis or {}
+    values["shape"] = {k: a.get(k) for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")}
+    values["shape_status"] = shape_state(a) if a else "CADデータなし"
+
+
+def prepare_estimate(pf: Platform, payload: dict) -> dict:
+    """What the estimate needs from the files: a new analysis when its conditions differ from the registration's,
+    a reading when the drawing has none yet (and no draft reading is still running)."""
     with pf.session() as s:
         quote = s.get(Quote, payload["quote_id"])
         if quote is None:
             raise JobError("見積が見つかりません。")
         revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
         inputs = _inputs(quote)
-        stage(0)
-        analysis = analyse(pf, revision, inputs)
-        quote.analysis = analysis
-        a = analysis or {}
-        values["shape"] = {k: a.get(k) for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")}
-        values["shape_status"] = shape_state(a) if a else "CADデータなし"
-        stage(1)
+        request, done = analysis_request(revision, inputs)
+        read = False
         if revision is not None:
             sync_revision(pf, s, revision)
-            if revision.pdf_file_id and revision.reading is None and pf.service.drawing_reader_available() and \
-                    not (revision.reading_job_id and (pf.job(revision.reading_job_id) or {}).get("status") in ("queued", "running")):
-                try:
-                    with pf.files.local_path(revision.pdf_file_id) as pdf_path:
-                        r, ctx = pf.service.read_drawing(pdf_path, revision.pdf_name)
-                    revision.reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
-                except Exception:  # noqa: BLE001 - the conditions are entered by hand then
-                    pass
+            read = bool(revision.pdf_file_id and revision.reading is None and not (
+                revision.reading_job_id and (pf.job(revision.reading_job_id) or {}).get("status") in ("queued", "running")))
+        return {"analysis": request, "analysis_done": done, "pdf_file_id": revision.pdf_file_id if read else None,
+                "pdf_text": False, "read": read}
+
+
+def finish_estimate(pf: Platform, payload: dict, plan: dict, extracted: dict, stage, values: dict) -> dict:
+    masters = pf.masters()
+    with pf.session() as s:
+        quote = s.get(Quote, payload["quote_id"])
+        if quote is None:
+            raise JobError("見積が見つかりません。")
+        revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        inputs = _inputs(quote)
+        analysis = extracted["analysis"] if plan["analysis"] else plan["analysis_done"]
+        quote.analysis = analysis
+        if "shape" not in values:
+            stage_shape(values, analysis)
+            stage(1)
+        if revision is not None and plan["read"] and revision.reading is None:
+            reading = reading_with_context(pf, masters, extracted["reading"], revision.pdf_name)
+            if reading:
+                revision.reading = reading
         reading = reading_for_pricing(revision)
         quote.reading = reading
         values["reading"] = ({"items": len([k for k in ("material", "thickness_mm", "quantity", "surface_treatment", "rush")
@@ -197,20 +229,24 @@ def _metric(result: dict, name: str):
 
 def analyse(pf: Platform, revision: DrawingRevision | None, inputs: QuoteInputs) -> dict | None:
     """The shape analysis with this quote's conditions (the registration analysis when they are the same)."""
+    request, done = analysis_request(revision, inputs)
+    return analyse_file(pf.files, request)[0] if request else done
+
+
+def analysis_request(revision: DrawingRevision | None, inputs: QuoteInputs) -> tuple[dict | None, dict | None]:
+    """(a request for a new analysis with this quote's conditions, or None; the analysis to use when no new one is
+    needed: the registration's when the conditions are the same, else None)."""
     if revision is None or not revision.shape_file_id:
-        return None
+        return None, None
     if revision.shape_kind == "dxf" and not inputs.thickness_mm:
-        return None
+        return None, None
     same = (revision.analysis is not None and inputs.k_factor == 0.33 and not inputs.k_factor_confirmed
             and not inputs.flat_confirmed and (revision.shape_kind != "dxf" or inputs.thickness_mm == revision.thickness_mm))
     if same:
-        return revision.analysis
-    data, meta = pf.files.get(revision.shape_file_id)
-    try:
-        return pf.service.analyze_bytes(data, meta["filename"], inputs.thickness_mm, inputs.k_factor,
-                                        inputs.k_factor_confirmed, inputs.flat_confirmed).model_dump(mode="json")
-    except Exception:  # noqa: BLE001
-        return {"status": "error", "file_name": meta["filename"], "message": "CADデータを解析できませんでした。"}
+        return None, revision.analysis
+    return {"file_id": revision.shape_file_id, "file_name": revision.shape_name, "thickness_mm": inputs.thickness_mm,
+            "k_factor": inputs.k_factor, "k_factor_confirmed": inputs.k_factor_confirmed,
+            "flat_confirmed": inputs.flat_confirmed}, None
 
 
 # ---------------------------------------------------------------- reading

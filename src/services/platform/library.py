@@ -13,7 +13,7 @@ from sqlalchemy.orm import selectinload
 from src.db.models import Case, Drawing, IssuedDocument, LibraryDocument, Quote
 from src.services.estimate import ServiceError
 from src.services.platform.core import Platform, iso
-from src.services.platform.drawings import pdf_text
+from src.services.extraction import pdf_text
 
 KINDS = ["図面", "見積書", "発注書", "ミルシート", "作業日報", "社内規格", "仕様書", "その他"]
 
