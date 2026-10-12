@@ -15,6 +15,7 @@ from sqlalchemy.orm import selectinload
 from src.models import SheetMetalAnalysis
 from src.db.models import (Case, CaseStatus, CaseStatusLog, Drawing, DrawingRevision, IssuedDocument, Quote,
                            QuoteEditLog, now)
+from src.db.retry import retry_on_conflict
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
 from src.services.platform.cases import next_action, status_brief
@@ -140,7 +141,7 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
         report_progress(step=i + 1, steps=len(STAGES), stage=STAGES[i], stages=STAGES, values=dict(values))
 
     stage(0)
-    plan = prepare_estimate(pf, payload)
+    plan = retry_on_conflict(lambda: prepare_estimate(pf, payload))
 
     def progress(**p) -> None:
         if p["stage"] == STAGES[1]:  # the shape is known before the drawing is read
@@ -148,7 +149,7 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
             stage(1)
 
     extracted = extract(pf.service.extractor(progress), plan)
-    return finish_estimate(pf, payload, plan, extracted, stage, values)
+    return retry_on_conflict(lambda: finish_estimate(pf, payload, plan, extracted, stage, values))
 
 
 def stage_shape(values: dict, analysis: dict | None) -> None:

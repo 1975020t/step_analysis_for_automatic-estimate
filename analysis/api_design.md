@@ -130,7 +130,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 
 | 変数 | 既定 | 内容 |
 |---|---|---|
-| `DATABASE_URL` | なし（SQLite `<ESTIMATE_STORAGE_DIR>/app.db`） | データベース |
+| `DATABASE_URL` | なし（SQLite `<ESTIMATE_STORAGE_DIR>/app.db`） | データベース（PostgreSQL、Aurora DSQL は `auroradsql+psycopg://admin@<エンドポイント>/postgres?region=...`） |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスター（材料・工程・表面処理・価格方針・自社情報） |
 | `ESTIMATE_STORAGE_DIR` | `output` | アップロード（uploads/）、見積書（documents/）、3D表示（viewer/）、SQLite の `app.db` |
 | `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` で uploads/・documents/・viewer/ を S3 に置く（SQLite の `app.db` はフォルダのまま） |
@@ -153,8 +153,22 @@ GET  /api/history?customer=...&limit=50&offset=0
 | 受付の状態 | `DbJobStore`（データベースの `jobs` 表） | 済み | `src/services/platform/records.py`。見積書の出力記録も `DbQuoteLog`（`quote_log` 表、番号の重なりは主キーで防ぐ） |
 | ファイル | `FileStore` ＋ `LocalBlobStore`（`ESTIMATE_STORAGE_DIR`）か `S3BlobStore`（`ESTIMATE_STORAGE_URL`） | 済み（S3。S3互換の MinIO も同じ） | `BlobStore`（`put / get / exists / local_file`）。CadQuery・pdfium のようにファイルを自分で開く処理には `FileStore.local_path` が手元のパスを渡す（S3 では一時的な写し） |
 | 認証 | 共通の合言葉（`API_TOKEN`）と、画面で選んだ担当者 | ログイン・権限・利用者の招待 | `api/security.py` の2つの関数を差し替える。`*_by` の列はそのまま使う |
-| データベース | SQLite（既定）／PostgreSQL（`DATABASE_URL`） | 管理サービスの PostgreSQL | `DATABASE_URL` を替えるだけ |
+| データベース | SQLite（既定）／PostgreSQL／Aurora DSQL（`DATABASE_URL`） | Aurora DSQL | `DATABASE_URL` を替えるだけ。DSQL への対応は下の「Aurora DSQL で動かす」 |
 | 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの構成で動く。クラウド固有のサービスには依存していない |
+
+## Aurora DSQL で動かす
+
+`DATABASE_URL=auroradsql+psycopg://admin@<エンドポイント>/postgres?region=ap-northeast-1` で Aurora DSQL につなぐ（方言は公式の `aurora-dsql-sqlalchemy`）。DSQL は PostgreSQL と同じ書き方で動くが、次の点が違うので合わせてある。
+
+| DSQL の違い | 対応 |
+|---|---|
+| パスワードの代わりに IAM の一時トークン | 接続のたびにコネクタが作る（Lambda のロールの権限）。1時間で切れる接続は 50分で作り直す（`src/db/session.py`） |
+| 構造の変更（DDL）は1文ずつ、データの変更と同じトランザクションにできない | 空のデータベースには、モデルから表を一度に作り（`create_all`、方言が1文ずつ確定）、最新のマイグレーションとして記録する。モデルとマイグレーションが同じ形になることはテストで確かめる。以後のマイグレーションは DSQL でできる変更だけにする |
+| 番号（ID）は 64ビットで、接続ごとに 65,536 個ずつ先取りされる（番号が飛ぶ） | 番号と、番号を指す列をすべて `BIGINT` にした（マイグレーション 0004。SQLite は INTEGER のまま）。画面は番号の連続を前提にしていない |
+| 鍵で待たない。同じ行を同時に変えると、後から確定した方が失敗する（SQLSTATE 40001） | 画面の操作は、まだ何も確定していなければ最初からやり直す（最大5回、`api/conflict.py`）。何か確定した後なら 409 で「もう一度」と返す。受付の DB の段（準備・仕上げ）、受付の状態の書き込み、見積番号もやり直す（`src/db/retry.py`） |
+| 1つのトランザクションで変えられるのは 3,000行まで | 過去見積の初期データ（約2,100行）と取り込みは 1,000行ずつ確定する |
+
+DSQL の実機では未確認（手元で動く DSQL はない）。AWS に置くときに、お試しデータの投入と画面の巡回を実機で通す。
 
 ## 今の制限
 

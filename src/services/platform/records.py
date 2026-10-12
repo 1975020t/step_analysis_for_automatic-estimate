@@ -16,10 +16,11 @@ from datetime import datetime
 from pathlib import Path
 
 from sqlalchemy import create_engine, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DBAPIError, IntegrityError
 from sqlalchemy.orm import Session, sessionmaker
 
 from src.db.models import JobRow, QuoteLogRow, now
+from src.db.retry import CHUNK, backoff, is_conflict, retry_on_conflict
 from src.quote_log import FIELDS
 from src.services.jobs import QUEUED, RUNNING, _now
 from src.services.storage import new_id
@@ -67,13 +68,17 @@ class DbJobStore:
     def write(self, job: dict) -> None:
         job_id = self._check(job["job_id"])
         data = json.loads(json.dumps(job, ensure_ascii=False))
-        with self.sessions() as s:
-            row = s.get(JobRow, job_id)
-            if row is None:
-                s.add(JobRow(job_id=job_id, kind=job["kind"], status=job["status"], data=data))
-            else:
-                row.status, row.data, row.updated_at = job["status"], data, now()
-            s.commit()
+
+        def save() -> None:
+            with self.sessions() as s:
+                row = s.get(JobRow, job_id)
+                if row is None:
+                    s.add(JobRow(job_id=job_id, kind=job["kind"], status=job["status"], data=data))
+                else:
+                    row.status, row.data, row.updated_at = job["status"], data, now()
+                s.commit()
+
+        retry_on_conflict(save)
 
     def update(self, job_id: str, **changes) -> dict:
         job = self.read(job_id)
@@ -119,6 +124,11 @@ class DbQuoteLog:
                     return number
                 except IntegrityError:  # taken by an output at the same moment: the next one
                     s.rollback()
+                except DBAPIError as exc:  # the same on Aurora DSQL (a conflict at commit)
+                    if not is_conflict(exc):
+                        raise
+                    s.rollback()
+                    backoff(0)
         raise RuntimeError("見積番号を決められませんでした。もう一度出力してください。")
 
 
@@ -140,6 +150,8 @@ def import_files(jobs: sessionmaker[Session], log: sessionmaker[Session], jobs_d
                 s.add(JobRow(job_id=job_id, kind=str(job.get("kind", "")), status=str(job.get("status", "")), data=job))
                 known.add(job_id)
                 counts["jobs"] += 1
+                if counts["jobs"] % CHUNK == 0:
+                    s.commit()
         s.commit()
     with log() as s:
         if quote_log_path.is_file():
@@ -152,5 +164,7 @@ def import_files(jobs: sessionmaker[Session], log: sessionmaker[Session], jobs_d
                     s.add(QuoteLogRow(quote_no=number, **{k: row.get(k) or "" for k in _LOG_COLUMNS}))
                     known.add(number)
                     counts["quote_log"] += 1
+                    if counts["quote_log"] % CHUNK == 0:
+                        s.commit()
         s.commit()
     return counts

@@ -14,6 +14,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from src.db.models import Counter, PastQuoteRow
+from src.db.retry import CHUNK
 from src.db.seed import seed
 from src.db.session import open_database
 from src.master_loader import MasterLoader
@@ -80,6 +81,8 @@ class DbHistory:
                 known.add(key)
                 s.add(PastQuoteRow(**{f: getattr(q, f) for f in PAST_FIELDS}, **links))
                 added += 1
+                if added % CHUNK == 0:  # a large import: several transactions (Aurora DSQL)
+                    s.commit()
             if added:
                 bump(s, "history_rev")
             s.commit()
