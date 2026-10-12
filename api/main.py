@@ -21,8 +21,9 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from src.models import SheetMetalAnalysis
 from src.quote_document import PartInfo, Recipient
 from api.conflict import ConflictRetryMiddleware
+from api.login import CognitoVerifier
 from api.platform_routes import build_router
-from api.security import TenantMiddleware, token_guard
+from api.security import TenantMiddleware, current_user, token_guard
 from src.services.estimate import EstimateService, ReaderFactory, ServiceError
 from src.services.platform.core import Platform
 from src.services.platform.documents import NotIssuable
@@ -32,16 +33,20 @@ from src.services.schemas import (AnalysisJobRequest, AnalysisSource, DocumentFi
                                   JobOut, OutcomeInput, PastQuoteOut, QuoteRequest, QuoteResponse, SimilarRequest,
                                   SimilarResponse)
 from src.services.settings import Settings
+from src.tenancy import current_tenant
 
 ALLOWED = {".step": "step", ".stp": "step", ".dxf": "dxf", ".pdf": "pdf"}
 SIGNATURES = {"step": (b"ISO-10303-21",), "pdf": (b"%PDF-",), "dxf": (b"SECTION", b"AutoCAD Binary DXF")}
 
 
 def create_app(settings: Settings | None = None, reader_factory: ReaderFactory | None = None,
-               start_jobs: bool = True) -> FastAPI:
+               start_jobs: bool = True, login_keys=None) -> FastAPI:
     """The API. `reader_factory` replaces the drawing-PDF reader (tests use a fake one; no LLM call).
-    `start_jobs=False` accepts jobs without running them (for tests of the queue state)."""
+    `start_jobs=False` accepts jobs without running them (for tests of the queue state). `login_keys` replaces the
+    fetch of the user pool's signing keys (tests sign their own tokens; no AWS call)."""
     settings = settings or Settings.from_env()
+    verifier = (CognitoVerifier(settings, **({"keys": login_keys} if login_keys else {}))
+                if settings.login else None)
     platform = Platform(settings, reader_factory=reader_factory)
     service: EstimateService = platform.service
 
@@ -62,7 +67,8 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
                   description="STEP・DXFの解析、図面PDFの読み取り、見積、見積書、類似見積、過去見積の履歴。"
                               "金額はマスターとルールだけで決まります（LLMは計算しません）。")
     app.add_middleware(ConflictRetryMiddleware)  # Aurora DSQL: a request that met a conflicting write runs again
-    app.add_middleware(TenantMiddleware, tokens=settings.tokens(), prepare=platform.ensure_tenant)  # the company
+    app.add_middleware(TenantMiddleware, tokens=settings.tokens(), prepare=platform.ensure_tenant,
+                       verifier=verifier)  # the caller and their company
     app.state.service = service
     app.state.platform = platform
     app.state.settings = settings
@@ -88,7 +94,7 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     async def unexpected(_: Request, exc: Exception):
         return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": "サーバーでエラーが発生しました。"}})
 
-    guarded = [Depends(token_guard(settings.tokens()))]
+    guarded = [Depends(token_guard(settings.tokens(), login=settings.login))]
 
     def queue() -> JobQueue:
         return app.state.queue
@@ -104,6 +110,23 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     @app.get("/api/health", tags=["system"])
     def health() -> dict:
         return {"status": "ok", "drawing_reader": service.drawing_reader_available()}
+
+    @app.get("/api/auth/config", tags=["system"])
+    def auth_config() -> dict:
+        """How the screens sign in: `login` (Cognito's sign-in pages), `token` (an API token) or `open`."""
+        if not settings.login:
+            return {"mode": "token" if settings.tokens() else "open"}
+        domain = settings.cognito_domain
+        return {"mode": "login", "client_id": settings.cognito_client_id, "scopes": "openid email profile",
+                "authorize_url": f"{domain}/oauth2/authorize", "token_url": f"{domain}/oauth2/token",
+                "logout_url": f"{domain}/logout"}
+
+    @app.get("/api/me", tags=["system"], dependencies=guarded)
+    def me(request: Request) -> dict:
+        """The signed-in user and their company (or the company of the API token)."""
+        user = current_user(request)
+        return {"name": user.name if user else "", "email": user.email if user else "",
+                "tenant": current_tenant(), "signed_in": user is not None}
 
     @app.get("/api/masters", tags=["masters"], dependencies=guarded)
     def masters() -> dict:
