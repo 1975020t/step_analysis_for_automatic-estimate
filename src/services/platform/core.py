@@ -10,7 +10,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Iterator
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from src.db.models import Counter, PastQuoteRow
@@ -25,16 +25,27 @@ from src.similar_quotes import SimilarQuoteSearch
 PAST_FIELDS = [c for c in PastQuote.__dataclass_fields__]
 
 
-def bump(session: Session, name: str) -> int:
-    """Take the next value of a counter (row lock on PostgreSQL; SQLite serialises writers)."""
-    row = session.get(Counter, name, with_for_update=True)
-    if row is None:
-        row = Counter(name=name, value=0)
-        session.add(row)
+def bump(session: Session, name: str, start: int = 0) -> int:
+    """Take the next value of a counter, safely when several people save at the same moment.
+
+    The database adds 1 itself (``value = value + 1``): reading the value and writing value+1 from Python let two
+    saves take the same number (SQLite does not lock what it reads), and the second save then failed on the
+    unique case / document number. A missing counter is created with ``start`` (insert-if-absent, so two first
+    uses do not collide either). The increment locks the row (PostgreSQL) or the database (SQLite) until commit."""
+    dialect = session.get_bind().dialect.name
+    if dialect in ("sqlite", "postgresql"):
+        insert = __import__(f"sqlalchemy.dialects.{dialect}", fromlist=["insert"]).insert
+        session.execute(insert(Counter).values(name=name, value=start).on_conflict_do_nothing(index_elements=["name"]))
+    elif session.get(Counter, name) is None:
+        session.add(Counter(name=name, value=start))
         session.flush()
-    row.value += 1
-    session.flush()
-    return row.value
+    session.execute(update(Counter).where(Counter.name == name).values(value=Counter.value + 1)
+                    .execution_options(synchronize_session=False))
+    value = session.execute(select(Counter.value).where(Counter.name == name)).scalar_one()
+    stale = session.identity_map.get(session.identity_key(Counter, name))
+    if stale is not None:
+        session.expire(stale)
+    return value
 
 
 def counter(session: Session, name: str) -> int:

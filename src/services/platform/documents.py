@@ -147,9 +147,12 @@ def issue(pf: Platform, quote_id: int, kind: str, template_id: int | None, actor
         quote, template = _load(s, quote_id, kind, template_id)
         issued_at = now()
         if kind == "quote":
+            # one counter per quotation (started from the quotations already issued): two people issuing at the
+            # same moment do not take the same number
             count = len(list(s.scalars(select(IssuedDocument.id).where(IssuedDocument.quote_id == quote.id,
                                                                          IssuedDocument.kind == "quote"))))
-            number = quote.number if count == 0 else f"{quote.number}-{count + 1}"
+            n = bump(s, f"quote-doc-{quote.id}", start=count)
+            number = quote.number if n == 1 else f"{quote.number}-{n}"
         else:
             prefix = "D" if kind == "delivery" else "I"
             number = f"{prefix}-{issued_at.year}-{bump(s, f'{kind}-{issued_at.year}'):04d}"

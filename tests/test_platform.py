@@ -420,3 +420,36 @@ def test_a_flat_pattern_without_thickness_asks_for_the_thickness_and_documents_w
     assert q["notices"]["delivery"] == []
     q = change(client, q, quantity=q["inputs"]["quantity"] + 1)
     assert q["notices"]["delivery"] and q["notices"]["invoice"] and not q["notices"]["quote"]
+
+
+def test_estimates_and_documents_saved_at_the_same_moment_get_their_own_numbers(client):
+    """Several people saving at once: case numbers and document numbers never collide (they used to: the second
+    save failed with a server error, so the same data sometimes failed and sometimes not)."""
+    import threading
+
+    drawing = register(client, "CN-001")
+    results: list = []
+
+    def create():
+        r = client.post("/api/estimates", json={"drawing_id": drawing, "customer": "株式会社テスト", "quantity": 5, "material": "SPCC"})
+        results.append(r)
+
+    threads = [threading.Thread(target=create) for _ in range(8)]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    assert [r.status_code for r in results] == [202] * 8
+    assert len({r.json()["number"] for r in results}) == 8
+    for r in results:
+        assert wait(client, r.json()["job_id"])["status"] == "done"
+
+    won = {s["name"]: s["id"] for s in client.get("/api/statuses").json()}["受注"]
+    quotes = [client.get(f"/api/estimates/{r.json()['estimate_id']}").json() for r in results]
+    for q in quotes:
+        assert issue(client, q).status_code == 201
+        d = client.get(f"/api/estimates/{q['id']}").json()
+        assert client.put(f"/api/cases/{d['case_id']}/status", json={"status_id": won, "version": d["case_version"]}).status_code == 200
+    issued: list = []
+    threads = [threading.Thread(target=lambda q=q: issued.append(issue(client, q, "delivery"))) for q in quotes]
+    [t.start() for t in threads]
+    [t.join() for t in threads]
+    assert [r.status_code for r in issued] == [201] * 8 and len({r.json()["number"] for r in issued}) == 8
