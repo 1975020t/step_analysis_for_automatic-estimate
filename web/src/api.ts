@@ -1,5 +1,7 @@
 // The only way the screens talk to the server. No amount or "can it be issued" is computed here.
 
+import { authMode, idToken, startLogin } from "./auth";
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -36,8 +38,14 @@ export const session = {
   setToken: (t: string) => store.set("apiToken", t),
 };
 
-function headers(extra: Record<string, string> = {}): Record<string, string> {
+async function headers(extra: Record<string, string> = {}): Promise<Record<string, string>> {
   const h: Record<string, string> = { ...extra };
+  if (authMode() === "login") {
+    // signed in: the ID token says who acts and for which company (no X-Actor)
+    const token = await idToken();
+    if (token) h["Authorization"] = `Bearer ${token}`;
+    return h;
+  }
   const token = session.token();
   if (token) h["Authorization"] = `Bearer ${token}`;
   const actor = session.actor();
@@ -57,18 +65,19 @@ async function handle(res: Response) {
     /* not JSON */
   }
   const e = body?.error || {};
+  if (res.status === 401 && authMode() === "login") void startLogin(); // the sign-in ran out: sign in again
   throw new ApiError(res.status, e.code || "ERROR", e.message || `エラー（${res.status}）`, e.details);
 }
 
 export async function get<T = any>(path: string): Promise<T> {
-  return handle(await fetch(path, { headers: headers() }));
+  return handle(await fetch(path, { headers: await headers() }));
 }
 
 export async function send<T = any>(method: string, path: string, body?: any): Promise<T> {
   return handle(
     await fetch(path, {
       method,
-      headers: headers({ "Content-Type": "application/json" }),
+      headers: await headers({ "Content-Type": "application/json" }),
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
   );
@@ -82,12 +91,12 @@ export async function upload<T = any>(path: string, file: File, fields: Record<s
   const form = new FormData();
   form.append("file", file, file.name);
   Object.entries(fields).forEach(([k, v]) => form.append(k, v));
-  return handle(await fetch(path, { method: "POST", headers: headers(), body: form }));
+  return handle(await fetch(path, { method: "POST", headers: await headers(), body: form }));
 }
 
 /** An image or PDF behind the API (with the token header) as an object URL. */
 export async function blobUrl(path: string): Promise<string> {
-  const res = await fetch(path, { headers: headers() });
+  const res = await fetch(path, { headers: await headers() });
   if (!res.ok) await handle(res);
   return URL.createObjectURL(await res.blob());
 }

@@ -10,6 +10,12 @@
   API_TOKEN              when set, every API call needs it (Authorization: Bearer ... or X-API-Token)
   TENANT_TOKENS          companies and their API tokens, "<company id>=<token>,..." (several companies in one
                          system; a call with a company's token works on that company's data only)   default: none
+  COGNITO_USER_POOL_ID   sign-in with Amazon Cognito (e.g. ap-northeast-1_AbCdEf123): the screens show a login page and
+                         the company comes from the user's `custom:tenant_id` (api/login.py)   default: none
+  COGNITO_CLIENT_ID      the app client of the screens (public, authorization code with PKCE)
+  COGNITO_DOMAIN         the sign-in pages, https://<prefix>.auth.<region>.amazoncognito.com (or a custom domain)
+  COGNITO_TENANT_CLAIM   the claim holding the company id                   default: custom:tenant_id
+  COGNITO_ISSUER         only for a stand-in user pool (tests): the issuer instead of the one of COGNITO_USER_POOL_ID
   MAX_UPLOAD_MB          largest accepted upload                                              default: 50
   JOB_WORKERS            background workers for analyses and drawing readings                 default: 2
   DATABASE_URL           the database (PostgreSQL: postgresql+psycopg://user:pass@host/db)
@@ -39,6 +45,11 @@ class Settings:
     web_dist: Path | None = None
     storage_url: str = ""
     tenant_tokens: str = ""
+    cognito_user_pool_id: str = ""
+    cognito_client_id: str = ""
+    cognito_domain: str = ""
+    cognito_tenant_claim: str = "custom:tenant_id"
+    cognito_issuer: str = ""          # derived from the user pool; set only for a stand-in (tests)
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -58,7 +69,24 @@ class Settings:
             drawing_reader=env.get("DRAWING_READER", "").strip(),
             web_dist=Path(env["WEB_DIST"]) if env.get("WEB_DIST") else None,
             tenant_tokens=env.get("TENANT_TOKENS", "").strip(),
+            cognito_user_pool_id=env.get("COGNITO_USER_POOL_ID", "").strip(),
+            cognito_client_id=env.get("COGNITO_CLIENT_ID", "").strip(),
+            cognito_domain=env.get("COGNITO_DOMAIN", "").strip().rstrip("/"),
+            cognito_tenant_claim=env.get("COGNITO_TENANT_CLAIM", "").strip() or "custom:tenant_id",
+            cognito_issuer=env.get("COGNITO_ISSUER", "").strip().rstrip("/"),
         )
+
+    @property
+    def login(self) -> bool:
+        """Sign-in with Cognito (the screens show a login page)."""
+        return bool(self.cognito_user_pool_id and self.cognito_client_id)
+
+    @property
+    def login_issuer(self) -> str:
+        if self.cognito_issuer:
+            return self.cognito_issuer
+        region = self.cognito_user_pool_id.split("_", 1)[0]
+        return f"https://cognito-idp.{region}.amazonaws.com/{self.cognito_user_pool_id}"
 
     def tokens(self) -> dict[str, str]:
         """API token -> company id (API_TOKEN is the token of the `default` company)."""

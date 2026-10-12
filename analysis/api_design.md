@@ -138,6 +138,10 @@ GET  /api/history?customer=...&limit=50&offset=0
 | `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 以前の版の見積書の出力記録（起動時にデータベースの `quote_log` 表へ取り込む） |
 | `API_TOKEN` | なし | 設定すると API の利用に `Authorization: Bearer <token>` か `X-API-Token` が必要（`/api/health` を除く） |
 | `TENANT_TOKENS` | なし | 会社ID と合言葉（`alpha=合言葉1,beta=合言葉2`）。下の「複数の会社」 |
+| `COGNITO_USER_POOL_ID`・`COGNITO_CLIENT_ID` | なし | 両方あるとログイン（Cognito）を使う。下の「ログイン」 |
+| `COGNITO_DOMAIN` | なし | ログインの画面のドメイン（`https://<接頭辞>.auth.<リージョン>.amazoncognito.com`） |
+| `COGNITO_TENANT_CLAIM` | `custom:tenant_id` | 会社IDを持つ属性 |
+| `COGNITO_ISSUER` | ユーザープールから決まる | テストで偽のユーザープールを使うときだけ |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限 |
 | `JOB_WORKERS` | 2 | 受付を処理するスレッド数 |
 | `ANALYSIS_ANTHROPIC_API_KEY` | なし | 図面PDFの読み取りにだけ使う（LLM を使う機能は増やしていない） |
@@ -153,7 +157,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 | 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ |
 | 受付の状態 | `DbJobStore`（データベースの `jobs` 表） | 済み | `src/services/platform/records.py`。見積書の出力記録も `DbQuoteLog`（`quote_log` 表、番号の重なりは主キーで防ぐ） |
 | ファイル | `FileStore` ＋ `LocalBlobStore`（`ESTIMATE_STORAGE_DIR`）か `S3BlobStore`（`ESTIMATE_STORAGE_URL`） | 済み（S3。S3互換の MinIO も同じ） | `BlobStore`（`put / get / exists / local_file`）。CadQuery・pdfium のようにファイルを自分で開く処理には `FileStore.local_path` が手元のパスを渡す（S3 では一時的な写し） |
-| 認証 | 会社ごとの合言葉（`API_TOKEN`・`TENANT_TOKENS`）と、画面で選んだ担当者 | ログイン（Cognito）・権限・利用者の招待 | `api/security.py` の会社の決め方と操作者を差し替える。`*_by` の列はそのまま使う |
+| 認証 | ログイン（Cognito、`COGNITO_*`）。ほかのシステムは会社ごとの合言葉（`API_TOKEN`・`TENANT_TOKENS`） | 済み（ログイン）。権限（役割）・利用者の招待は未 | `api/login.py` が ID トークンを確かめ、`api/security.py` が会社と操作者を決める。`*_by` の列はそのまま使う |
 | データベース | SQLite（既定）／PostgreSQL／Aurora DSQL（`DATABASE_URL`） | Aurora DSQL | `DATABASE_URL` を替えるだけ。DSQL への対応は下の「Aurora DSQL で動かす」 |
 | 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの構成で動く。クラウド固有のサービスには依存していない |
 
@@ -169,7 +173,21 @@ GET  /api/history?customer=...&limit=50&offset=0
 - 新しい会社は最初に呼ばれたときに、マスター（`data/*.csv`）・ステータス・属性・テンプレートが入る。自社情報は空（画面で入れる）。過去見積・協力会社のお試しデータは入れない
 - マスターと類似見積の索引の作り置きは会社ごと
 
-ログイン（Cognito）にするときは、合言葉の代わりにログインした利用者の会社を `TenantMiddleware` で設定する。
+ログインを使うときは、ログインした利用者の会社（ID トークンの `custom:tenant_id`）で決まる（下の「ログイン」）。
+
+## ログイン（Amazon Cognito）
+
+`COGNITO_USER_POOL_ID` と `COGNITO_CLIENT_ID` を設定すると使う。
+
+- 画面（`web/src/auth.ts`）は最初に `GET /api/auth/config`（守りなし）で方式を知る。`{"mode": "login", "client_id", "scopes", "authorize_url", "token_url", "logout_url"}` なら、ログインの画面を出し、Cognito のログインの画面（Hosted UI / Managed Login）へ移る。認可コードと PKCE（S256）で、画面にシークレットを置かない。パスワードは本システムのサーバーを通らない
+- 戻り先は `/auth/callback`（`state` を照合し、コードを ID トークン・リフレッシュトークンに替える）。ID トークンは `localStorage` に置き、期限の1分前にリフレッシュトークンで取り直す。API が 401 を返したらログインし直す
+- API の呼び出しは `Authorization: Bearer <ID トークン>`。`api/login.py`（`CognitoVerifier`）がユーザープールの鍵（`<issuer>/.well-known/jwks.json`、知らない鍵 ID のときだけ取り直す）で署名を確かめ、発行元・アプリクライアント（`aud`）・ID トークンであること（`token_use`）・期限（30秒の幅）を確かめる
+- 会社は `custom:tenant_id`（`COGNITO_TENANT_CLAIM`）。ない・形が正しくない利用者は 403 `NO_TENANT`。初めての会社には初期データが入る（合言葉の会社と同じ）
+- 操作者（`*_by` の列と履歴）はログインした人の `name`（なければメールアドレス）。`X-Actor` は使わない。`GET /api/me` が名前・メール・会社を返す
+- 合言葉（`API_TOKEN`・`TENANT_TOKENS`）も同時に使える（ほかのシステム・スクリプト用。先に合言葉として照合する）
+- ログアウトは画面のトークンを消し、Cognito の `/logout`（`logout_uri` は画面の `/`）へ移る
+- ユーザープール側の設定：アプリクライアントはシークレットなし、許可するフローは認可コード、スコープ `openid email profile`、コールバック `https://<画面>/auth/callback`、サインアウト `https://<画面>/`、カスタム属性 `tenant_id`（利用者が書き換えられないようにする）
+- 試験は AWS を呼ばない：`tests/test_login.py` は自前の鍵で ID トークンを作り、`tests/test_e2e_login.py` は偽の鍵の配布元（`COGNITO_ISSUER`）とブラウザの通信の差し替えでログインからログアウトまでを通す
 
 ## Aurora DSQL で動かす
 

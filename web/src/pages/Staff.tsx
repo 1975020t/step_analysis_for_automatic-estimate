@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { put, session } from "../api";
+import { authMode } from "../auth";
 import { ErrorBox, Field, Loading, useLoad, useMeta, useToast } from "../ui";
 
 export default function StaffPage() {
@@ -43,19 +44,26 @@ export default function StaffPage() {
         </div>
         <ErrorBox error={error} />
       </section>
-      <section className="panel">
-        <h2 style={{ marginBottom: 8 }}>この端末で操作する人</h2>
-        <p className="small muted">修正履歴・ステータスの変更・帳票の発行に、この担当者の名前が残ります。</p>
-        <Field label="操作する担当者">
-          <select aria-label="操作する担当者" value={actor} onChange={(e) => { setActor(e.target.value); session.setActor(e.target.value); toast("操作する担当者を設定しました"); }}>
-            <option value="">（記録しない）</option>
-            {rows.filter((r) => r.id).map((r) => <option key={r.id}>{r.name}</option>)}
-          </select>
-        </Field>
-        <Field label="接続用の合言葉（管理者から伝えられた場合だけ入力）">
-          <input type="password" value={token} onChange={(e) => setToken(e.target.value)} onBlur={() => session.setToken(token.trim())} />
-        </Field>
-      </section>
+      {authMode() === "login" ? (
+        <section className="panel">
+          <h2 style={{ marginBottom: 8 }}>操作した人の記録</h2>
+          <p className="small muted">修正履歴・ステータスの変更・帳票の発行には、ログインしている人の名前が残ります。</p>
+        </section>
+      ) : (
+        <section className="panel">
+          <h2 style={{ marginBottom: 8 }}>この端末で操作する人</h2>
+          <p className="small muted">修正履歴・ステータスの変更・帳票の発行に、この担当者の名前が残ります。</p>
+          <Field label="操作する担当者">
+            <select aria-label="操作する担当者" value={actor} onChange={(e) => { setActor(e.target.value); session.setActor(e.target.value); toast("操作する担当者を設定しました"); }}>
+              <option value="">（記録しない）</option>
+              {rows.filter((r) => r.id).map((r) => <option key={r.id}>{r.name}</option>)}
+            </select>
+          </Field>
+          <Field label="接続用の合言葉（管理者から伝えられた場合だけ入力）">
+            <input type="password" value={token} onChange={(e) => setToken(e.target.value)} onBlur={() => session.setToken(token.trim())} />
+          </Field>
+        </section>
+      )}
     </div>
   );
 }

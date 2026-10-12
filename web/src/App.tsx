@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Link, Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { get, session } from "./api";
+import { authMode, finishLogin, idToken, loadAuthConfig, logout, startLogin } from "./auth";
 import { Icon, MetaProvider, ToastProvider } from "./ui";
 import HomePage from "./pages/Home";
 import RegisterPage from "./pages/Register";
@@ -53,6 +54,10 @@ function Sidebar() {
   useEffect(() => {
     get("/api/home").then((h) => setCounts(h.counts)).catch(() => setCounts(null));
   }, [location.pathname]);
+  const [me, setMe] = useState<{ name: string } | null>(null);
+  useEffect(() => {
+    if (authMode() === "login") get("/api/me").then(setMe).catch(() => setMe(null));
+  }, []);
   const inEstimate = /^\/estimates\/\d+/.test(location.pathname);
   return (
     <aside className="side">
@@ -100,7 +105,16 @@ function Sidebar() {
         </div>
       </nav>
       <div className="who">
-        <Link to="/settings/staff">担当者：{session.actor() || "未設定"}</Link>
+        {authMode() === "login" ? (
+          <>
+            <span>ログイン中：{me?.name || "…"}</span>
+            <button className="btn link small" onClick={logout}>
+              ログアウト
+            </button>
+          </>
+        ) : (
+          <Link to="/settings/staff">担当者：{session.actor() || "未設定"}</Link>
+        )}
       </div>
     </aside>
   );
@@ -197,38 +211,87 @@ function Layout({ children }: { children: ReactNode }) {
   );
 }
 
+/** Before the screens: learn whether sign-in is used, finish a return from the sign-in page, and ask to sign in. */
+function AuthGate({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [state, setState] = useState<"loading" | "ready" | "signin">("loading");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    (async () => {
+      await loadAuthConfig();
+      if (authMode() !== "login") return setState("ready");
+      if (location.pathname === "/auth/callback") {
+        try {
+          navigate(await finishLogin(location.search), { replace: true });
+        } catch (e: any) {
+          setError(e.message);
+          return setState("signin");
+        }
+      }
+      setState((await idToken()) ? "ready" : "signin");
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  if (state === "loading") return <div className="empty">{location.pathname === "/auth/callback" ? "ログインしています…" : "読み込み中…"}</div>;
+  if (state === "signin")
+    return (
+      <div className="login">
+        <div className="panel">
+          <div className="brand">
+            <div className="brand-mark">
+              <i />
+            </div>
+            <div>
+              <b>板金見積</b>
+              <span>図面管理プラットフォーム</span>
+            </div>
+          </div>
+          <p>会社のアカウントでログインしてください。</p>
+          {error && <div className="error">{error}</div>}
+          <button className="btn primary" onClick={() => startLogin(location.pathname === "/auth/callback" ? "/" : undefined)}>
+            ログイン
+          </button>
+        </div>
+      </div>
+    );
+  return <>{children}</>;
+}
+
 export default function App() {
   return (
-    <ToastProvider>
-      <MetaProvider>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/drawings/register" element={<RegisterPage />} />
-            <Route path="/drawings/:id" element={<DrawingPage />} />
-            <Route path="/drawings" element={<DrawingsPage />} />
-            <Route path="/estimates/new" element={<NewEstimatePage />} />
-            <Route path="/estimates/:id/progress" element={<ProgressPage />} />
-            <Route path="/estimates/:id" element={<EstimatePage />} />
-            <Route path="/estimates" element={<Navigate to="/cases" replace />} />
-            <Route path="/cases" element={<CasesPage />} />
-            <Route path="/search" element={<SearchPage />} />
-            <Route path="/review" element={<ReviewPage />} />
-            <Route path="/documents" element={<DocumentsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/settings/masters" element={<MastersPage />} />
-            <Route path="/settings/logic" element={<LogicPage />} />
-            <Route path="/settings/templates" element={<TemplatesPage />} />
-            <Route path="/settings/statuses" element={<StatusesPage />} />
-            <Route path="/settings/categories" element={<CategoriesPage />} />
-            <Route path="/settings/staff" element={<StaffPage />} />
-            <Route path="/settings/import" element={<ImportPage />} />
-            <Route path="/settings/partners" element={<PartnersPage />} />
-            <Route path="/partners" element={<Navigate to="/settings/partners" replace />} />
-            <Route path="*" element={<div className="empty">ページが見つかりません。</div>} />
-          </Routes>
-        </Layout>
-      </MetaProvider>
-    </ToastProvider>
+    <AuthGate>
+      <ToastProvider>
+        <MetaProvider>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/drawings/register" element={<RegisterPage />} />
+              <Route path="/drawings/:id" element={<DrawingPage />} />
+              <Route path="/drawings" element={<DrawingsPage />} />
+              <Route path="/estimates/new" element={<NewEstimatePage />} />
+              <Route path="/estimates/:id/progress" element={<ProgressPage />} />
+              <Route path="/estimates/:id" element={<EstimatePage />} />
+              <Route path="/estimates" element={<Navigate to="/cases" replace />} />
+              <Route path="/cases" element={<CasesPage />} />
+              <Route path="/search" element={<SearchPage />} />
+              <Route path="/review" element={<ReviewPage />} />
+              <Route path="/documents" element={<DocumentsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings/masters" element={<MastersPage />} />
+              <Route path="/settings/logic" element={<LogicPage />} />
+              <Route path="/settings/templates" element={<TemplatesPage />} />
+              <Route path="/settings/statuses" element={<StatusesPage />} />
+              <Route path="/settings/categories" element={<CategoriesPage />} />
+              <Route path="/settings/staff" element={<StaffPage />} />
+              <Route path="/settings/import" element={<ImportPage />} />
+              <Route path="/settings/partners" element={<PartnersPage />} />
+              <Route path="/partners" element={<Navigate to="/settings/partners" replace />} />
+              <Route path="*" element={<div className="empty">ページが見つかりません。</div>} />
+            </Routes>
+          </Layout>
+        </MetaProvider>
+      </ToastProvider>
+    </AuthGate>
   );
 }

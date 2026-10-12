@@ -291,6 +291,10 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | `QUOTE_LOG_PATH` | `output/quote_log.csv` | 以前の版の見積書の記録。API の起動時にデータベースへ取り込む（今の記録はデータベース） |
 | `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要。守りは `api/security.py` の1か所 |
 | `TENANT_TOKENS` | なし | 1つのシステムを複数の会社で使うときの、会社IDとその合言葉（`alpha=合言葉1,beta=合言葉2`）。会社の合言葉で呼ぶと、その会社のデータ・番号・マスター・ファイルだけを扱う。`API_TOKEN` は会社ID `default`（今までのデータ）の合言葉。新しい会社は最初に呼ばれたときにマスター・ステータスなどの初期データが入る（過去見積のお試しデータは入らない） |
+| `COGNITO_USER_POOL_ID` | なし | ログイン（Amazon Cognito）のユーザープール（例 `ap-northeast-1_AbCdEf123`）。`COGNITO_CLIENT_ID` と両方を設定すると、画面はログインの画面から始まり、ログインした人の会社（`custom:tenant_id`）のデータを扱い、操作者にはその人の名前が残る。合言葉（`API_TOKEN`・`TENANT_TOKENS`）はほかのシステムからの呼び出し用にそのまま使える |
+| `COGNITO_CLIENT_ID` | なし | 画面用のアプリクライアント（クライアントシークレットなし。認可コードと PKCE。コールバック URL は `https://<画面のホスト>/auth/callback`、サインアウト URL は `https://<画面のホスト>/`） |
+| `COGNITO_DOMAIN` | なし | ログインの画面のドメイン（`https://<接頭辞>.auth.<リージョン>.amazoncognito.com` か独自ドメイン） |
+| `COGNITO_TENANT_CLAIM` | `custom:tenant_id` | 会社IDを持つ属性。会社IDのない利用者は 403 |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類と中身の先頭も確認） |
 | `JOB_WORKERS` | 2 | 裏で処理する数 |
 | `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・資料の撮影用。API を呼ばない） |
