@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from src.db.models import (AttributeDef, CaseStatus, Category, CompanyRow, FinishRow, MaterialRow, Partner,
                            PastQuoteRow, PolicyRow, ProcessRow, Staff, Template)
+from src.db.retry import CHUNK
 from src.past_quotes import HistoryStore
 
 STATUSES = [  # name, color, phase, role
@@ -98,7 +99,11 @@ def seed(session: Session, data_dir: str | Path = "data", history_path: str | Pa
         for i, name in enumerate(names):
             session.add(Staff(name=name, sort=i))
     if _empty(session, PastQuoteRow) and history:
-        session.execute(insert(PastQuoteRow), [asdict(q) for q in history])
+        session.commit()
+        rows = [asdict(q) for q in history]
+        for start in range(0, len(rows), CHUNK):  # a few thousand rows: several transactions (Aurora DSQL)
+            session.execute(insert(PastQuoteRow), rows[start:start + CHUNK])
+            session.commit()
     if _empty(session, Category):
         customers = [c for c, _ in _top_customers(history, 5)]
         for i, (group, names) in enumerate((("顧客別", customers), ("製品別", PRODUCTS), ("部品種別", PART_KINDS))):

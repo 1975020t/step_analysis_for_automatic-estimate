@@ -9,13 +9,18 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Table, Text,
-                        UniqueConstraint)
+from sqlalchemy import (JSON, BigInteger, Boolean, Column, Date, DateTime, Float, ForeignKey, Integer, String, Table,
+                        Text, UniqueConstraint)
 from sqlalchemy.orm import DeclarativeBase, declared_attr, Mapped, mapped_column, relationship
 
 
 def now() -> datetime:
     return datetime.now().replace(microsecond=0)
+
+
+# Row ids are 64-bit (Aurora DSQL hands out ids from caches of 65,536 numbers per connection, so they grow fast).
+# SQLite keeps INTEGER: only an INTEGER PRIMARY KEY numbers itself there.
+ID = BigInteger().with_variant(Integer(), "sqlite")
 
 
 class Base(DeclarativeBase):
@@ -33,7 +38,7 @@ class Versioned:
 # ---------------------------------------------------------------- settings
 class Staff(Base):
     __tablename__ = "staff"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     name: Mapped[str] = mapped_column(String(80), unique=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     sort: Mapped[int] = mapped_column(Integer, default=0)
@@ -41,7 +46,7 @@ class Staff(Base):
 
 class CaseStatus(Versioned, Base):
     __tablename__ = "case_statuses"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     name: Mapped[str] = mapped_column(String(40))
     sort: Mapped[int] = mapped_column(Integer, default=0)
     color: Mapped[str] = mapped_column(String(20), default="blue")       # light / blue / dark / grey
@@ -55,16 +60,16 @@ class CaseStatus(Versioned, Base):
 class Category(Base):
     """A folder of drawings. parent_id NULL: a group (顧客別, 製品別, 部品種別 ...)."""
     __tablename__ = "categories"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     name: Mapped[str] = mapped_column(String(80))
-    parent_id: Mapped[int | None] = mapped_column(ForeignKey("categories.id", ondelete="CASCADE"), nullable=True)
+    parent_id: Mapped[int | None] = mapped_column(ID, ForeignKey("categories.id", ondelete="CASCADE"), nullable=True)
     sort: Mapped[int] = mapped_column(Integer, default=0)
 
 
 class AttributeDef(Base):
     """An attribute / search item of drawings. builtin ones map to drawing columns or analysis values."""
     __tablename__ = "attribute_defs"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     key: Mapped[str] = mapped_column(String(40), unique=True)
     label: Mapped[str] = mapped_column(String(80))
     input_type: Mapped[str] = mapped_column(String(20), default="text")  # text / select / number_range / date_range
@@ -78,7 +83,7 @@ class AttributeDef(Base):
 class Template(Base):
     """A document template: which items are shown. Costs and margin are never printed (fixed)."""
     __tablename__ = "templates"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     name: Mapped[str] = mapped_column(String(80))
     customers: Mapped[list] = mapped_column(JSON, default=list)   # empty: every customer
     options: Mapped[dict] = mapped_column(JSON, default=dict)
@@ -152,18 +157,18 @@ class CompanyRow(Versioned, Base):
 # ---------------------------------------------------------------- drawings
 drawing_categories = Table(
     "drawing_categories", Base.metadata,
-    Column("drawing_id", ForeignKey("drawings.id", ondelete="CASCADE"), primary_key=True),
-    Column("category_id", ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True),
+    Column("drawing_id", ID, ForeignKey("drawings.id", ondelete="CASCADE"), primary_key=True),
+    Column("category_id", ID, ForeignKey("categories.id", ondelete="CASCADE"), primary_key=True),
 )
 
 
 class Drawing(Versioned, Base):
     __tablename__ = "drawings"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     drawing_no: Mapped[str] = mapped_column(String(80), index=True)
     name: Mapped[str] = mapped_column(String(120), default="")
     customer: Mapped[str] = mapped_column(String(120), default="")
-    current_revision_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    current_revision_id: Mapped[int | None] = mapped_column(ID, nullable=True)
     attrs: Mapped[dict] = mapped_column(JSON, default=dict)          # custom attributes (AttributeDef.key -> value)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
@@ -176,8 +181,8 @@ class Drawing(Versioned, Base):
 class DrawingRevision(Base):
     """One version of a drawing: a drawing PDF and/or a shape file (STEP / DXF), their analysis and reading."""
     __tablename__ = "drawing_revisions"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    drawing_id: Mapped[int] = mapped_column(ForeignKey("drawings.id", ondelete="CASCADE"), index=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
+    drawing_id: Mapped[int] = mapped_column(ID, ForeignKey("drawings.id", ondelete="CASCADE"), index=True)
     revision: Mapped[str] = mapped_column(String(20), default="")
     pdf_file_id: Mapped[str] = mapped_column(String(40), default="")
     pdf_name: Mapped[str] = mapped_column(String(160), default="")
@@ -201,8 +206,8 @@ class DrawingRevision(Base):
 class DrawingNote(Base):
     """A note written on the drawing at a position (x, y: 0..1 of the preview)."""
     __tablename__ = "drawing_notes"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    revision_id: Mapped[int] = mapped_column(ForeignKey("drawing_revisions.id", ondelete="CASCADE"), index=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
+    revision_id: Mapped[int] = mapped_column(ID, ForeignKey("drawing_revisions.id", ondelete="CASCADE"), index=True)
     x: Mapped[float] = mapped_column(Float)
     y: Mapped[float] = mapped_column(Float)
     text: Mapped[str] = mapped_column(Text)
@@ -213,8 +218,8 @@ class DrawingNote(Base):
 class DrawingMemo(Base):
     """注意 / 不具合 memo of a drawing."""
     __tablename__ = "drawing_memos"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    drawing_id: Mapped[int] = mapped_column(ForeignKey("drawings.id", ondelete="CASCADE"), index=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
+    drawing_id: Mapped[int] = mapped_column(ID, ForeignKey("drawings.id", ondelete="CASCADE"), index=True)
     kind: Mapped[str] = mapped_column(String(20), default="注意")
     text: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
@@ -224,11 +229,11 @@ class DrawingMemo(Base):
 # ---------------------------------------------------------------- cases and quotes
 class Case(Versioned, Base):
     __tablename__ = "cases"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     number: Mapped[str] = mapped_column(String(40), unique=True)
     customer: Mapped[str] = mapped_column(String(120))
     title: Mapped[str] = mapped_column(String(160), default="")
-    status_id: Mapped[int] = mapped_column(ForeignKey("case_statuses.id"))
+    status_id: Mapped[int] = mapped_column(ID, ForeignKey("case_statuses.id"))
     staff: Mapped[str] = mapped_column(String(80), default="")
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)       # 希望納期 (never changes the price)
     outcome: Mapped[str] = mapped_column(String(10), default="未回答")      # 受注 / 失注 / 未回答
@@ -247,8 +252,8 @@ class Case(Versioned, Base):
 class CaseStatusLog(Base):
     """Status changes, with the status name as it was then (renaming a status keeps the old name here)."""
     __tablename__ = "case_status_log"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    case_id: Mapped[int] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
+    case_id: Mapped[int] = mapped_column(ID, ForeignKey("cases.id", ondelete="CASCADE"), index=True)
     status_name: Mapped[str] = mapped_column(String(40))
     at: Mapped[datetime] = mapped_column(DateTime, default=now)
     actor: Mapped[str] = mapped_column(String(80), default="")
@@ -257,11 +262,11 @@ class CaseStatusLog(Base):
 class Quote(Versioned, Base):
     """The estimate of one drawing revision: its inputs, the analysis used and the last computed result."""
     __tablename__ = "quotes"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    case_id: Mapped[int] = mapped_column(ForeignKey("cases.id", ondelete="CASCADE"), index=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
+    case_id: Mapped[int] = mapped_column(ID, ForeignKey("cases.id", ondelete="CASCADE"), index=True)
     number: Mapped[str] = mapped_column(String(40), unique=True)
-    drawing_id: Mapped[int | None] = mapped_column(ForeignKey("drawings.id"), nullable=True, index=True)
-    revision_id: Mapped[int | None] = mapped_column(ForeignKey("drawing_revisions.id"), nullable=True)
+    drawing_id: Mapped[int | None] = mapped_column(ID, ForeignKey("drawings.id"), nullable=True, index=True)
+    revision_id: Mapped[int | None] = mapped_column(ID, ForeignKey("drawing_revisions.id"), nullable=True)
     inputs: Mapped[dict] = mapped_column(JSON, default=dict)      # see src/services/platform/quotes.py
     analysis: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     reading: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # the revision's reading used as draft
@@ -276,8 +281,8 @@ class Quote(Versioned, Base):
 
 class QuoteEditLog(Base):
     __tablename__ = "quote_edit_log"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    quote_id: Mapped[int] = mapped_column(ForeignKey("quotes.id", ondelete="CASCADE"), index=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
+    quote_id: Mapped[int] = mapped_column(ID, ForeignKey("quotes.id", ondelete="CASCADE"), index=True)
     at: Mapped[datetime] = mapped_column(DateTime, default=now)
     actor: Mapped[str] = mapped_column(String(80), default="")
     summary: Mapped[str] = mapped_column(Text, default="")
@@ -288,12 +293,12 @@ class QuoteEditLog(Base):
 class IssuedDocument(Base):
     """A document issued from a quote: 見積書 / 納品書 / 請求書, with the amounts printed on it."""
     __tablename__ = "issued_documents"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     kind: Mapped[str] = mapped_column(String(20))                 # quote / delivery / invoice
     number: Mapped[str] = mapped_column(String(40), unique=True)
-    case_id: Mapped[int] = mapped_column(ForeignKey("cases.id"), index=True)
-    quote_id: Mapped[int] = mapped_column(ForeignKey("quotes.id"), index=True)
-    template_id: Mapped[int | None] = mapped_column(ForeignKey("templates.id"), nullable=True)
+    case_id: Mapped[int] = mapped_column(ID, ForeignKey("cases.id"), index=True)
+    quote_id: Mapped[int] = mapped_column(ID, ForeignKey("quotes.id"), index=True)
+    template_id: Mapped[int | None] = mapped_column(ID, ForeignKey("templates.id"), nullable=True)
     issued_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     issued_by: Mapped[str] = mapped_column(String(80), default="")
     customer: Mapped[str] = mapped_column(String(120), default="")
@@ -314,7 +319,7 @@ class IssuedDocument(Base):
 class PastQuoteRow(Base):
     __tablename__ = "past_quotes"
     __table_args__ = (UniqueConstraint("quote_no", "date", "customer", name="uq_past_quote"),)
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     quote_no: Mapped[str] = mapped_column(String(80), index=True)
     date: Mapped[date] = mapped_column(Date, index=True)
     customer: Mapped[str] = mapped_column(String(120))
@@ -344,8 +349,8 @@ class PastQuoteRow(Base):
     shape_class: Mapped[str] = mapped_column(String(80), default="")
     source: Mapped[str] = mapped_column(String(120), default="")
     original: Mapped[dict] = mapped_column(JSON, default=dict)
-    case_id: Mapped[int | None] = mapped_column(ForeignKey("cases.id"), nullable=True, index=True)
-    drawing_id: Mapped[int | None] = mapped_column(ForeignKey("drawings.id"), nullable=True, index=True)
+    case_id: Mapped[int | None] = mapped_column(ID, ForeignKey("cases.id"), nullable=True, index=True)
+    drawing_id: Mapped[int | None] = mapped_column(ID, ForeignKey("drawings.id"), nullable=True, index=True)
     lost_reason: Mapped[str] = mapped_column(String(40), default="")
     answer_days: Mapped[float | None] = mapped_column(Float, nullable=True)
 
@@ -353,7 +358,7 @@ class PastQuoteRow(Base):
 # ---------------------------------------------------------------- partners and documents
 class Partner(Versioned, Base):
     __tablename__ = "partners"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     kind: Mapped[str] = mapped_column(String(20), default="協力会社")   # 協力会社 / 顧客
     name: Mapped[str] = mapped_column(String(120))
     category: Mapped[str] = mapped_column(String(40), default="")       # 区分 (表面処理, 熱処理, 材料, 業種 ...)
@@ -369,7 +374,7 @@ class Partner(Versioned, Base):
 class LibraryDocument(Base):
     """A registered document (PDF / Excel) for the keyword search: kind and related drawings set by a person."""
     __tablename__ = "documents"
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(ID, primary_key=True)
     kind: Mapped[str] = mapped_column(String(20))
     title: Mapped[str] = mapped_column(String(200))
     file_id: Mapped[str] = mapped_column(String(40))

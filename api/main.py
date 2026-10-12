@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 
 from src.models import SheetMetalAnalysis
 from src.quote_document import PartInfo, Recipient
+from api.conflict import ConflictRetryMiddleware
 from api.platform_routes import build_router
 from api.security import token_guard
 from src.services.estimate import EstimateService, ReaderFactory, ServiceError
@@ -60,6 +61,7 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     app = FastAPI(title="板金見積 API", version="1.0.0", lifespan=lifespan,
                   description="STEP・DXFの解析、図面PDFの読み取り、見積、見積書、類似見積、過去見積の履歴。"
                               "金額はマスターとルールだけで決まります（LLMは計算しません）。")
+    app.add_middleware(ConflictRetryMiddleware)  # Aurora DSQL: a request that met a conflicting write runs again
     app.state.service = service
     app.state.platform = platform
     app.state.settings = settings

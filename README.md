@@ -283,7 +283,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 
 | 変数 | 既定 | 内容 |
 |---|---|---|
-| `DATABASE_URL` | なし（SQLite `<保存先>/app.db`） | データベース。PostgreSQL は `postgresql+psycopg://user:pass@host/db` |
+| `DATABASE_URL` | なし（SQLite `<保存先>/app.db`） | データベース。PostgreSQL は `postgresql+psycopg://user:pass@host/db`。Aurora DSQL は `auroradsql+psycopg://admin@<クラスターのエンドポイント>/postgres?region=ap-northeast-1`（パスワードは不要。IAM の権限から接続のたびに一時トークンを作る） |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスターと自社情報（評価とテストはこの CSV を直接読む） |
 | `ESTIMATE_STORAGE_DIR` | `output` | 図面PDF・形状ファイル・帳票・書類・受付・3D表示のファイル |
 | `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` にすると、図面PDF・形状ファイル・帳票・書類・3D表示のファイルを S3 に置く（受付の状態と見積書の出力記録はデータベース。SQLite の場合はそのファイルが `ESTIMATE_STORAGE_DIR` に残る）。AWS の認証は boto3 の標準の方法（IAM ロールなど） |

@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.db.models import (Case, Category, Drawing, DrawingMemo, DrawingNote, DrawingRevision, LibraryDocument, Quote,
                            now)
+from src.db.retry import retry_on_conflict
 from src.master_loader import UNREGISTERED
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
@@ -114,9 +115,9 @@ def run_register_job(pf: Platform, payload: dict) -> dict:
     """At registration: analyse the shape file, take the drawing reading (the draft read before registering, or a
     new reading when none was made and the reader is available), extract the PDF text for the search.
     Three steps (src/services/extraction.py): prepare (database) -> extract (files only) -> finish (database)."""
-    plan = prepare_register(pf, payload)
+    plan = retry_on_conflict(lambda: prepare_register(pf, payload))
     extracted = extract(pf.service.extractor(lambda **p: report_progress(stage=p["stage"])), plan)
-    return finish_register(pf, payload, plan, extracted)
+    return retry_on_conflict(lambda: finish_register(pf, payload, plan, extracted))
 
 
 def prepare_register(pf: Platform, payload: dict) -> dict:
