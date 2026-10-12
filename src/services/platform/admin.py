@@ -26,6 +26,8 @@ MASTER_TABLES = {
 FIELD_LABELS = {"density_kg_m3": "密度", "price_per_kg": "kg単価", "waste_factor": "歩留まり係数", "unit_price": "単価",
                 "value": "値"}
 INPUT_TYPES = ["text", "select", "number_range", "date_range"]
+CALCULATION_TYPES = {"per_mm", "per_hole", "per_bend", "per_location", "per_piece", "per_point", "flat"}
+UNITS = {"mm", "hole", "bend", "location", "piece", "point", "job", "part"}
 
 
 # ---------------------------------------------------------------- staff
@@ -40,16 +42,29 @@ def save_staff(pf: Platform, rows: list[dict]) -> list[dict]:
         raise ServiceError("担当者の名前は空にできず、重複もできません。")
     with pf.session() as s:
         existing = {r.id: r for r in s.scalars(select(Staff))}
-        keep = {r.get("id") for r in rows if r.get("id")}
-        for sid, row in existing.items():
-            if sid not in keep:
-                row.active = False  # kept for the history (cases keep the name)
-        for i, r in enumerate(rows):
+        keep = {r.get("id") for r in rows if r.get("id") in existing}
+        by_name = {row.name: row for row in existing.values()}
+        targets = []
+        for r, name in zip(rows, names):
             row = existing.get(r.get("id")) if r.get("id") else None
+            holder = by_name.get(name)
+            if row is None and holder is not None and holder.id not in keep:
+                row = holder  # the name of a removed (inactive) person: that row comes back
+            elif holder is not None and holder is not row and holder.id not in keep:
+                holder.name = f"{holder.name}（削除済み{holder.id}）"  # a removed person's name is reused: theirs gives way
+            targets.append((row, name))
+        for sid, row in existing.items():
+            if sid not in keep and all(t is not row for t, _ in targets):
+                row.active = False  # kept for the history (cases keep the name)
+        for row, _ in targets:  # free the names first so that swapping two names works (names are unique)
+            if row is not None:
+                row.name = f"__{row.id}__"
+        s.flush()
+        for i, ((row, name), r) in enumerate(zip(targets, rows)):
             if row is None:
-                row = s.scalars(select(Staff).where(Staff.name == r["name"].strip())).first() or Staff(name=r["name"].strip())
+                row = Staff(name=name)
                 s.add(row)
-            row.name, row.active, row.sort = r["name"].strip(), bool(r.get("active", True)), i
+            row.name, row.active, row.sort = name, bool(r.get("active", True)), i
         s.commit()
     return staff(pf)
 
@@ -212,8 +227,8 @@ class PartnerIn(BaseModel):
     category: str = ""
     specialties: str = ""
     price_records: str = ""
-    avg_lead_days: float | None = None
-    deal_count: int = 0
+    avg_lead_days: float | None = Field(None, ge=0)
+    deal_count: int = Field(0, ge=0)
     rating: str = ""
     notes: str = ""
 
@@ -280,6 +295,12 @@ def save_master_row(pf: Platform, table: str, code: str, values: dict[str, Any],
                     raise ServiceError(f"{FIELD_LABELS.get(f, f)}は0以上の数値で入力してください。") from None
             if f == "charge_scope" and v not in ("per_part", "per_order"):
                 raise ServiceError("課金の範囲は「1個ごと」か「1注文に1回」です。")
+            if f == "calculation_type" and v not in CALCULATION_TYPES:
+                raise ServiceError("計算のしかたが正しくありません。")
+            if f == "unit" and v not in UNITS:
+                raise ServiceError("単位が正しくありません。")
+            if table == "pricing_policy" and f == "value" and code.endswith("_rate") and not 0 <= float(v) <= 1:
+                raise ServiceError("率は 0〜100% の範囲で入力してください（画面では % で入力します）。")
             if f == "aliases":
                 v = "|".join(a.strip() for a in v.replace("、", "|").split("|") if a.strip())
             clean[f] = v

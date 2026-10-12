@@ -26,6 +26,7 @@ function placeOf(field: string | null): [Tab, string] | null {
   if (field.startsWith("processes")) return ["conditions", `c-processes${field.includes(".") ? "-" + field.split(".")[1] : ""}`];
   if (field.startsWith("custom_processes")) return ["conditions", `c-custom-${field.split(".")[1] || "0"}`];
   if (field.startsWith("shape.")) return ["conditions", `c-shape-${field.split(".")[1]}`];
+  if (field === "dxf_thickness") return ["conditions", "c-dxf-thickness"];
   if (field === "shape" || field === "thickness_mm") return ["shape", "shape-panel"];
   return null;
 }
@@ -285,6 +286,7 @@ function NextAction({ q, goTo, onChanged, onError }: { q: any; goTo: (f: string 
       <div className="next" id="next">
         <h2>次のアクション：{a.label}</h2>
         <p className="small muted" style={{ margin: "0 0 10px" }}>受注済み（{q.status.name}）。見積書と同じ金額で作成します。</p>
+        {(q.notices?.[a.doc_kind] || []).map((n: string, i: number) => <p key={i} className="small warn" style={{ margin: "0 0 10px" }}>{n}</p>)}
         <button className="btn primary" onClick={() => navigate(actionHref(a))}>{a.label}へ →</button>
       </div>
     );
@@ -644,7 +646,7 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
       )}
       {kind === "dxf" && (
         <div className="row" style={{ marginTop: 10 }}>
-          <div className="field" style={{ width: 160 }}><label>板厚（mm）</label><input aria-label="DXFの板厚" type="number" step="0.1" value={f.thickness_mm ?? ""} onChange={(e) => set("thickness_mm", e.target.value)} /></div>
+          <div className="field" style={{ width: 160 }}><label>板厚（mm）</label><input id="c-dxf-thickness" aria-label="DXFの板厚" type="number" step="0.1" value={f.thickness_mm ?? ""} onChange={(e) => set("thickness_mm", e.target.value)} /></div>
           <label className="check"><input type="checkbox" checked={f.flat_confirmed} onChange={(e) => set("flat_confirmed", e.target.checked)} />曲げなし（平板）</label>
         </div>
       )}

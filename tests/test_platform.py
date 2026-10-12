@@ -375,3 +375,48 @@ def test_a_delivery_note_follows_the_status_of_the_case(client):
     assert d["outcome"] == "受注" and not d["blockers"]["delivery"] and d["next_action"]["doc_kind"] == "delivery"
     done = issue(client, d, "delivery")
     assert done.status_code == 201 and done.json()["total"] == d["documents"][0]["total"]  # the quotation's amount
+
+
+def test_settings_refuse_bad_values_with_a_message_instead_of_failing(client):
+    assert client.get("/api/drawings?dim_min=abc").status_code == 400
+    assert client.get("/api/drawings?attrs=notjson").status_code == 400
+    rows = client.get("/api/statuses").json()
+    body = [{k: r[k] for k in ("id", "name", "color", "phase", "visible")} for r in rows]
+    blank = client.put("/api/statuses", json={"statuses": body + [{"name": " ", "phase": "drafting"}]})
+    assert blank.status_code == 400 and "名前" in blank.json()["error"]["message"]
+    empty = client.put("/api/statuses", json={"statuses": body + [{"name": "", "phase": "drafting"}]})
+    assert empty.status_code == 422 and "名前を入力してください" in empty.json()["error"]["message"]  # in Japanese
+
+    # staff: swapping two names, and reusing the name of someone removed, are saved (names are unique)
+    staff = client.get("/api/staff").json()
+    a, b, c = staff[0], staff[1], staff[2]
+    assert client.put("/api/staff", json={"staff": [{"id": a["id"], "name": b["name"]}, {"id": b["id"], "name": a["name"]}, c]}).status_code == 200
+    assert client.put("/api/staff", json={"staff": [{"id": b["id"], "name": a["name"]}, c]}).status_code == 200  # a is removed
+    assert client.put("/api/staff", json={"staff": [{"id": c["id"], "name": b["name"]}]}).status_code == 200  # b's old name
+    active = [s["name"] for s in client.get("/api/staff").json() if s["active"]]
+    assert active == [b["name"]]
+
+    # masters: an unknown calculation type or unit, a rate over 100%
+    p = client.get("/api/master-tables/processes").json()[-1]
+    values = {k: p[k] for k in ("display_name", "calculation_type", "unit_price", "unit", "charge_scope", "aliases")}
+    for change in ({"calculation_type": "zzz"}, {"unit": "zzz"}):
+        r = client.put(f"/api/master-tables/processes/{p['code']}", json={"values": {**values, **change}, "version": p["version"]})
+        assert r.status_code == 400
+    tax = next(r for r in client.get("/api/master-tables/pricing_policy").json() if r["code"] == "tax_rate")
+    r = client.put("/api/master-tables/pricing_policy/tax_rate", json={"values": {"value": "10", "description": tax["description"]}, "version": tax["version"]})
+    assert r.status_code == 400 and client.get("/api/meta").json()["policy"]["tax_rate"] == 0.1
+
+
+def test_a_flat_pattern_without_thickness_asks_for_the_thickness_and_documents_warn_of_later_changes(client):
+    dxf = ROOT / "dxf_data" / "D1" / "Lv2_0013_D1.dxf"
+    q = estimate(client, register(client, "DX-001", step=dxf), material="SPCC")
+    assert [m["field"] for m in q["result"]["missing"]] == ["dxf_thickness"] and q["next_action"]["kind"] == "input"
+    q = change(client, q, thickness_mm=1.6)
+    assert q["result"]["issuable"] and q["result"]["shape"]["thickness_mm"]["value"] == 1.6
+
+    # the delivery note copies the issued quotation: a change made afterwards is pointed out, not silently dropped
+    assert issue(client, q).status_code == 201
+    q = client.get(f"/api/estimates/{q['id']}").json()
+    assert q["notices"]["delivery"] == []
+    q = change(client, q, quantity=q["inputs"]["quantity"] + 1)
+    assert q["notices"]["delivery"] and q["notices"]["invoice"] and not q["notices"]["quote"]

@@ -22,7 +22,7 @@ from src.services.platform.core import Platform, bump, check_version, iso
 from src.services.platform.drawings import reading_for_pricing, sync_revision
 from src.services.platform.pricing import QuoteInputs, compute, evidence_texts, inputs_from_reading
 from src.services.platform.similar import similar
-from src.services.platform.wording import failure, notes
+from src.services.platform.wording import failure, input_errors, notes
 
 ANALYSIS_KEYS = ("k_factor", "k_factor_confirmed", "thickness_mm", "flat_confirmed")
 STAGES = ["CADデータの解析", "図面の読み取り", "マスタ照合", "見積計算", "類似実績の検索"]
@@ -93,7 +93,7 @@ def create(pf: Platform, body: EstimateCreate, actor: str) -> dict:
         try:
             inputs = QuoteInputs(**given)
         except ValidationError as exc:
-            raise ServiceError("見積の条件が正しくありません: " + "; ".join(e["msg"] for e in exc.errors())) from None
+            raise ServiceError("見積の条件が正しくありません: " + input_errors(exc.errors())) from None
         number = next_case_number(s)
         status = status_by_role(s, "drafting")
         case = Case(number=number, customer=inputs.customer.strip(), title=inputs.title.strip(), status=status,
@@ -172,7 +172,8 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
                               "processes": len(inputs.processes),
                               "unregistered": len(inputs.custom_processes) + int(bool(inputs.custom_finish)) + int(bool(inputs.custom_material))}
         stage(3)
-        result = compute(inputs, masters, analysis, reading, file_name=revision.shape_name if revision else "")
+        result = compute(inputs, masters, analysis, reading, file_name=revision.shape_name if revision else "",
+                         dxf=_is_dxf(revision))
         quote.result = result
         values["price"] = result["price"]["subtotal"] if result["price"] else None
         values["missing"] = len(result["missing"])
@@ -183,6 +184,10 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
         quote.updated_at = now()
         s.commit()
     return {"quote_id": payload["quote_id"], "values": values}
+
+
+def _is_dxf(revision: DrawingRevision | None) -> bool:
+    return bool(revision and revision.shape_kind == "dxf" and revision.shape_file_id)
 
 
 def _metric(result: dict, name: str):
@@ -221,7 +226,7 @@ def detail(pf: Platform, quote_id: int) -> dict:
         pending = bool(job and job["status"] in ("queued", "running"))
         inputs = _inputs(quote)
         result = compute(inputs, masters, quote.analysis, quote.reading, analysis_pending=pending,
-                         file_name=revision.shape_name if revision else "")
+                         file_name=revision.shape_name if revision else "", dxf=_is_dxf(revision))
         log = [{"at": iso(e.at), "actor": e.actor, "summary": e.summary, "total_before": e.total_before,
                 "total_after": e.total_after}
                for e in s.scalars(select(QuoteEditLog).where(QuoteEditLog.quote_id == quote.id).order_by(QuoteEditLog.id.desc()))]
@@ -249,6 +254,7 @@ def detail(pf: Platform, quote_id: int) -> dict:
                     "progress": job.get("progress")} if job else None,
             "result": result, "edit_log": log, "documents": docs, "chat": quote.chat or [],
             "blockers": blockers(result, case, docs),
+            "notices": notices(result, docs),
             "similar": found,
             "similar_compare": compare(found, result, drawing.drawing_no if drawing else ""),
             "next_action": next_action(case, quote, drawing, len(result["missing"]), pending, {d["kind"] for d in docs}),
@@ -309,6 +315,18 @@ def blockers(result: dict, case: Case, docs: list[dict]) -> dict:
     return {"quote": quote, "delivery": list(trade), "invoice": list(trade)}
 
 
+def notices(result: dict, docs: list[dict]) -> dict:
+    """Points worth a look before issuing a document that do not block it: the delivery note and the invoice copy
+    the last issued quotation, so say so when the estimate has changed since."""
+    last = next((d for d in docs if d["kind"] == "quote"), None)  # docs: newest first
+    price = result.get("price")
+    trade = []
+    if last and (price is None or (price["subtotal"], price["quantity"]) != (last["subtotal"], last["quantity"])):
+        trade.append(f"見積書 {last['number']} の発行後に見積の条件が変わっています。納品書・請求書は発行済みの見積書の金額"
+                     f"（{last['quantity']}個・税込 ¥{last['total']:,}）で作成します。今の条件にするには見積書を再発行してください")
+    return {"quote": [], "delivery": list(trade), "invoice": list(trade)}
+
+
 def document_out(d: IssuedDocument) -> dict:
     return {"id": d.id, "kind": d.kind, "number": d.number, "issued_at": iso(d.issued_at), "issued_by": d.issued_by,
             "customer": d.customer, "part_name": d.part_name, "drawing_no": d.drawing_no, "quantity": d.quantity,
@@ -359,8 +377,7 @@ def update(pf: Platform, quote_id: int, body: EstimateUpdate, actor: str) -> dic
         try:
             inputs = QuoteInputs(**data)
         except ValidationError as exc:
-            raise ServiceError("見積の条件が正しくありません: " + "; ".join(
-                f"{'.'.join(str(x) for x in e['loc'])}: {e['msg']}" for e in exc.errors())) from None
+            raise ServiceError("見積の条件が正しくありません: " + input_errors(exc.errors())) from None
         object.__setattr__(inputs, "__pydantic_fields_set__", set(before.model_fields_set) | set(body.inputs))
         if not inputs.customer.strip():
             raise ServiceError("顧客は必須です。")
@@ -368,7 +385,8 @@ def update(pf: Platform, quote_id: int, body: EstimateUpdate, actor: str) -> dic
         if any(getattr(inputs, k) != getattr(before, k) for k in ANALYSIS_KEYS):
             quote.analysis = analyse(pf, revision, inputs)
         _store(quote, inputs)
-        quote.result = compute(inputs, masters, quote.analysis, quote.reading, file_name=revision.shape_name if revision else "")
+        quote.result = compute(inputs, masters, quote.analysis, quote.reading, file_name=revision.shape_name if revision else "",
+                               dxf=_is_dxf(revision))
         quote.updated_at, quote.updated_by = now(), actor
         case = quote.case
         case.customer, case.title, case.staff, case.due_date = inputs.customer.strip(), inputs.title.strip(), inputs.staff, inputs.due_date

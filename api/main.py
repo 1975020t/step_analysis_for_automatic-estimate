@@ -74,8 +74,11 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(_: Request, exc: RequestValidationError):
-        details = [{"loc": list(e.get("loc", [])), "message": e.get("msg", "")} for e in exc.errors()]
-        return JSONResponse(status_code=422, content={"error": {"code": "INVALID_INPUT", "message": "入力が正しくありません。",
+        from src.services.platform.wording import input_error, input_errors
+
+        details = [{"loc": list(e.get("loc", [])), "message": input_error(e)} for e in exc.errors()]
+        return JSONResponse(status_code=422, content={"error": {"code": "INVALID_INPUT",
+                                                                "message": f"入力が正しくありません（{input_errors(exc.errors())}）。",
                                                                 "details": details}})
 
     @app.exception_handler(Exception)

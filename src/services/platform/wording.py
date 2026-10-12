@@ -95,3 +95,34 @@ def review_reason(text: str) -> str:
         if re.match(pattern, t):
             return re.sub(pattern + (r".*$" if r"\1" not in replacement else ""), replacement, t, count=1)
     return t
+
+
+# Input errors (pydantic validation) in the estimator's words instead of the library's English.
+FIELD_NAMES = {
+    "customer": "顧客", "title": "案件名", "staff": "担当", "quantity": "数量", "due_date": "希望納期", "material": "材質",
+    "custom_material": "マスタにない材質", "surface_treatment": "表面処理", "custom_finish": "マスタにない表面処理",
+    "rush": "特急", "processes": "追加加工", "custom_processes": "マスタにない加工", "k_factor": "Kファクター",
+    "thickness_mm": "板厚", "flat_confirmed": "曲げなし（平板）", "shape": "寸法の値", "name": "名前",
+    "price_per_kg": "kg単価", "density_kg_m3": "密度", "unit_price": "単価", "blank_area_mm2": "展開面積",
+    "cut_length_mm": "切断長", "hole_count": "穴数", "bend_count": "曲げ数", "drawing_no": "図番", "label": "項目名",
+    "competitor_price": "他社価格", "statuses": "ステータス", "staff_list": "担当者", "text": "メモ", "version": "版",
+    "status_id": "ステータス", "drawing_id": "図面", "code": "コード", "x": "位置", "y": "位置",
+}
+_KIND = {"string_too_short": "を入力してください", "missing": "を入力してください", "greater_than": "は0より大きい値にしてください",
+         "greater_than_equal": "は0以上にしてください", "less_than_equal": "が大きすぎます", "less_than": "が大きすぎます",
+         "int_parsing": "は整数で入力してください", "int_from_float": "は整数で入力してください",
+         "float_parsing": "は数値で入力してください", "date_from_datetime_parsing": "の日付が正しくありません",
+         "date_parsing": "の日付が正しくありません", "bool_parsing": "が正しくありません"}
+
+
+def input_error(error: dict) -> str:
+    """One pydantic error as 「数量は0より大きい値にしてください」."""
+    names = [FIELD_NAMES[str(x)] for x in error.get("loc", []) if str(x) in FIELD_NAMES]
+    field = names[-1] if names else "入力"
+    if len(names) > 1 and names[0] != field:
+        field = f"{names[0]}の{field}"
+    return f"{field}{_KIND.get(error.get('type', ''), 'が正しくありません')}"
+
+
+def input_errors(errors: list[dict]) -> str:
+    return "／".join(dict.fromkeys(input_error(e) for e in errors))

@@ -137,7 +137,17 @@ def build_router(pf: Platform, guarded: list) -> APIRouter:
     def drawing_list(request: Request) -> list[dict]:
         """条件検索（図番・品名・顧客・ステータス・材質・加工・最大寸法・登録日・分類・図面内の文字・属性）。"""
         f = dict(request.query_params)
-        f["attrs"] = json.loads(f.pop("attrs", "") or "{}")
+        try:
+            f["attrs"] = json.loads(f.pop("attrs", "") or "{}")
+            for key in ("dim_min", "dim_max"):
+                if f.get(key) not in (None, ""):
+                    float(f[key])
+            if f.get("category_id"):
+                int(f["category_id"])
+        except (ValueError, TypeError):
+            raise ServiceError("検索条件が正しくありません（最大寸法は数値、属性はJSON）。") from None
+        if not isinstance(f["attrs"], dict):
+            raise ServiceError("検索条件が正しくありません（属性はJSON）。")
         return drawings.list_drawings(pf, f)
 
     @r.get("/drawings/same-number", tags=["drawings"])

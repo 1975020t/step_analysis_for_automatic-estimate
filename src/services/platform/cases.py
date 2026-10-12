@@ -316,6 +316,10 @@ def save_statuses(pf: Platform, rows: list[StatusRow]) -> list[dict]:
             raise ServiceError(f"フェーズは {'・'.join(p['label'] for p in PHASES)} のどれかです。")
         if row.color not in COLORS:
             raise ServiceError("色が正しくありません。")
+    if any(not r.name.strip() for r in rows):
+        raise ServiceError("ステータスの名前を入力してください。")
+    if not rows:
+        raise ServiceError("ステータスが1つもありません。")
     if len({r.name.strip() for r in rows}) != len(rows):
         raise ServiceError("同じ名前のステータスがあります。")
     with pf.session() as s:

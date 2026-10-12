@@ -197,7 +197,8 @@ def effective_analysis(analysis: dict | None, shape: ShapeInput, file_name: str 
 
 
 # ---------------------------------------------------------------- missing items
-def missing_items(inputs: QuoteInputs, masters: MasterLoader, shape_detail: dict, analysis_pending: bool) -> list[Missing]:
+def missing_items(inputs: QuoteInputs, masters: MasterLoader, shape_detail: dict, analysis_pending: bool,
+                  dxf: bool = False) -> list[Missing]:
     out: list[Missing] = []
     if not inputs.quantity:
         out.append(Missing(field="quantity", label="数量", message="数量が未入力です"))
@@ -231,6 +232,10 @@ def missing_items(inputs: QuoteInputs, masters: MasterLoader, shape_detail: dict
                                message=f"マスタにない加工「{p.name}」の{'・'.join(lacking)}が未入力です"))
     if analysis_pending:
         out.append(Missing(field="analysis", label="CADデータ", message="CADデータの解析がまだ終わっていません"))
+    elif dxf and not inputs.thickness_mm and any(shape_detail[n]["value"] is None for n in SHAPE_FIELDS):
+        # a flat pattern (DXF) without a thickness is not analysed yet: the thickness is what to enter
+        out.append(Missing(field="dxf_thickness", label="板厚",
+                           message="板厚が未入力です（展開図DXFには板厚がないため入力します。入力すると寸法を求めます）"))
     else:
         for name, label in SHAPE_FIELDS.items():
             if shape_detail[name]["value"] is None:
@@ -268,11 +273,11 @@ def condition_of(inputs: QuoteInputs, masters: MasterLoader) -> tuple[QuoteCondi
 
 
 def compute(inputs: QuoteInputs, masters: MasterLoader, analysis: dict | None, reading: dict | None = None,
-            analysis_pending: bool = False, file_name: str = "") -> dict:
+            analysis_pending: bool = False, file_name: str = "", dxf: bool = False) -> dict:
     """Everything the estimate screen shows, computed on the server. The amounts are present only when nothing
     is missing (then the quotation can be issued)."""
     effective, shape_detail = effective_analysis(analysis, inputs.shape, file_name)
-    missing = missing_items(inputs, masters, shape_detail, analysis_pending)
+    missing = missing_items(inputs, masters, shape_detail, analysis_pending, dxf)
     out: dict = {"missing": [m.model_dump() for m in missing], "issuable": not missing, "shape": shape_detail,
                  "hints": hints(inputs, analysis, reading, masters),
                  "hint_items": hint_items(inputs, analysis, reading, masters), "items": drawing_items(reading, inputs, masters, analysis),

@@ -49,7 +49,8 @@ def _quote_document(pf: Platform, s, quote: Quote, number: str, issued_at: datet
     inputs = _inputs(quote)
     revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
     drawing = s.get(Drawing, quote.drawing_id) if quote.drawing_id else None
-    result = compute(inputs, masters, quote.analysis, quote.reading)
+    result = compute(inputs, masters, quote.analysis, quote.reading,
+                     dxf=bool(revision and revision.shape_kind == "dxf" and revision.shape_file_id))
     if result["missing"]:
         raise NotIssuable("未入力の項目があるため発行できません: " + "／".join(m["message"] for m in result["missing"]),
                           result["missing"])

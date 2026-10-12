@@ -140,3 +140,14 @@ def test_api_failure_does_not_mutate_existing_condition():
     assert original.material == "AL5052"
     assert original.quantity == 10
     assert original.additional_processes == []
+
+
+def test_mock_client_understands_the_examples_shown_on_the_screen() -> None:
+    from src.llm_client import MockLLMClient
+
+    mock = MockLLMClient()
+    condition = QuoteCondition(material="SPCC", quantity=10)
+    quantity = mock.interpret_quote_change("数量を200に", condition, []).operations
+    assert [(o.field, o.value) for o in quantity] == [("quantity", 200)]
+    countersink = mock.interpret_quote_change("皿もみを4か所追加", condition, []).operations
+    assert [(o.process_code, o.quantity) for o in countersink] == [("COUNTERSINK", 4)]

@@ -45,13 +45,15 @@ React の画面（web/、Vite。npm run build で web/dist）
 | | `GET /api/drawings`（条件はクエリ。自社の属性は `attrs` に JSON）、`GET /api/drawings/same-number`、`GET/PUT /api/drawings/{id}`、`PUT /api/drawings/{id}/current-revision`、`GET /api/drawings/{id}/similar`、`POST /api/drawings/{id}/memos`、`POST /api/revisions/{id}/notes`、`DELETE /api/notes/{id}`、`GET /api/revisions/{id}/preview.png`、`GET /api/files/{id}/raw` | |
 | 見積 | `GET /api/estimate-draft?drawing_id=` または `?reading_job_id=&file_name=` | 新規見積の条件入力の下書き。項目ごとに値と印 `mark`（read 読取・review 要確認・unregistered マスタ未登録・none 記載なし・drawing 図面情報）と `note`。値は見積の受付が図面の読み取りから入れる値と同じ（`inputs_from_reading`） |
 | | `POST /api/estimates`（202。`rush`・`processes`・`custom_processes` も受ける） | 案件と見積を作り、受付番号（estimate）で 形状解析 → 図面の読み取り → マスタ照合 → 見積計算 → 類似実績の検索。`GET /api/jobs/{id}` の `progress` に段階と途中の値 |
-| | `GET /api/estimates`、`GET /api/estimates/{id}`、`PUT /api/estimates/{id}`（`version` 必須）、`POST /api/estimates/{id}/chat` | 詳細は条件・解析（確定／概算／解析不可）・`result`（明細・費目ごとの小計・price・missing・hints・items・shape）・`hint_items`（確認事項と直す場所 `field`）・`blockers`（帳票の種類ごとの発行できない理由）・類似実績と `similar_compare`（今回との単価の差）・`next_action`・`flow_step`（6つの手順の現在地）・`outcome_statuses`（受注・失注のステータス）・`phase`・修正履歴・発行した帳票 |
+| | `GET /api/estimates`、`GET /api/estimates/{id}`、`PUT /api/estimates/{id}`（`version` 必須）、`POST /api/estimates/{id}/chat` | 詳細は条件・解析（確定／概算／解析不可）・`result`（明細・費目ごとの小計・price・missing・hints・items・shape）・`hint_items`（確認事項と直す場所 `field`）・`blockers`（帳票の種類ごとの発行できない理由）・`notices`（発行は止めない注意。見積書の発行後に条件が変わったとき、納品書・請求書は発行済みの見積書の金額で作る旨）・類似実績と `similar_compare`（今回との単価の差）・`next_action`・`flow_step`（6つの手順の現在地）・`outcome_statuses`（受注・失注のステータス）・`phase`・修正履歴・発行した帳票 |
 | 帳票 | `GET /api/estimates/{id}/documents/preview.png?kind=&template_id=`、`POST /api/estimates/{id}/documents`（201、未入力・未受注は 409 `NOT_ISSUABLE` と `details`）、`GET /api/issued`、`GET /api/issued/{id}/file.pdf` | |
 | 案件 | `GET /api/cases?q=&staff=&phase=`（一覧＝急ぐ順・フェーズ・警告・To Doの理由・次のアクション、フェーズごとの件数、警告の数。`phase` はフェーズのキーか `active`）、`PUT /api/cases/{id}/status`（`version` 必須、失注は理由）、`GET /api/cases/{id}/history`、`GET/PUT /api/statuses`、`GET /api/review?months=` | |
 | 検索・書類・取引先 | `GET /api/search?q=&kind=`、`GET/POST /api/library`、`GET /api/library/{id}/file`、`DELETE /api/library/{id}`、`GET/POST/PUT /api/partners` | |
 | 設定 | `GET/PUT /api/staff`、`GET/POST/PUT/DELETE /api/categories`、`GET/PUT /api/attributes`、`GET/POST/PUT/DELETE /api/templates`、`GET /api/templates/{id}/preview.png`、`GET/POST/PUT /api/master-tables/{table}`、`GET /api/logic`、`POST /api/history/columns` | |
 
 **フェーズ**：ステータスの属性 `phase`（`drafting` 見積作成中・`checking` 見積確認中・`waiting` 回答待ち・`production` 製造・出荷・`closed` 完了分）。名前を変えても追加しても、属するフェーズはステータスが持つ（マイグレーション `0002` が、改修前の表示グループ・役割・名前から決めて移す）。受注かどうか（`outcome`）は、役割が受注・出荷済・完了か、フェーズが製造・出荷のステータスで決まる。完了分の役割のないステータス（利用者が追加した「納品済」など）は、それまでの結果を引き継ぐ。納品書・請求書は結果が受注で見積書を発行済みのときだけ発行できる。**To Do・注意の判定** は案件の警告（`cases.warnings_of`）と同じ基準で、二重に作らない。
+
+**入力の誤り**：422（`INVALID_INPUT`）と見積の条件の誤り（400）は、欄の名前と直し方を日本語で返す（`wording.input_errors`）。マスタの計算のしかた・単位は決まった値だけ、価格方針の率は 0〜1 だけを受け付ける。展開図DXFに板厚がないときの未入力の項目は、寸法5つではなく `dxf_thickness`（板厚）1つにする。
 
 **受付の開始**：見積の受付は、見積の行を保存してから始める（`JobQueue.submit(..., start=False)` → コミット → `start`）。保存前に受付が見積を読みに行って「見積が見つかりません」となることを防ぐ。
 

@@ -13,6 +13,7 @@ export default function DocumentsPage() {
   const [kind, setKind] = useState(params.get("kind") || "quote");
   const [quoteId, setQuoteId] = useState(params.get("quote") || "");
   const [templateId, setTemplateId] = useState("");
+  const [templateFor, setTemplateFor] = useState<number | null>(null);
   const [person, setPerson] = useState("");
   const [remarks, setRemarks] = useState("");
   const [estimates, setEstimates] = useState<any[]>([]);
@@ -35,10 +36,13 @@ export default function DocumentsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quoteId, kind]);
   useEffect(() => {
-    if (!estimate || templateId) return;
+    if (!estimate || templateFor === estimate.id) return;  // the customer's template, once per case (then the user's choice)
     const t = (meta?.templates || []).find((x) => x.customers.includes(estimate.customer)) || (meta?.templates || []).find((x) => x.is_default);
-    if (t) setTemplateId(String(t.id));
-  }, [estimate, meta, templateId]);
+    if (t) {
+      setTemplateId(String(t.id));
+      setTemplateFor(estimate.id);
+    }
+  }, [estimate, meta, templateFor]);
 
   const blockers: { message: string }[] = (estimate?.blockers?.[kind] || []).map((m: string) => ({ message: m }));
   const canIssue = estimate && blockers.length === 0;
@@ -112,6 +116,9 @@ export default function DocumentsPage() {
               })}
             </div>
             <p className="small muted" style={{ margin: "4px 0 0" }}>納品書・請求書は受注登録済みの案件のみ、見積書と同じ金額で発行可能</p>
+            {(estimate?.notices?.[kind] || []).map((n: string, i: number) => (
+              <div key={i} className="notice" style={{ marginTop: 10 }} data-testid="document-notice">{n}</div>
+            ))}
             {blockers.length > 0 && (
               <div className="notice" data-testid="not-issuable" style={{ marginTop: 10 }}>
                 <b>{LABEL[kind]}を発行できない理由</b>

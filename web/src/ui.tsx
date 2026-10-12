@@ -168,7 +168,8 @@ export function StatusDot({ name, color }: { name: string; color: string }) {
 export function ErrorBox({ error }: { error: any }) {
   if (!error) return null;
   const message = typeof error === "string" ? error : error.message;
-  const details = error instanceof ApiError && Array.isArray(error.details) ? error.details : null;
+  // the items of a refused issue (未入力の項目); input errors are already in the message
+  const details = error instanceof ApiError && Array.isArray(error.details) ? error.details.filter((d: any) => !d.loc) : null;
   return (
     <div className="error" role="alert">
       {message}
