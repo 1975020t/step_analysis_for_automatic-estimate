@@ -20,7 +20,7 @@ from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
 from src.services.platform.cases import next_action, status_brief
 from src.services.platform.core import Platform, bump, check_version, iso
-from src.services.extraction import analyse as analyse_file, extract
+from src.services.extraction import extract
 from src.services.platform.drawings import reading_for_pricing, reading_with_context, sync_revision
 from src.services.platform.pricing import QuoteInputs, compute, evidence_texts, inputs_from_reading
 from src.services.platform.similar import similar
@@ -228,12 +228,6 @@ def _metric(result: dict, name: str):
     return (result.get("shape") or {}).get(name, {}).get("value")
 
 
-def analyse(pf: Platform, revision: DrawingRevision | None, inputs: QuoteInputs) -> dict | None:
-    """The shape analysis with this quote's conditions (the registration analysis when they are the same)."""
-    request, done = analysis_request(revision, inputs)
-    return analyse_file(pf.files, request)[0] if request else done
-
-
 def analysis_request(revision: DrawingRevision | None, inputs: QuoteInputs) -> tuple[dict | None, dict | None]:
     """(a request for a new analysis with this quote's conditions, or None; the analysis to use when no new one is
     needed: the registration's when the conditions are the same, else None)."""
@@ -420,11 +414,15 @@ def update(pf: Platform, quote_id: int, body: EstimateUpdate, actor: str) -> dic
         if not inputs.customer.strip():
             raise ServiceError("顧客は必須です。")
         revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        request = None
         if any(getattr(inputs, k) != getattr(before, k) for k in ANALYSIS_KEYS):
-            quote.analysis = analyse(pf, revision, inputs)
+            # a new analysis with the new conditions runs as a job (the CAD analysis is not done in the API)
+            request, done = analysis_request(revision, inputs)
+            quote.analysis = None if request else done
         _store(quote, inputs)
-        quote.result = compute(inputs, masters, quote.analysis, quote.reading, file_name=revision.shape_name if revision else "",
-                               dxf=_is_dxf(revision))
+        pending = bool(request) or _reanalysing(pf, quote)
+        quote.result = compute(inputs, masters, quote.analysis, quote.reading, analysis_pending=pending,
+                               file_name=revision.shape_name if revision else "", dxf=_is_dxf(revision))
         quote.updated_at, quote.updated_by = now(), actor
         case = quote.case
         case.customer, case.title, case.staff, case.due_date = inputs.customer.strip(), inputs.title.strip(), inputs.staff, inputs.due_date
@@ -432,10 +430,65 @@ def update(pf: Platform, quote_id: int, body: EstimateUpdate, actor: str) -> dic
         summary = changes(before, inputs, masters) or "条件を保存"
         if body.note:
             summary += f"（{body.note}）"
-        s.add(QuoteEditLog(quote_id=quote.id, actor=actor, summary=summary, total_before=old_total,
-                           total_after=((quote.result or {}).get("price") or {}).get("subtotal")))
+        log = QuoteEditLog(quote_id=quote.id, actor=actor, summary=summary, total_before=old_total,
+                           total_after=((quote.result or {}).get("price") or {}).get("subtotal"))
+        s.add(log)
+        job = None
+        if request:
+            s.flush()
+            job = pf.submit("reanalysis", {"quote_id": quote.id, "log_id": log.id}, start=False)
+            quote.job_id = job["job_id"]
         s.commit()
+    if job:
+        pf.start(job["job_id"])  # only after the commit: the job reads the new conditions
     return detail(pf, quote_id)
+
+
+def _reanalysing(pf: Platform, quote: Quote) -> bool:
+    job = pf.job(quote.job_id) if quote.job_id else None
+    return bool(job and job["kind"] == "reanalysis" and job["status"] in ("queued", "running"))
+
+
+def run_reanalysis_job(pf: Platform, payload: dict) -> dict:
+    """The analysis again with a quote's changed conditions (k factor, thickness of a flat pattern, flat), in the
+    same three steps as an estimate: prepare (database) -> extract (files only) -> finish (database)."""
+    report_progress(step=1, steps=1, stage=STAGES[0], stages=STAGES[:1])
+    plan = retry_on_conflict(lambda: prepare_reanalysis(pf, payload))
+    extracted = extract(pf.service.extractor(), plan) if plan["analysis"] else {"analysis": None}
+    return retry_on_conflict(lambda: finish_reanalysis(pf, payload, plan, extracted))
+
+
+def prepare_reanalysis(pf: Platform, payload: dict) -> dict:
+    with pf.session() as s:
+        quote = s.get(Quote, payload["quote_id"])
+        if quote is None:
+            raise JobError("見積が見つかりません。")
+        revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        request, done = analysis_request(revision, _inputs(quote))
+        return {"analysis": request, "analysis_done": done, "pdf_file_id": None, "pdf_text": False, "read": False}
+
+
+def finish_reanalysis(pf: Platform, payload: dict, plan: dict, extracted: dict) -> dict:
+    masters = pf.masters()
+    with pf.session() as s:
+        quote = s.get(Quote, payload["quote_id"])
+        if quote is None:
+            raise JobError("見積が見つかりません。")
+        revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        inputs = _inputs(quote)
+        request, done = analysis_request(revision, inputs)
+        if request != plan["analysis"]:
+            return {"quote_id": quote.id, "superseded": True}  # the conditions changed again: a later job analyses
+        quote.analysis = extracted["analysis"] if request else done
+        quote.result = compute(inputs, masters, quote.analysis, quote.reading,
+                               file_name=revision.shape_name if revision else "", dxf=_is_dxf(revision))
+        subtotal = ((quote.result or {}).get("price") or {}).get("subtotal")
+        log = s.get(QuoteEditLog, payload.get("log_id")) if payload.get("log_id") else None
+        if log is not None and log.quote_id == quote.id:
+            log.total_after = subtotal  # the amount after the change is known now
+        quote.updated_at = now()
+        s.commit()
+    return {"quote_id": payload["quote_id"], "subtotal": subtotal}
 
 
 LABELS = {"customer": "顧客", "title": "案件名", "staff": "担当", "quantity": "数量", "due_date": "希望納期",
