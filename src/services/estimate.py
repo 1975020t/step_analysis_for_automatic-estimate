@@ -143,6 +143,11 @@ class EstimateService:
         if not self.drawing_reader_available():
             raise ServiceError("図面PDFの読み取りには Claude APIキー（ANALYSIS_ANTHROPIC_API_KEY）の設定が必要です。"
                                "条件は手入力してください。", status=503, code="DRAWING_READER_UNAVAILABLE")
+        reading, evidence = self.read_drawing_raw(path)
+        return reading, self.drawing_context(reading, file_name, unregistered_process_texts(evidence, self.masters))
+
+    def read_drawing_raw(self, path: str | Path) -> tuple[dict, list | None]:
+        """The reading and its evidence, without the masters (the extraction step: no database)."""
         reading = dict(self.reader_factory().read(str(path)))
         evidence = reading.pop("evidence", None)
         texts = {}
@@ -153,7 +158,13 @@ class EstimateService:
                     texts[key] = str(text).strip()
         if texts:
             reading["source_texts"] = texts
-        return reading, self.drawing_context(reading, file_name, unregistered_process_texts(evidence, self.masters))
+        return reading, evidence
+
+    def extractor(self, progress=None):
+        """The extraction step's tools: the files and the reader (when available), no database."""
+        from src.services.extraction import Extractor
+
+        return Extractor(self.files, self.read_drawing_raw if self.drawing_reader_available() else None, progress)
 
     def drawing_context(self, reading: dict, file_name: str = "", unregistered: list[str] | None = None) -> DrawingContext:
         items = [DrawingItem(field=i.field, label=i.label, value=i.value, display=i.display, status=i.status,

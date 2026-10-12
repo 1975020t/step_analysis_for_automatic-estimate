@@ -19,6 +19,7 @@ from src.db.models import (Case, Category, Drawing, DrawingMemo, DrawingNote, Dr
 from src.master_loader import UNREGISTERED
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
+from src.services.extraction import extract
 from src.services.pdfium_lock import PDFIUM_LOCK
 from src.services.platform.core import Platform, check_version, iso
 
@@ -111,44 +112,63 @@ def _meta(pf: Platform, file_id: str, kinds) -> dict:
 
 def run_register_job(pf: Platform, payload: dict) -> dict:
     """At registration: analyse the shape file, take the drawing reading (the draft read before registering, or a
-    new reading when none was made and the reader is available), extract the PDF text for the search."""
+    new reading when none was made and the reader is available), extract the PDF text for the search.
+    Three steps (src/services/extraction.py): prepare (database) -> extract (files only) -> finish (database)."""
+    plan = prepare_register(pf, payload)
+    extracted = extract(pf.service.extractor(lambda **p: report_progress(stage=p["stage"])), plan)
+    return finish_register(pf, payload, plan, extracted)
+
+
+def prepare_register(pf: Platform, payload: dict) -> dict:
+    with pf.session() as s:
+        revision = s.get(DrawingRevision, payload["revision_id"])
+        if revision is None:
+            raise JobError("図面の版が見つかりません。")
+        analysis = None
+        if revision.shape_file_id and not (revision.shape_kind == "dxf" and not revision.thickness_mm):
+            analysis = {"file_id": revision.shape_file_id, "file_name": revision.shape_name,
+                        "thickness_mm": revision.thickness_mm, "max_dimension": True}
+        draft = reading_of_job(pf, revision.reading_job_id) if revision.pdf_file_id else None
+        return {"analysis": analysis, "pdf_file_id": revision.pdf_file_id, "pdf_text": bool(revision.pdf_file_id),
+                "read": bool(revision.pdf_file_id and draft is None and not revision.reading_job_id),
+                "draft_reading": draft}
+
+
+def finish_register(pf: Platform, payload: dict, plan: dict, extracted: dict) -> dict:
+    masters = pf.masters()
     with pf.session() as s:
         revision = s.get(DrawingRevision, payload["revision_id"])
         if revision is None:
             raise JobError("図面の版が見つかりません。")
         result: dict = {}
         if revision.shape_file_id:
-            report_progress(stage="CADデータの解析")
-            if revision.shape_kind == "dxf" and not revision.thickness_mm:
+            if plan["analysis"] is None:
                 result["analysis"] = "板厚がないため未解析（見積のときに板厚を入力）"
             else:
-                try:
-                    data, meta = pf.files.get(revision.shape_file_id)
-                    analysis = pf.service.analyze_bytes(data, meta["filename"], revision.thickness_mm)
-                    revision.analysis = analysis.model_dump(mode="json")
-                    revision.max_dimension_mm = max_dimension(pf, revision, analysis)
-                    result["analysis"] = analysis.status
-                except Exception:  # noqa: BLE001 - recorded as a failed analysis; the quote asks for the values
-                    revision.analysis = {"status": "error", "file_name": revision.shape_name,
-                                         "message": "CADデータを解析できませんでした。"}
-                    result["analysis"] = "error"
+                revision.analysis = extracted["analysis"]
+                if extracted["analysis"].get("status") != "error":
+                    revision.max_dimension_mm = extracted["max_dimension_mm"]
+                result["analysis"] = extracted["analysis"].get("status")
         if revision.pdf_file_id:
-            report_progress(stage="図面の読み取り")
-            with pf.files.local_path(revision.pdf_file_id) as pdf_path:
-                revision.pdf_text = pdf_text(pdf_path)
-                reading = reading_of_job(pf, revision.reading_job_id)
-                if reading is None and not revision.reading_job_id and pf.service.drawing_reader_available():
-                    try:
-                        r, ctx = pf.service.read_drawing(pdf_path, revision.pdf_name)
-                        reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
-                    except Exception:  # noqa: BLE001
-                        reading = None
+            revision.pdf_text = extracted["pdf_text"]
+            reading = plan["draft_reading"] or reading_with_context(pf, masters, extracted["reading"], revision.pdf_name)
             if reading:
                 revision.reading = reading
                 apply_reading(revision, reading["reading"])
             result["reading"] = bool(reading)
         s.commit()
     return result
+
+
+def reading_with_context(pf: Platform, masters, raw: dict | None, file_name: str) -> dict | None:
+    """The stored form of a reading: the reading and its items judged against the masters (the finish step)."""
+    if not raw:
+        return None
+    from src.quote_document import unregistered_process_texts
+
+    reading = raw["reading"]
+    ctx = pf.service.drawing_context(reading, file_name, unregistered_process_texts(raw.get("evidence"), masters))
+    return {"reading": reading, "drawing": ctx.model_dump(mode="json")}
 
 
 def reading_of_job(pf: Platform, job_id: str) -> dict | None:
@@ -176,39 +196,6 @@ def sync_revision(pf: Platform, s: Session, revision: DrawingRevision) -> None:
             revision.reading = reading
             apply_reading(revision, reading["reading"])
             s.commit()
-
-
-def max_dimension(pf: Platform, revision: DrawingRevision, analysis) -> float | None:
-    if revision.shape_kind == "step":
-        try:
-            import cadquery as cq
-
-            with pf.files.local_path(revision.shape_file_id) as path:
-                box = cq.importers.importStep(str(path)).val().BoundingBox()
-            return round(max(box.xlen, box.ylen, box.zlen), 1)
-        except Exception:  # noqa: BLE001
-            pass
-    box = analysis.flat_pattern.bounding_box_mm if analysis.flat_pattern else None
-    return round(max(box), 1) if box else None
-
-
-def pdf_text(path: Path) -> str:
-    """The text layer of a PDF (empty for a scan: no OCR)."""
-    import pypdfium2 as pdfium
-
-    with PDFIUM_LOCK:
-        try:
-            pdf = pdfium.PdfDocument(str(path))
-            texts = []
-            for page in pdf:
-                textpage = page.get_textpage()
-                texts.append(textpage.get_text_range())
-                textpage.close()
-                page.close()
-            pdf.close()
-            return "\n".join(texts).replace("\r", "")
-        except Exception:  # noqa: BLE001
-            return ""
 
 
 def render_png(path: Path, width: int = 900) -> bytes:

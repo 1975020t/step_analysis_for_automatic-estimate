@@ -123,6 +123,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 
 - 受付はデータベースの `jobs` 表に1行ずつ持つ（`DbJobStore`。種類、入力、状態、時刻、進み具合、結果か失敗の理由）。以前の版の `<ESTIMATE_STORAGE_DIR>/jobs/*.json` は起動時に1回だけ取り込む。SQLite のときは受付だけ別のファイル（`jobs.db`）に置く（処理中の見積が `app.db` の書き込みの鍵を持ったままでも、進み具合を書けるように）。受け付けたら書いてすぐ返す（テストでは処理に3秒かかっても受付は0.5秒以内）
 - `JobQueue` が同じプロセスのスレッドで実行する（`JOB_WORKERS` 本）
+- 画面の受付（登録 `register`・見積 `estimate`）は3つの段に分かれている：**準備**（`prepare_register`・`prepare_estimate`。データベースを読み、どのファイルをどの条件で解析・読み取りするかを JSON の「計画」にする）→ **抽出**（`src/services/extraction.py` の `extract`。ファイルと読み取り器だけを使い、データベースは使わない。結果も JSON）→ **保存**（`finish_register`・`finish_estimate`。マスター照合・金額・類似・保存）。今は1つの受付の中で順に呼ぶ。AWS ではそれぞれを Step Functions の段にでき、抽出の段にはデータベースの権限が要らない（`tests/test_extraction.py` が、抽出がデータベースを読み込まないことと、各段を JSON で受け渡しても同じ結果になることを確かめる）
 - **再起動**：起動時に queued / running のままの受付を並べ直す（アップロードしたファイルは残っている）。完了した受付の結果はそのまま読める（`tests/test_api.py::test_jobs_survive_a_restart`）
 
 ## 設定（環境変数）
