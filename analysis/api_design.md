@@ -121,7 +121,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 
 ## 受付（重い処理）の仕組み
 
-- `JobStore` が受付ごとに `<ESTIMATE_STORAGE_DIR>/jobs/<job_id>.json` を持つ（種類、入力、状態、時刻、結果か失敗の理由）。受け付けたら書いてすぐ返す（テストでは処理に3秒かかっても受付は0.5秒以内）
+- 受付はデータベースの `jobs` 表に1行ずつ持つ（`DbJobStore`。種類、入力、状態、時刻、進み具合、結果か失敗の理由）。以前の版の `<ESTIMATE_STORAGE_DIR>/jobs/*.json` は起動時に1回だけ取り込む。SQLite のときは受付だけ別のファイル（`jobs.db`）に置く（処理中の見積が `app.db` の書き込みの鍵を持ったままでも、進み具合を書けるように）。受け付けたら書いてすぐ返す（テストでは処理に3秒かかっても受付は0.5秒以内）
 - `JobQueue` が同じプロセスのスレッドで実行する（`JOB_WORKERS` 本）
 - **再起動**：起動時に queued / running のままの受付を並べ直す（アップロードしたファイルは残っている）。完了した受付の結果はそのまま読める（`tests/test_api.py::test_jobs_survive_a_restart`）
 
@@ -131,10 +131,10 @@ GET  /api/history?customer=...&limit=50&offset=0
 |---|---|---|
 | `DATABASE_URL` | なし（SQLite `<ESTIMATE_STORAGE_DIR>/app.db`） | データベース |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスター（材料・工程・表面処理・価格方針・自社情報） |
-| `ESTIMATE_STORAGE_DIR` | `output` | アップロード（uploads/）、受付（jobs/）、見積書（documents/）、3D表示（viewer/） |
-| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` で uploads/・documents/・viewer/ を S3 に置く（jobs/ と出力記録・SQLite はフォルダのまま） |
+| `ESTIMATE_STORAGE_DIR` | `output` | アップロード（uploads/）、見積書（documents/）、3D表示（viewer/）、SQLite の `app.db` |
+| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` で uploads/・documents/・viewer/ を S3 に置く（SQLite の `app.db` はフォルダのまま） |
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴（コミットする。データベースに取り込んだ後は書き換えない） |
-| `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 見積書の出力記録 |
+| `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 以前の版の見積書の出力記録（起動時にデータベースの `quote_log` 表へ取り込む） |
 | `API_TOKEN` | なし | 設定すると API の利用に `Authorization: Bearer <token>` か `X-API-Token` が必要（`/api/health` を除く） |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限 |
 | `JOB_WORKERS` | 2 | 受付を処理するスレッド数 |
@@ -149,7 +149,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 | 部分 | 今 | 差し替え先 | 差し替え方 |
 |---|---|---|---|
 | 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ |
-| 受付の状態 | `JobStore`（JSONファイル） | データベースの表 | `create / read / update / unfinished` を実装し直す |
+| 受付の状態 | `DbJobStore`（データベースの `jobs` 表） | 済み | `src/services/platform/records.py`。見積書の出力記録も `DbQuoteLog`（`quote_log` 表、番号の重なりは主キーで防ぐ） |
 | ファイル | `FileStore` ＋ `LocalBlobStore`（`ESTIMATE_STORAGE_DIR`）か `S3BlobStore`（`ESTIMATE_STORAGE_URL`） | 済み（S3。S3互換の MinIO も同じ） | `BlobStore`（`put / get / exists / local_file`）。CadQuery・pdfium のようにファイルを自分で開く処理には `FileStore.local_path` が手元のパスを渡す（S3 では一時的な写し） |
 | 認証 | 共通の合言葉（`API_TOKEN`）と、画面で選んだ担当者 | ログイン・権限・利用者の招待 | `api/security.py` の2つの関数を差し替える。`*_by` の列はそのまま使う |
 | データベース | SQLite（既定）／PostgreSQL（`DATABASE_URL`） | 管理サービスの PostgreSQL | `DATABASE_URL` を替えるだけ |
@@ -157,6 +157,6 @@ GET  /api/history?customer=...&limit=50&offset=0
 
 ## 今の制限
 
-- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列が要る（受付の状態もファイルなので、複数台では共有のディスクかデータベースに移す）
+- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列が要る（受付の状態と出力記録はデータベースにあるので、複数台で共有できる）
 - 図面PDFの読み取りは今の読み取り器を呼ぶだけ（LLM の呼び出しの中身は変えていない）。pdfium は同時に使えないため、ページの読み込みとプレビュー・文字の取り出しは1つずつ行う
 - 図面の検索・類似の候補は、図面をすべて読んでから絞り込む（数千件までを想定）。それ以上はデータベースの索引と検索に移す

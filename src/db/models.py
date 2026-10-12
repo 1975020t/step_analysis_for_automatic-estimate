@@ -380,3 +380,31 @@ class LibraryDocument(Base):
     customer: Mapped[str] = mapped_column(String(120), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
     created_by: Mapped[str] = mapped_column(String(80), default="")
+
+
+# ---------------------------------------------------------------- background jobs and the quote output log
+class JobRow(Base):
+    """A background job (analysis, drawing reading, registration, estimate): the whole job as JSON in `data`
+    (kind, status, input, times, progress, result or error), the status also as a column for the restart scan."""
+    __tablename__ = "jobs"
+    job_id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(20))
+    status: Mapped[str] = mapped_column(String(10), index=True)
+    data: Mapped[dict] = mapped_column(JSON, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=now)
+
+
+class QuoteLogRow(Base):
+    """The output log of the quotes of POST /api/documents (was output/quote_log.csv). The primary key keeps two
+    outputs from sharing a number."""
+    __tablename__ = "quote_log"
+    quote_no: Mapped[str] = mapped_column(String(40), primary_key=True)
+    issued_at: Mapped[str] = mapped_column(String(25))
+    customer: Mapped[str] = mapped_column(String(200), default="")
+    subject: Mapped[str] = mapped_column(String(200), default="")
+    drawing_no: Mapped[str] = mapped_column(String(120), default="")
+    quantity: Mapped[str] = mapped_column(String(20), default="")
+    total: Mapped[str] = mapped_column(String(20), default="")
+    is_estimate: Mapped[str] = mapped_column(String(10), default="")
+    input_files: Mapped[str] = mapped_column(Text, default="")

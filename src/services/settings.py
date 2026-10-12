@@ -1,11 +1,12 @@
 """Where things are kept and the API limits, from environment variables (defaults: the repository layout).
 
   ESTIMATE_DATA_DIR      masters (materials, processes, finishes, pricing policy, company)   default: data
-  ESTIMATE_STORAGE_DIR   uploads, jobs, documents, 3D view files                              default: output
+  ESTIMATE_STORAGE_DIR   uploads, documents, 3D view files, SQLite                           default: output
   ESTIMATE_STORAGE_URL   s3://bucket/prefix keeps the uploads, documents and 3D view files in S3 instead of
-                         ESTIMATE_STORAGE_DIR (jobs, the quote log and SQLite stay in the folder)   default: none
+                         ESTIMATE_STORAGE_DIR (SQLite stays in the folder)   default: none
   PAST_QUOTES_PATH       quote history CSV (committed)                     default: data/past_quotes/history.csv
-  QUOTE_LOG_PATH         issued-quote log                                  default: <storage>/quote_log.csv
+  QUOTE_LOG_PATH         issued-quote log of an earlier version (taken into the database on start)
+                                                                         default: <storage>/quote_log.csv
   API_TOKEN              when set, every API call needs it (Authorization: Bearer ... or X-API-Token)
   MAX_UPLOAD_MB          largest accepted upload                                              default: 50
   JOB_WORKERS            background workers for analyses and drawing readings                 default: 2

@@ -19,6 +19,7 @@ from src.db.session import open_database
 from src.master_loader import MasterLoader
 from src.past_quotes import PastQuote
 from src.services.estimate import EstimateService, ReaderFactory, ServiceError
+from src.services.platform.records import DbJobStore, DbQuoteLog, import_files, job_sessions
 from src.services.settings import Settings
 from src.similar_quotes import SimilarQuoteSearch
 
@@ -121,6 +122,10 @@ class PlatformEstimateService(EstimateService):
     def __init__(self, platform: "Platform", settings: Settings, reader_factory: ReaderFactory | None) -> None:
         self.platform = platform
         super().__init__(settings, reader_factory=reader_factory)
+        self.job_store = DbJobStore(platform.job_sessions)
+
+    def quote_log(self) -> DbQuoteLog:  # type: ignore[override]
+        return DbQuoteLog(self.platform.sessions)
 
     @property
     def masters(self) -> MasterLoader:  # type: ignore[override]
@@ -146,6 +151,8 @@ class Platform:
         self.sessions = open_database(settings.db_url)
         with self.sessions() as s:
             seed(s, settings.data_dir, settings.history_path)
+        self.job_sessions = job_sessions(settings.db_url, self.sessions)
+        import_files(self.job_sessions, self.sessions, settings.jobs_dir, settings.quote_log_path)  # an earlier version's
         self._lock = threading.Lock()
         self._masters: tuple[int, MasterLoader] | None = None
         self._index: tuple[tuple, SimilarQuoteSearch] | None = None

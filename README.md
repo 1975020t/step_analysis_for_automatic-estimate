@@ -199,7 +199,7 @@ Kファクター未指定（既定0.33）で曲げがある場合は、従来ど
 
 **テンプレート**（設定 ＞ 見積書テンプレート）：表示する項目（費目の内訳＝項目名と数量だけ・単価と数量・図番と改訂・有効期限・備考欄・社印）を切り替えます。適用する顧客を指定でき、原価・粗利は社外用に出しません（固定）。
 
-API だけで使う場合の見積書（`POST /api/documents`、番号は `Q20260928-001` 形式で `output/quote_log.csv` に記録）も今までどおり使えます。
+API だけで使う場合の見積書（`POST /api/documents`、番号は `Q20260928-001` 形式でデータベースの `quote_log` 表に記録）も今までどおり使えます。
 
 **書式**：A4縦1ページ。見本は [analysis/quote_document_sample.pdf](analysis/quote_document_sample.pdf)（確定）と [analysis/quote_document_sample_estimate.pdf](analysis/quote_document_sample_estimate.pdf)（概算）。概算の見本は、今は使いません。この機能で出力した例は [通常](analysis/quote_document_example.pdf)・[未登録の加工を別途見積にした例](analysis/quote_document_example_separate.pdf)・[社内用の見積根拠](analysis/quote_document_example_internal.pdf) です（仮の宛先。`python scripts/make_quote_examples.py` で作り直せます）。
 
@@ -231,7 +231,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 
 **自社情報の設定**：`data/company.csv` は仮の値です（リポジトリは公開のため、実在の会社名・住所・登録番号は入れません）。実際の自社情報は、同じ形式の `data/company.local.csv`（Git管理外）に書くと、そちらが優先されます。`remark_1`、`remark_2`… が備考の定型文、`delivery_place` が受渡場所の既定値です。税率・有効期限・納期は `data/pricing_policy.csv`（`tax_rate`、`quote_validity_days`、`lead_time_days_normal`、`lead_time_days_rush`）で設定します。
 
-**記録**：出力するたびに `output/quote_log.csv`（Git管理外）に、見積番号、発行日時、宛先、件名、図番、数量、合計、概算かどうか（今はつねに0。以前の記録との互換のため列を残す）、入力ファイル名を1行残します。見積番号の連番はこの記録から決めます（同じ日に何度出力しても重複しません）。
+**記録**：API で出力するたびにデータベースの `quote_log` 表に（API を使わず `src/quote_log.py` を直接呼ぶときは `output/quote_log.csv` に）、見積番号、発行日時、宛先、件名、図番、数量、合計、概算かどうか（今はつねに0。以前の記録との互換のため列を残す）、入力ファイル名を1行残します。見積番号の連番はこの記録から決めます（同じ日に何度出力しても重複しません）。
 
 **日本語フォント**：IPAゴシック（`fonts/ipag.ttf`、IPAフォントライセンスv1.0、[ライセンス文](fonts/IPA_Font_License_Agreement_v1.0.txt)）をPDFに埋め込むため、Windows でも文字化けしません。長い会社名・品名・仕様は縮小し、それでも入らなければ折り返して枠内に収めます。同じ入力・同じ発行日時なら同じPDFになります。
 
@@ -279,16 +279,16 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | 形状の解析・図面PDFの読み取り（単体） | `POST /api/files` → `POST /api/analyses` または `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` |
 | 見積の計算・見積書・類似見積・履歴（画面を使わない呼び出し） | `POST /api/quotes`、`POST /api/documents`、`POST /api/similar-quotes`、`/api/history...` |
 
-更新は版（`version`）つきで受け付け、ほかの人が先に保存していたら 409（`CONFLICT`）を返します（黙って上書きしません）。解析と図面の読み取りは受付番号を返して裏で処理し、受付の状態はファイルに残るので、APIを再起動しても取れます。
+更新は版（`version`）つきで受け付け、ほかの人が先に保存していたら 409（`CONFLICT`）を返します（黙って上書きしません）。解析と図面の読み取りは受付番号を返して裏で処理し、受付の状態はデータベースに残るので、APIを再起動しても取れます。
 
 | 変数 | 既定 | 内容 |
 |---|---|---|
 | `DATABASE_URL` | なし（SQLite `<保存先>/app.db`） | データベース。PostgreSQL は `postgresql+psycopg://user:pass@host/db` |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスターと自社情報（評価とテストはこの CSV を直接読む） |
 | `ESTIMATE_STORAGE_DIR` | `output` | 図面PDF・形状ファイル・帳票・書類・受付・3D表示のファイル |
-| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` にすると、図面PDF・形状ファイル・帳票・書類・3D表示のファイルを S3 に置く（受付の状態・見積書の出力記録・SQLite は `ESTIMATE_STORAGE_DIR` のまま）。AWS の認証は boto3 の標準の方法（IAM ロールなど） |
+| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` にすると、図面PDF・形状ファイル・帳票・書類・3D表示のファイルを S3 に置く（受付の状態と見積書の出力記録はデータベース。SQLite の場合はそのファイルが `ESTIMATE_STORAGE_DIR` に残る）。AWS の認証は boto3 の標準の方法（IAM ロールなど） |
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴 |
-| `QUOTE_LOG_PATH` | `output/quote_log.csv` | `POST /api/documents` の見積書の記録 |
+| `QUOTE_LOG_PATH` | `output/quote_log.csv` | 以前の版の見積書の記録。API の起動時にデータベースへ取り込む（今の記録はデータベース） |
 | `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要。守りは `api/security.py` の1か所 |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類と中身の先頭も確認） |
 | `JOB_WORKERS` | 2 | 裏で処理する数 |

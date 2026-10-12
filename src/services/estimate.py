@@ -310,7 +310,7 @@ class EstimateService:
             unregistered_texts=drawing.unregistered_texts if drawing else None)
         history = self.history_store()
         taken = [q.quote_no for q in self.search_index().quotes]
-        document.number = QuoteLog(self.settings.quote_log_path).issue(issued_at, log_row(document), taken)
+        document.number = self.quote_log().issue(issued_at, log_row(document), taken)
         files = {"quote": (f"{document.number}_{document.title}.pdf", render_quote(document))}
         if include_internal:
             files["internal"] = (f"{document.number}_見積根拠（社内用）.pdf", render_internal(document))
@@ -318,6 +318,10 @@ class EstimateService:
             self.blobs.put(f"documents/{document.number}/{kind}.pdf", data)
         history.append([from_document(document, self.masters)])
         return IssuedDocument(document, files)
+
+    def quote_log(self):
+        """Where the quote numbers and the output log are kept (the CSV file here; the database in the API)."""
+        return QuoteLog(self.settings.quote_log_path)
 
     def document_file(self, quote_no: str, kind: str) -> bytes:
         if kind not in ("quote", "internal") or not quote_no.replace("-", "").isalnum():
