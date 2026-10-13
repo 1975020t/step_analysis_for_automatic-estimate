@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { get, post, upload, waitJob } from "../api";
+import { get, post, uploadFile, waitJob } from "../api";
 import { ErrorBox, Field, Flow, Loading, Mark, Thumb, useLoad, useMeta } from "../ui";
 
 export const WIZARD = [{ label: "図面選択" }, { label: "条件入力" }, { label: "解析・計算", note: "自動・約1分" }, { label: "確認・発行", note: "最終" }];
@@ -52,7 +52,7 @@ function SelectDrawing({ source, setSource, onNext }: { source: Source | null; s
     try {
       const next: any = { type: "files", ...(files || {}) };
       for (const f of list) {
-        const u = await upload("/api/files", f);
+        const u = await uploadFile(f);
         if (u.kind === "pdf") {
           next.pdf = u;
           next.readingJob = undefined;

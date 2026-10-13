@@ -75,6 +75,7 @@ python scripts/evaluate_pdf.py --data pdf_shift_dev --reader src.pdf_reader:PdfC
 - `scripts/verify/` 検証スクリプト（ステータスと納品書・API の総当たり・同時保存の負荷試験・解析の並行試験・ブラウザ巡回）。内容と結果は `docs/09_テスト報告書.md`。画面用の API を大きく変えたら回し、報告書の数字を直す
 - `web/` 画面（Vite + React + TypeScript、`npm run build` で `web/dist`。API が配信する）。`scripts/seed_demo.py` がお試しデータ、`tests/test_e2e_flow.py` がブラウザでの通しの操作（`web/dist` が必要）
 - `Dockerfile`（API）・`web/Dockerfile`（画面、nginx）・`docker-compose.yml`（db・api・web）
+- AWS：`api/aws_lambda.py`（API と受付の準備・保存・失敗・DBの準備の入口）、`src/services/aws_extract.py`（抽出の段の入口。DBなし）、`src/services/stepfunctions.py`（`JOBS_STATE_MACHINE_ARN` で受付を Step Functions の実行に）、`src/services/platform/jobsteps.py`（種類ごとの準備・保存）、`Dockerfile.lambda`（イメージ api・extract）、`deploy/aws/`（状態機械の定義、インフラ担当者向けの引き継ぎ資料 `README.md`）。画面は保存先が S3 のときファイルを S3 へ直接送る（`POST /api/uploads`）。テストは `tests/test_aws.py`・`tests/test_e2e_s3.py`、イメージの確認は `scripts/verify/lambda_images.py`
 - `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること

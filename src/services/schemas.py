@@ -223,6 +223,24 @@ class FileOut(BaseModel):
     size: int
 
 
+class UploadStart(BaseModel):
+    filename: str = Field(min_length=1, max_length=255)
+    size: int = Field(ge=1)
+
+
+class UploadForm(BaseModel):
+    """direct=true: post the file to `url` as a form with `fields` and then `file` (straight to S3)."""
+    direct: bool
+    file_id: str | None = None
+    filename: str | None = None
+    url: str | None = None
+    fields: dict[str, str] = {}
+
+
+class UploadDone(BaseModel):
+    filename: str = Field(min_length=1, max_length=255)
+
+
 class AnalysisJobRequest(BaseModel):
     file_id: str
     thickness_mm: float | None = Field(None, gt=0, description="DXF のとき必須（DXFには板厚がない）")

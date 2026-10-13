@@ -7,7 +7,7 @@
     "dangerous": 0.0,
     "rejected": 0.0,
     "success": 1.0,
-    "mean_seconds": 0.1589108910891089
+    "mean_seconds": 0.22475247524752476
   },
   "Lv1": {
     "n": 104,
@@ -17,7 +17,7 @@
     "dangerous": 0.0,
     "rejected": 0.0,
     "success": 1.0,
-    "mean_seconds": 0.20798076923076922
+    "mean_seconds": 0.27740384615384617
   },
   "Lv2": {
     "n": 102,
@@ -27,7 +27,7 @@
     "dangerous": 0.0,
     "rejected": 0.0,
     "success": 1.0,
-    "mean_seconds": 0.4082352941176471
+    "mean_seconds": 0.5634313725490196
   },
   "Lv3": {
     "n": 101,
@@ -37,7 +37,7 @@
     "dangerous": 0.0,
     "rejected": 0.0,
     "success": 1.0,
-    "mean_seconds": 0.6311881188118812
+    "mean_seconds": 0.8050495049504951
   },
   "Lv4": {
     "n": 100,
@@ -47,6 +47,6 @@
     "dangerous": 0.0,
     "rejected": 0.0,
     "success": 1.0,
-    "mean_seconds": 0.1068
+    "mean_seconds": 0.13670000000000002
   }
 }

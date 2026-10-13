@@ -20,10 +20,13 @@ React の画面（web/、Vite。npm run build で web/dist）
    similar.py   類似の図面と実績（src/similar_quotes.is_similar）
    library.py   書類と検索、admin.py 設定とマスター編集と見積ロジック、masters.py DB のマスター
    core.py      Platform（DB・マスターと履歴の読み込み直し・受付）
+   jobsteps.py  受付の種類ごとの準備と保存の段（AWS の状態機械が1段ずつ呼ぶ）
         ▼
   src/services/（処理の層。Web の枠組みに依存しない）
    estimate.py  EstimateService：解析・図面の読み取り・見積・見積書・類似見積・履歴・3D表示（今までの API もこれを呼ぶ）
    jobs.py      受付（状態をファイルに保存、スレッドで実行、途中の進み具合）
+   stepfunctions.py  AWS の受付（Step Functions の実行として始める）
+   aws_extract.py    AWS の抽出の段の入口（CadQuery 入りのコンテナ、データベースなし）
    storage.py   ファイルの置き場（FileStore。中身はフォルダか S3 の BlobStore）、settings.py 置き場所と制限、pdfium_lock.py
         ▼
   src/db/（SQLAlchemy のモデル・接続・初期データ）、migrations/（Alembic）
@@ -125,6 +128,7 @@ GET  /api/history?customer=...&limit=50&offset=0
 - `JobQueue` が同じプロセスのスレッドで実行する（`JOB_WORKERS` 本）
 - 画面の受付（登録 `register`・見積 `estimate`・条件変更後の再解析 `reanalysis`）は3つの段に分かれている：**準備**（`prepare_register`・`prepare_estimate`・`prepare_reanalysis`。データベースを読み、どのファイルをどの条件で解析・読み取りするかを JSON の「計画」にする）→ **抽出**（`src/services/extraction.py` の `extract`。ファイルと読み取り器だけを使い、データベースは使わない。結果も JSON）→ **保存**（`finish_register`・`finish_estimate`・`finish_reanalysis`。マスター照合・金額・類似・保存）。今は1つの受付の中で順に呼ぶ。AWS ではそれぞれを Step Functions の段にでき、抽出の段にはデータベースの権限が要らない（`tests/test_extraction.py` が、抽出がデータベースを読み込まないことと、各段を JSON で受け渡しても同じ結果になることを確かめる）
 - 見積の条件のうち解析に効くもの（Kファクター・その指定・DXF の板厚・曲げなし）を `PUT /api/estimates/{id}` で変えると、API は条件を保存してすぐ返し、解析し直しは受付 `reanalysis` で行う（API の中では CAD の解析をしない。AWS では API の Lambda に CadQuery を載せない）。返る詳細の `job` が queued / running の間は、未入力の項目に「CADデータの解析がまだ終わっていません」が出て発行できない。画面は終わるまで読み直す。終わると金額を計算し直し、修正履歴の「変更後の金額」を埋める。終わる前に条件をまた変えたときは、古い受付は何もせず新しい受付が解析する。登録時と同じ条件に戻したときは登録時の解析をそのまま使う（受付なし）
+- **AWS**（`JOBS_STATE_MACHINE_ARN`）：受付を Step Functions の状態機械（`deploy/aws/jobs_state_machine.asl.json`）の実行として始める（`StepFunctionsQueue`。実行の名前は受付番号）。段は Lambda で、準備 `api.aws_lambda.prepare` → 抽出 `src.services.aws_extract.handler` → 保存 `api.aws_lambda.finish`、どこかで失敗したら `api.aws_lambda.fail` が受付を失敗にする（`JobError` の文言はそのまま、それ以外は安全な文言）。準備と保存はスレッドのときと同じ関数（`src/services/platform/jobsteps.py`）。段の間で渡すのは `{job_id, tenant_id, kind}` だけで、計画と結果はファイル置き場の `jobs/<受付番号>/plan.json`・`extracted.json`（Step Functions の状態は 256KB まで）。登録の抽出の段で 3D表示のファイル（GLB）も作る（API の Lambda には CadQuery がない）。実行を始められなかった受付は失敗にする。`tests/test_aws.py` が状態機械の定義どおりに受付を動かし、スレッドのときと同じ結果になることと、API 側が CadQuery なしで動くことを確かめる
 - **再起動**：起動時に queued / running のままの受付を並べ直す（アップロードしたファイルは残っている）。完了した受付の結果はそのまま読める（`tests/test_api.py::test_jobs_survive_a_restart`）
 
 ## 設定（環境変数）
@@ -144,23 +148,28 @@ GET  /api/history?customer=...&limit=50&offset=0
 | `COGNITO_TENANT_CLAIM` | `custom:tenant_id` | 会社IDを持つ属性 |
 | `COGNITO_ISSUER` | ユーザープールから決まる | テストで偽のユーザープールを使うときだけ |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限 |
+| `DIRECT_DOWNLOAD_MB` | 4 | 保存先が S3 のとき、これより大きいファイルは S3 から直接取り出す（307 で署名付きの URL へ） |
 | `JOB_WORKERS` | 2 | 受付を処理するスレッド数 |
+| `JOBS_STATE_MACHINE_ARN` | なし | 受付を Step Functions の実行として動かす（上の「受付（重い処理）の仕組み」） |
+| `CORS_ORIGINS` | なし | 画面を別のドメインに置くときに呼び出しを許す画面の URL（カンマ区切り） |
 | `ANALYSIS_ANTHROPIC_API_KEY` | なし | 図面PDFの読み取りにだけ使う（LLM を使う機能は増やしていない） |
 | `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・撮影・通しのテスト用） |
 | `WEB_DIST` | `web/dist` | API が配信する画面 |
 
 アップロードは拡張子（.step .stp .dxf .pdf、履歴の取り込みは .csv）と中身の先頭（STEP は `ISO-10303-21`、PDF は `%PDF-`、DXF は `SECTION`）の両方を確かめる。ファイル名は正規化し、保存場所は受付側で決める（利用者の入力からパスを作らない）。
 
+保存先が S3 のときは、画面は図面・STEP・DXF を S3 へ直接送る（AWS Lambda の1回の要求は約6MBまで）。`POST /api/uploads`（ファイル名と大きさ）が、新しいファイル番号と、その1つのキーだけに `MAX_UPLOAD_MB` までを送れる署名付きのフォーム（10分）を返す。ブラウザはそのフォームで S3 に送り、`POST /api/uploads/{file_id}/complete` で取り込みを頼む。API は S3 の先頭 4KB と大きさを見て、拡張子・中身・大きさを `POST /api/files` と同じく確かめてから記録する（同じファイルを2回取り込まない）。保存先がフォルダーのときは `direct: false` を返し、画面は `POST /api/files` で送る。取り出しは、`DIRECT_DOWNLOAD_MB`（4MB）を超えるファイル（`/api/files/{id}/raw`・`model.glb`）を数分で切れる署名付きの URL へ 307 で転送する（ブラウザは転送先に認証のヘッダーを付けない）。バケットには画面のドメインからの GET・POST を許す CORS が要る（`deploy/aws/README.md`）。
+
 ## 差し替えられる部分
 
 | 部分 | 今 | 差し替え先 | 差し替え方 |
 |---|---|---|---|
-| 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ |
+| 受付の実行 | `JobQueue`（同じプロセスのスレッド）か `StepFunctionsQueue`（`JOBS_STATE_MACHINE_ARN`） | 済み（AWS Step Functions） | 準備・抽出・保存の3段を状態機械の段（Lambda）として動かす（`api/aws_lambda.py`・`src/services/aws_extract.py`、`deploy/aws/`） |
 | 受付の状態 | `DbJobStore`（データベースの `jobs` 表） | 済み | `src/services/platform/records.py`。見積書の出力記録も `DbQuoteLog`（`quote_log` 表、番号の重なりは主キーで防ぐ） |
 | ファイル | `FileStore` ＋ `LocalBlobStore`（`ESTIMATE_STORAGE_DIR`）か `S3BlobStore`（`ESTIMATE_STORAGE_URL`） | 済み（S3。S3互換の MinIO も同じ） | `BlobStore`（`put / get / exists / local_file`）。CadQuery・pdfium のようにファイルを自分で開く処理には `FileStore.local_path` が手元のパスを渡す（S3 では一時的な写し） |
 | 認証 | ログイン（Cognito、`COGNITO_*`）。ほかのシステムは会社ごとの合言葉（`API_TOKEN`・`TENANT_TOKENS`） | 済み（ログイン）。権限（役割）・利用者の招待は未 | `api/login.py` が ID トークンを確かめ、`api/security.py` が会社と操作者を決める。`*_by` の列はそのまま使う |
 | データベース | SQLite（既定）／PostgreSQL／Aurora DSQL（`DATABASE_URL`） | Aurora DSQL | `DATABASE_URL` を替えるだけ。DSQL への対応は下の「Aurora DSQL で動かす」 |
-| 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの構成で動く。クラウド固有のサービスには依存していない |
+| 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または AWS（Lambda・Step Functions・S3・Aurora DSQL・Cognito） | 同じコードを環境変数と入口で切り替える。AWS 用のイメージは `Dockerfile.lambda`（API と抽出の2つ）、手順は `deploy/aws/README.md` |
 
 ## 複数の会社（マルチテナント）
 
@@ -206,6 +215,8 @@ DSQL の実機では未確認（手元で動く DSQL はない）。AWS に置�
 
 ## 今の制限
 
-- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列が要る（受付の状態と出力記録はデータベースにあるので、複数台で共有できる）
+- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列が要る（受付の状態と出力記録はデータベースにあるので、複数台で共有できる）。AWS では Step Functions がその役をする
+- AWS の実機（Lambda・Step Functions・S3・DSQL）では未確認。手元では、2つのイメージを Lambda の実行環境の代わり（aws-lambda-rie）で動かし、状態機械の定義どおりに登録と見積を通した（`scripts/verify/lambda_images.py`）。起動の遅さと抽出に要るメモリは実機で測る
+- AWS では、書類（書類と検索）と過去見積の CSV の取り込みは API を通るので、約4MBまで（図面・STEP・DXF は S3 へ直接送るので 50MB まで）
 - 図面PDFの読み取りは今の読み取り器を呼ぶだけ（LLM の呼び出しの中身は変えていない）。pdfium は同時に使えないため、ページの読み込みとプレビュー・文字の取り出しは1つずつ行う
 - 図面の検索・類似の候補は、図面をすべて読んでから絞り込む（数千件までを想定）。それ以上はデータベースの索引と検索に移す

@@ -94,6 +94,19 @@ export async function upload<T = any>(path: string, file: File, fields: Record<s
   return handle(await fetch(path, { method: "POST", headers: await headers(), body: form }));
 }
 
+/** A drawing PDF, STEP or DXF: straight to the file store (S3) when the API offers it (on AWS a request through the
+ * API holds about 6MB), else through the API. Either way the answer is the file's id, name, kind and size. */
+export async function uploadFile<T = any>(file: File): Promise<T> {
+  const form = await post("/api/uploads", { filename: file.name, size: file.size });
+  if (!form.direct) return upload<T>("/api/files", file);
+  const body = new FormData();
+  Object.entries(form.fields as Record<string, string>).forEach(([k, v]) => body.append(k, v));
+  body.append("file", file, file.name);
+  const sent = await fetch(form.url, { method: "POST", body });
+  if (!sent.ok) throw new ApiError(sent.status, "UPLOAD_FAILED", `ファイルを送れませんでした（${sent.status}）。もう一度お試しください。`);
+  return post<T>(`/api/uploads/${form.file_id}/complete`, { filename: file.name });
+}
+
 /** An image or PDF behind the API (with the token header) as an object URL. */
 export async function blobUrl(path: string): Promise<string> {
   const res = await fetch(path, { headers: await headers() });

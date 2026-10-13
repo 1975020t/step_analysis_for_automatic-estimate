@@ -132,7 +132,8 @@ def prepare_register(pf: Platform, payload: dict) -> dict:
         draft = reading_of_job(pf, revision.reading_job_id) if revision.pdf_file_id else None
         return {"analysis": analysis, "pdf_file_id": revision.pdf_file_id, "pdf_text": bool(revision.pdf_file_id),
                 "read": bool(revision.pdf_file_id and draft is None and not revision.reading_job_id),
-                "draft_reading": draft}
+                "draft_reading": draft,
+                "viewer_file_id": revision.shape_file_id if revision.shape_kind == "step" else None}
 
 
 def finish_register(pf: Platform, payload: dict, plan: dict, extracted: dict) -> dict:

@@ -276,6 +276,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | ホーム・案件・実績分析 | `GET /api/home`、`GET /api/cases`、`PUT /api/cases/{id}/status`、`GET /api/review` |
 | 検索・書類・取引先 | `GET /api/search`、`GET/POST /api/library`、`GET/POST/PUT /api/partners` |
 | 設定・マスター | `/api/statuses`、`/api/categories`、`/api/attributes`、`/api/templates`、`/api/staff`、`/api/master-tables/{table}`、`GET /api/logic` |
+| ファイル | `POST /api/files`（API を通して送る）、`POST /api/uploads` → 保存先（S3）へ直接送る → `POST /api/uploads/{file_id}/complete`（保存先が S3 のとき。画面はこちらを使う） |
 | 形状の解析・図面PDFの読み取り（単体） | `POST /api/files` → `POST /api/analyses` または `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` |
 | 見積の計算・見積書・類似見積・履歴（画面を使わない呼び出し） | `POST /api/quotes`、`POST /api/documents`、`POST /api/similar-quotes`、`/api/history...` |
 
@@ -296,9 +297,21 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | `COGNITO_DOMAIN` | なし | ログインの画面のドメイン（`https://<接頭辞>.auth.<リージョン>.amazoncognito.com` か独自ドメイン） |
 | `COGNITO_TENANT_CLAIM` | `custom:tenant_id` | 会社IDを持つ属性。会社IDのない利用者は 403 |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類と中身の先頭も確認） |
+| `DIRECT_DOWNLOAD_MB` | 4 | 保存先が S3 のとき、これより大きいファイル（図面PDF・3D表示）は S3 から直接取り出す（数分で切れるリンクへ転送。AWS Lambda の応答は約6MBまで） |
 | `JOB_WORKERS` | 2 | 裏で処理する数 |
+| `JOBS_STATE_MACHINE_ARN` | なし | AWS で、受付をこの Step Functions の状態機械の実行として動かす（準備 → 抽出 → 保存。API の中のスレッドでは動かさない）。[deploy/aws/README.md](deploy/aws/README.md) |
+| `CORS_ORIGINS` | なし | 画面を API と別のドメインに置くときの、呼び出しを許す画面の URL（`https://app.example.com,...`）。同じドメインで受けるなら不要 |
 | `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・資料の撮影用。API を呼ばない） |
 | `WEB_DIST` | `web/dist` | API が配信する画面 |
+
+## AWS に載せる
+
+手元と同じコードを、環境変数と入口だけ変えて AWS Lambda で動かします。インフラ担当者向けの手順・設定・権限は [deploy/aws/README.md](deploy/aws/README.md) にまとめてあります。
+
+- **入口**：`api/aws_lambda.py` が、API（API Gateway から）と、受付の準備・保存・失敗の記録です。抽出（形の解析・図面の読み取り）は `src/services/aws_extract.py` です。受付の流れは `deploy/aws/jobs_state_machine.asl.json`（Step Functions）にあります
+- **イメージ**：`Dockerfile.lambda` から2つ作ります。API（CadQuery なし、約440MB）と、抽出（CadQuery 入り、約3.3GB）です
+- **ファイル**：画面は図面・STEP・DXF を S3 へ直接送り、大きいファイルは S3 から直接取り出します。Lambda の1回の要求と応答は約6MBまでなので、こうしています
+- **手元で確かめる**：`python scripts/verify/lambda_images.py --rie <aws-lambda-rie>` で、2つのイメージを Lambda と同じ形で動かし、図面の登録と見積を通します
 
 ## データベース
 

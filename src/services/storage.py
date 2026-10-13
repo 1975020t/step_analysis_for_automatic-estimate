@@ -9,6 +9,9 @@ Two layers:
 - `TenantBlobStore` puts each company's keys under `tenants/<company id>/` (the `default` company keeps the keys of
   before), so that one bucket holds every company's files apart.
 
+With S3 the browser can send and fetch large files straight to and from the bucket (`upload_form`, `download_url`:
+signed for a few minutes, for one key): on AWS Lambda a request or a response through the API holds about 6MB.
+
 Keys are generated here (never taken from a user) so a key cannot point outside the store.
 """
 from __future__ import annotations
@@ -21,7 +24,7 @@ import tempfile
 import unicodedata
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
-from typing import Iterator, Protocol
+from typing import Callable, Iterator, Protocol
 
 from src.tenancy import DEFAULT_TENANT, current_tenant
 
@@ -52,6 +55,7 @@ class BlobStore(Protocol):
     def get(self, key: str) -> bytes: ...          # KeyError when missing
     def exists(self, key: str) -> bool: ...
     def local_file(self, key: str): ...            # context manager -> Path (KeyError when missing)
+    def head(self, key: str, length: int) -> tuple[bytes, int]: ...   # first bytes and the size (KeyError)
 
 
 class LocalBlobStore:
@@ -83,6 +87,13 @@ class LocalBlobStore:
         if not path.is_file():
             raise KeyError(key)
         yield path
+
+    def head(self, key: str, length: int) -> tuple[bytes, int]:
+        path = self._path(key)
+        if not path.is_file():
+            raise KeyError(key)
+        with path.open("rb") as handle:
+            return handle.read(length), path.stat().st_size
 
 
 class S3BlobStore:
@@ -130,6 +141,32 @@ class S3BlobStore:
         finally:
             shutil.rmtree(folder, ignore_errors=True)
 
+    def head(self, key: str, length: int) -> tuple[bytes, int]:
+        try:
+            got = self.client.get_object(Bucket=self.bucket, Key=self._key(key), Range=f"bytes=0-{max(0, length - 1)}")
+        except self.client.exceptions.NoSuchKey:
+            raise KeyError(key) from None
+        except self.client.exceptions.ClientError as exc:  # an empty object has no byte 0
+            if exc.response.get("Error", {}).get("Code") != "InvalidRange":
+                raise
+            return b"", 0
+        size = got.get("ContentRange", "").rpartition("/")[2]
+        data = got["Body"].read()
+        return data, int(size) if size.isdigit() else len(data)
+
+    def upload_form(self, key: str, max_bytes: int, expires: int = 600) -> dict:
+        """A form the browser posts the file with, straight to the bucket: this key only, at most max_bytes."""
+        form = self.client.generate_presigned_post(self.bucket, self._key(key), ExpiresIn=expires,
+                                                   Conditions=[["content-length-range", 1, max_bytes]])
+        return {"url": form["url"], "fields": form["fields"]}
+
+    def download_url(self, key: str, filename: str, media_type: str, expires: int = 300) -> str:
+        from urllib.parse import quote
+
+        return self.client.generate_presigned_url("get_object", ExpiresIn=expires, Params={
+            "Bucket": self.bucket, "Key": self._key(key), "ResponseContentType": media_type,
+            "ResponseContentDisposition": f"inline; filename*=UTF-8''{quote(filename)}"})
+
 
 class TenantBlobStore:
     """The keys of the current company (src/tenancy.py): `tenants/<id>/<key>`, or `<key>` for `default`."""
@@ -153,6 +190,20 @@ class TenantBlobStore:
 
     def local_file(self, key: str):
         return self.blobs.local_file(self._key(key))
+
+    def head(self, key: str, length: int) -> tuple[bytes, int]:
+        return self.blobs.head(self._key(key), length)
+
+    @property
+    def direct(self) -> bool:
+        """The browser can send and fetch files straight to and from the store (S3)."""
+        return hasattr(self.blobs, "upload_form")
+
+    def upload_form(self, key: str, max_bytes: int) -> dict:
+        return self.blobs.upload_form(self._key(key), max_bytes)
+
+    def download_url(self, key: str, filename: str, media_type: str) -> str:
+        return self.blobs.download_url(self._key(key), filename, media_type)
 
 
 def blob_store(url: str, root: str | Path) -> BlobStore:
@@ -188,6 +239,38 @@ class FileStore:
         self.blobs.put(self._key(file_id, name), data)
         self.blobs.put(self._key(file_id, "meta.json"), json.dumps(meta, ensure_ascii=False).encode("utf-8"))
         return meta
+
+    @property
+    def direct(self) -> bool:
+        return bool(getattr(self.blobs, "direct", False))
+
+    def upload_form(self, filename: str, max_bytes: int) -> dict:
+        """A new file id and the form the browser sends the file with, straight to the store (S3). `complete`
+        takes it in once it is there."""
+        file_id, name = new_id("f"), safe_name(filename)
+        return {"file_id": file_id, "filename": name, **self.blobs.upload_form(self._key(file_id, name), max_bytes)}
+
+    def complete(self, file_id: str, filename: str, check: Callable[[bytes, int], None] = lambda head, size: None,
+                 length: int = 4096) -> dict:
+        """Take in the file the browser sent straight to the store: `check(first bytes, size)` raises to refuse it,
+        else its meta is written. KeyError when it is not there or was taken in already."""
+        if not self.ID.match(file_id or ""):
+            raise KeyError(file_id)
+        name = safe_name(filename)
+        if self.blobs.exists(self._key(file_id, "meta.json")):
+            raise KeyError(file_id)
+        head, size = self.blobs.head(self._key(file_id, name), length)
+        check(head, size)
+        meta = {"file_id": file_id, "filename": name, "kind": KINDS.get(Path(name).suffix.lower(), "other"), "size": size}
+        self.blobs.put(self._key(file_id, "meta.json"), json.dumps(meta, ensure_ascii=False).encode("utf-8"))
+        return meta
+
+    def download_url(self, file_id: str, media_type: str) -> str | None:
+        """A short-lived link straight to the file in the store (S3), or None for a folder."""
+        if not self.direct:
+            return None
+        meta = self.meta(file_id)
+        return self.blobs.download_url(self._key(file_id, meta["filename"]), meta["filename"], media_type)
 
     def meta(self, file_id: str) -> dict:
         if not self.ID.match(file_id or ""):
