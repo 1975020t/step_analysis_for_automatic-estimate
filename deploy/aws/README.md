@@ -133,7 +133,17 @@ S3 の署名付きのフォームとリンクは api の権限で作ります。
 | ビヘイビア | オリジン | 設定 |
 |---|---|---|
 | `/api/*` | API Gateway | キャッシュしない（CachingDisabled）。オリジンリクエストポリシーは `AllViewerExceptHostHeader`（Authorization ヘッダーを渡す）。メソッドはすべて許可 |
-| 既定（`*`） | S3（画面、OAC） | `index.html` 以外はキャッシュしてよい。403・404 は `/index.html`（200）を返す（画面の URL を直接開けるように） |
+| 既定（`*`） | S3（画面、OAC） | `index.html` 以外はキャッシュしてよい。下の CloudFront Function を「ビューワーリクエスト」に付ける |
+
+画面の URL（`/estimates/12` など）を直接開けるように、拡張子のないパスを `/index.html` に読み替えます。これは**既定のビヘイビアだけに付ける CloudFront Function** で行ってください。ディストリビューションの「カスタムエラーレスポンス（403・404 → /index.html）」は使わないでください。これはディストリビューション全体に効くため、API の 404（「見積が見つかりません」など）や 403 まで画面の HTML に置き換わり、画面が理由を表示できなくなります。
+
+```js
+function handler(event) {
+  var r = event.request;
+  if (!r.uri.includes(".")) r.uri = "/index.html";  // /assets/*.js などのファイルはそのまま
+  return r;
+}
+```
 
 画面を作り直したら `web/dist` を S3 に置き直し、`/index.html` の無効化をしてください。
 
