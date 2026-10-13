@@ -174,15 +174,26 @@ class EstimateService:
                               items=items, flags=list(reading.get("flags") or []), unregistered_texts=unregistered or [])
 
     def run_drawing_job(self, payload: dict) -> dict:
+        return self.finish_drawing_job(self.extract_drawing_job(payload))
+
+    def extract_drawing_job(self, payload: dict) -> dict:
+        """The reading of a drawing job: the file and the reader only (the extraction step, no database)."""
         try:
             meta = self.files.meta(payload["file_id"])
         except KeyError:
             raise JobError("アップロードしたファイルが見つかりません。") from None
-        try:
-            with self.files.local_path(payload["file_id"]) as path:
-                reading, drawing = self.read_drawing(path, meta["filename"])
-        except ServiceError as exc:
-            raise JobError(str(exc)) from None
+        if not self.drawing_reader_available():
+            raise JobError("図面PDFの読み取りには Claude APIキー（ANALYSIS_ANTHROPIC_API_KEY）の設定が必要です。"
+                           "条件は手入力してください。")
+        with self.files.local_path(payload["file_id"]) as path:
+            reading, evidence = self.read_drawing_raw(path)
+        return {"reading": reading, "evidence": evidence, "file_name": meta["filename"]}
+
+    def finish_drawing_job(self, extracted: dict) -> dict:
+        """The rules on the reading (the masters decide the codes)."""
+        reading = extracted["reading"]
+        drawing = self.drawing_context(reading, extracted["file_name"],
+                                       unregistered_process_texts(extracted["evidence"], self.masters))
         return {"reading": reading, "drawing": drawing.model_dump(mode="json")}
 
     # ------------------------------------------------------------ jobs

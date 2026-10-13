@@ -17,12 +17,18 @@
   COGNITO_TENANT_CLAIM   the claim holding the company id                   default: custom:tenant_id
   COGNITO_ISSUER         only for a stand-in user pool (tests): the issuer instead of the one of COGNITO_USER_POOL_ID
   MAX_UPLOAD_MB          largest accepted upload                                              default: 50
+  DIRECT_DOWNLOAD_MB     with S3, larger files are fetched straight from the bucket (a short-lived link) instead
+                         of through the API (a response of AWS Lambda holds about 6MB)        default: 4
   JOB_WORKERS            background workers for analyses and drawing readings                 default: 2
   DATABASE_URL           the database (PostgreSQL: postgresql+psycopg://user:pass@host/db)
                                                                          default: SQLite <storage>/app.db
   DRAWING_READER         "recorded:<file.json>" replays recorded drawing readings (demo / screenshots,
                          no Claude API call)                              default: the Claude API reader
   WEB_DIST               the built screens (web/dist) served by the API at /   default: web/dist when present
+  CORS_ORIGINS           screens on another domain that may call the API, "https://app.example.com,..." (not needed
+                         when the screens and the API are behind one domain)   default: none
+  JOBS_STATE_MACHINE_ARN on AWS: the jobs run as executions of this Step Functions state machine (prepare -> extract
+                         -> finish, deploy/aws/) instead of threads of the API process   default: none (threads)
 """
 from __future__ import annotations
 
@@ -39,6 +45,7 @@ class Settings:
     quote_log_path: Path = Path("output/quote_log.csv")
     api_token: str = ""
     max_upload_bytes: int = 50 * 1024 * 1024
+    direct_download_bytes: int = 4 * 1024 * 1024
     job_workers: int = 2
     database_url: str = ""
     drawing_reader: str = ""
@@ -50,6 +57,8 @@ class Settings:
     cognito_domain: str = ""
     cognito_tenant_claim: str = "custom:tenant_id"
     cognito_issuer: str = ""          # derived from the user pool; set only for a stand-in (tests)
+    cors_origins: tuple[str, ...] = ()
+    jobs_state_machine: str = ""
     extra: dict = field(default_factory=dict)
 
     @classmethod
@@ -64,6 +73,7 @@ class Settings:
             quote_log_path=Path(env.get("QUOTE_LOG_PATH") or storage / "quote_log.csv"),
             api_token=env.get("API_TOKEN", "").strip(),
             max_upload_bytes=int(float(env.get("MAX_UPLOAD_MB") or 50) * 1024 * 1024),
+            direct_download_bytes=int(float(env.get("DIRECT_DOWNLOAD_MB") or 4) * 1024 * 1024),
             job_workers=max(1, int(env.get("JOB_WORKERS") or 2)),
             database_url=env.get("DATABASE_URL", "").strip(),
             drawing_reader=env.get("DRAWING_READER", "").strip(),
@@ -74,6 +84,8 @@ class Settings:
             cognito_domain=env.get("COGNITO_DOMAIN", "").strip().rstrip("/"),
             cognito_tenant_claim=env.get("COGNITO_TENANT_CLAIM", "").strip() or "custom:tenant_id",
             cognito_issuer=env.get("COGNITO_ISSUER", "").strip().rstrip("/"),
+            cors_origins=tuple(o.strip().rstrip("/") for o in env.get("CORS_ORIGINS", "").split(",") if o.strip()),
+            jobs_state_machine=env.get("JOBS_STATE_MACHINE_ARN", "").strip(),
         )
 
     @property

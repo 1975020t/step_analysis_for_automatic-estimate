@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import quote as urlquote
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel, Field
 
 from api.security import current_actor
@@ -120,10 +120,13 @@ def build_router(pf: Platform, guarded: list) -> APIRouter:
     @r.get("/files/{file_id}/raw", tags=["files"])
     def raw_file(file_id: str) -> Response:
         try:
+            meta_ = pf.files.meta(file_id)
+            media = {"pdf": "application/pdf"}.get(meta_["kind"], "application/octet-stream")
+            if meta_["size"] > pf.settings.direct_download_bytes and pf.files.direct:  # too large for a response of AWS Lambda
+                return RedirectResponse(pf.files.download_url(file_id, media), status_code=307)
             data, meta_ = pf.files.get(file_id)
         except KeyError:
             raise ServiceError("ファイルが見つかりません。", 404, "NOT_FOUND") from None
-        media = {"pdf": "application/pdf"}.get(meta_["kind"], "application/octet-stream")
         return Response(data, media_type=media,
                         headers={"Content-Disposition": f"inline; filename*=UTF-8''{urlquote(meta_['filename'])}"})
 

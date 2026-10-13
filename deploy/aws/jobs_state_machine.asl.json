@@ -1,0 +1,50 @@
+{
+  "Comment": "見積の受付（登録・見積・条件変更の解析し直し・解析・図面の読み取り）を3段で動かす。入力は {\"job_id\": \"j_...\"}（API が start_execution で渡す）。${...} はデプロイのときに Lambda の ARN に置き換える。",
+  "StartAt": "Prepare",
+  "States": {
+    "Prepare": {
+      "Comment": "準備（データベースを読む）：api.aws_lambda.prepare（API のイメージ）",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${PrepareFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Retry": [{"ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"],
+                 "IntervalSeconds": 2, "MaxAttempts": 3, "BackoffRate": 2}],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "Fail"}],
+      "Next": "Extract"
+    },
+    "Extract": {
+      "Comment": "抽出（形状の解析・図面の読み取り。データベースなし）：src.services.aws_extract.handler（抽出のイメージ）",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${ExtractFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "TimeoutSeconds": 900,
+      "Retry": [{"ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"],
+                 "IntervalSeconds": 2, "MaxAttempts": 3, "BackoffRate": 2}],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "Fail"}],
+      "Next": "Finish"
+    },
+    "Finish": {
+      "Comment": "保存（照合・金額・類似。データベースに書く）：api.aws_lambda.finish（API のイメージ）",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${FinishFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Retry": [{"ErrorEquals": ["Lambda.ServiceException", "Lambda.AWSLambdaException", "Lambda.SdkClientException", "Lambda.TooManyRequestsException"],
+                 "IntervalSeconds": 2, "MaxAttempts": 3, "BackoffRate": 2}],
+      "Catch": [{"ErrorEquals": ["States.ALL"], "ResultPath": "$.error", "Next": "Fail"}],
+      "End": true
+    },
+    "Fail": {
+      "Comment": "どこかの段で失敗：受付を「失敗」にする（api.aws_lambda.fail、API のイメージ）。入力は {job_id, ..., error: {Error, Cause}}",
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {"FunctionName": "${FailFunctionArn}", "Payload.$": "$"},
+      "OutputPath": "$.Payload",
+      "Retry": [{"ErrorEquals": ["States.ALL"], "IntervalSeconds": 2, "MaxAttempts": 3, "BackoffRate": 2}],
+      "Next": "Failed"
+    },
+    "Failed": {"Type": "Fail", "Error": "JobFailed"}
+  }
+}

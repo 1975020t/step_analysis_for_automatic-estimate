@@ -18,7 +18,8 @@ from src.services.storage import FileStore
 
 # plan = {"analysis": {"file_id", "thickness_mm", "k_factor", "k_factor_confirmed", "flat_confirmed",
 #                      "max_dimension": bool} | None,
-#         "pdf_file_id": str | None, "pdf_text": bool, "read": bool}
+#         "pdf_file_id": str | None, "pdf_text": bool, "read": bool,
+#         "viewer_file_id": str | None}   (a STEP whose 3D view file is made now: the API on AWS has no CadQuery)
 # result = {"analysis": dict | None, "max_dimension_mm": float | None, "pdf_text": str | None,
 #           "reading": {"reading": dict, "evidence": list | None} | None}
 
@@ -35,12 +36,24 @@ class Extractor:
         self.progress = progress or (lambda **_: None)
 
 
+def extract_job(service, kind: str, plan: dict, progress: Callable[..., None] | None = None) -> dict:
+    """The extraction step of a job of any kind (service: an EstimateService; only its files and reader are used).
+    The jobs of the first API ("analysis", "drawing") have the request as their plan."""
+    if kind == "analysis":
+        return {"analysis": service.run_analysis_job(plan)}
+    if kind == "drawing":
+        return service.extract_drawing_job(plan)
+    return extract(service.extractor(progress), plan)
+
+
 def extract(ex: Extractor, plan: dict) -> dict:
     out: dict = {"analysis": None, "max_dimension_mm": None, "pdf_text": None, "reading": None}
     request = plan.get("analysis")
     if request:
         ex.progress(stage="CADデータの解析")
         out["analysis"], out["max_dimension_mm"] = analyse(ex.files, request)
+    if plan.get("viewer_file_id"):
+        viewer(ex.files, plan["viewer_file_id"])
     pdf_file_id = plan.get("pdf_file_id")
     if pdf_file_id and (plan.get("pdf_text") or (plan.get("read") and ex.read_pdf is not None)):
         ex.progress(stage="図面の読み取り", analysis=out["analysis"])
@@ -71,6 +84,20 @@ def analyse(files: FileStore, request: dict) -> tuple[dict, float | None]:
         return {"status": "error", "file_name": request.get("file_name") or file_name, "message": ANALYSIS_FAILED}, None
     size = max_dimension(files, request["file_id"], meta["kind"], analysis) if request.get("max_dimension") else None
     return analysis.model_dump(mode="json"), size
+
+
+def viewer(files: FileStore, file_id: str) -> None:
+    """The 3D view file (GLB) of a STEP, kept where the API looks for it (EstimateService.glb)."""
+    key = f"viewer/{file_id}.glb"
+    try:
+        if files.blobs.exists(key):
+            return
+        from src.services.gltf import step_to_glb
+
+        with files.local_path(file_id) as path:
+            files.blobs.put(key, step_to_glb(path))
+    except Exception:  # noqa: BLE001 - the screens show the shape without the 3D view
+        pass
 
 
 def max_dimension(files: FileStore, file_id: str, kind: str, analysis) -> float | None:

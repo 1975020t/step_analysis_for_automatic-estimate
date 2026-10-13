@@ -4,8 +4,8 @@ A job is one JSON file (<storage>/jobs/<job_id>.json): kind, input, status (queu
 times, result or error. The state survives a restart: on start, jobs left queued or running are queued again
 (their input files are kept), finished ones stay readable.
 
-`JobQueue` runs handlers in a thread pool of this process. To move to RQ / Celery later, keep JobStore (or put
-it in a database) and replace JobQueue.submit with an enqueue call that runs `JobQueue.execute` in a worker.
+`JobQueue` runs handlers in a thread pool of this process. On AWS, `src.services.stepfunctions.StepFunctionsQueue`
+takes its place: each job is an execution of a state machine whose steps are Lambda functions (api/aws_lambda.py).
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ import os
 import threading
 import traceback
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -33,6 +34,19 @@ def report_progress(**progress) -> None:
     store, job_id = getattr(_CURRENT, "store", None), getattr(_CURRENT, "job_id", None)
     if store is not None and job_id:
         store.update(job_id, progress=progress)
+
+
+@contextmanager
+def job_context(store, job_id: str):
+    """report_progress inside this block writes to this job."""
+    _CURRENT.store, _CURRENT.job_id = store, job_id
+    try:
+        yield
+    finally:
+        _CURRENT.store, _CURRENT.job_id = None, None
+
+
+FAILED_MESSAGE = "処理中にエラーが発生しました。入力ファイルを確認してください。"
 
 
 class JobError(Exception):
@@ -128,19 +142,16 @@ class JobQueue:
 
     def execute(self, job_id: str) -> dict:
         job = self.store.update(job_id, status=RUNNING, started_at=_now())
-        _CURRENT.store, _CURRENT.job_id = self.store, job_id
         try:
-            with tenant_scope(job.get("tenant_id") or DEFAULT_TENANT):  # the company that asked for the job
+            # the company that asked for the job
+            with job_context(self.store, job_id), tenant_scope(job.get("tenant_id") or DEFAULT_TENANT):
                 result = self.handlers[job["kind"]](job["input"])
             return self.store.update(job_id, status=DONE, finished_at=_now(), result=result)
         except JobError as exc:
             return self.store.update(job_id, status=FAILED, finished_at=_now(), error=str(exc))
         except Exception:  # noqa: BLE001 - the details stay in the server log, not in the response
             traceback.print_exc()
-            return self.store.update(job_id, status=FAILED, finished_at=_now(),
-                                     error="処理中にエラーが発生しました。入力ファイルを確認してください。")
-        finally:
-            _CURRENT.store, _CURRENT.job_id = None, None
+            return self.store.update(job_id, status=FAILED, finished_at=_now(), error=FAILED_MESSAGE)
 
     def shutdown(self, wait: bool = True) -> None:
         if self._pool:
