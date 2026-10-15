@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 
 from src.db.models import (AttributeDef, Category, CompanyRow, FinishRow, MaterialRow, Partner, PolicyRow, ProcessRow,
                            Staff, Template, drawing_categories, now)
+from src.db.tenant_filter import key
 from src.services.estimate import ServiceError
 from src.services.platform.core import Platform, bump, check_version, iso
 
@@ -305,7 +306,7 @@ def save_master_row(pf: Platform, table: str, code: str, values: dict[str, Any],
                 v = "|".join(a.strip() for a in v.replace("、", "|").split("|") if a.strip())
             clean[f] = v
     with pf.session() as s:
-        row = s.get(model, code)
+        row = s.get(model, key(model, code))
         if create:
             if row is not None:
                 raise ServiceError(f"コード {code} はすでにあります。", 409, "DUPLICATE")

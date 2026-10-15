@@ -70,13 +70,14 @@ python scripts/evaluate_pdf_shape.py --data pdf_data --workers 8 --gate --report
 - `data/` マスター：材料・工程（追加加工を含む）・表面処理・価格方針（粗利率、特急割増）。各行の `aliases` が表記ゆれ。照合は `MasterLoader.resolve_alias`
 - `src/quote_document.py`・`src/quote_pdf.py`・`src/quote_log.py` 見積書PDF（中身と金額の端数処理、reportlab での描画、見積番号と `output/quote_log.csv`）。自社情報は `data/company.csv`（`data/company.local.csv` を優先）、フォントは `fonts/ipag.ttf`。例は `python scripts/make_quote_examples.py`
 - `src/past_quotes.py`・`src/similar_quotes.py` 見積履歴（`data/past_quotes/history.csv`、コミットする）と類似見積の検索。取り込みは `scripts/import_past_quotes.py`、効果の評価は `scripts/evaluate_similar_quotes.py`（`analysis/similar_quotes_eval.md`）。テストは履歴の一時コピーを使う（`tests/conftest.py`）
-- `src/services/` 処理の層（`EstimateService`、受付 `jobs.py`、入出力の型 `schemas.py`、設定 `settings.py`、pdfium の排他 `pdfium_lock.py`）。`api/main.py` が FastAPI（`create_app`）、`api/platform_routes.py` が画面用の API、`api/security.py` が合言葉と操作者（ログインを足すときはここ）。設計は `analysis/api_design.md`
+- `src/services/` 処理の層（`EstimateService`、受付 `jobs.py`、入出力の型 `schemas.py`、設定 `settings.py`、pdfium の排他 `pdfium_lock.py`）。`api/main.py` が FastAPI（`create_app`）、`api/platform_routes.py` が画面用の API、`api/security.py` が合言葉と会社と操作者、`api/login.py` がログイン（Amazon Cognito の ID トークンの検証。画面側は `web/src/auth.ts`）。複数の会社（マルチテナント）は `src/tenancy.py`（今の会社）と `src/db/tenant_filter.py`（今の会社の行だけを読み書き）。設計は `analysis/api_design.md`
 - `src/services/platform/` 画面の業務（フェーズ・To Do・次のアクションは `cases.py`、条件入力の下書きは `quotes.draft`）：`pricing.py`（見積の条件・未入力の項目・金額。発行できる条件はここ）、`masters.py`（DBのマスター → `MasterLoader`、見積だけの単価の重ね合わせ）、`drawings.py`・`quotes.py`・`cases.py`・`documents.py`（帳票）・`similar.py`（類似の対象）・`library.py`（書類と検索）・`admin.py`（設定・マスター編集・見積ロジック表示）・`wording.py`（解析器・読み取り器のメッセージを画面向けの言葉に言い換える。画面に内部の仕組みの話を出さない）
-- `src/db/` データベース（`models.py`、`session.py`、初期データ `seed.py`）。`migrations/` が Alembic のマイグレーション（モデルを変えたら `alembic revision --autogenerate`）。初期データは `data/*.csv` と `data/past_quotes/history.csv`。**評価ハーネスと既存のテストは今までどおり `data/` の CSV を読む**（画面でのマスター編集は評価に影響しない）
+- `src/db/` データベース（`models.py`、`session.py`、初期データ `seed.py`、Aurora DSQL の書き込みの衝突をやり直す `retry.py`。API 側は `api/conflict.py`）。`migrations/` が Alembic のマイグレーション（モデルを変えたら `alembic revision --autogenerate`）。初期データは `data/*.csv` と `data/past_quotes/history.csv`。**評価ハーネスと既存のテストは今までどおり `data/` の CSV を読む**（画面でのマスター編集は評価に影響しない）
 - `src/trade_pdf.py` 納品書・請求書（適格請求書）。`src/similar_quotes.py` の `is_similar` が類似の規則（材料が同じ・曲げ数の差1以内・穴数の差2以内、差の小さい順）
 - `scripts/verify/` 検証スクリプト（ステータスと納品書・API の総当たり・同時保存の負荷試験・解析の並行試験・ブラウザ巡回）。内容と結果は `docs/09_テスト報告書.md`。画面用の API を大きく変えたら回し、報告書の数字を直す
 - `web/` 画面（Vite + React + TypeScript、`npm run build` で `web/dist`。API が配信する）。`scripts/seed_demo.py` がお試しデータ、`tests/test_e2e_flow.py` がブラウザでの通しの操作（`web/dist` が必要）
 - `Dockerfile`（API）・`web/Dockerfile`（画面、nginx）・`docker-compose.yml`（db・api・web）
+- AWS：`api/aws_lambda.py`（API と受付の準備・保存・失敗・DBの準備の入口）、`src/services/aws_extract.py`（抽出の段の入口。DBなし）、`src/services/stepfunctions.py`（`JOBS_STATE_MACHINE_ARN` で受付を Step Functions の実行に）、`src/services/platform/jobsteps.py`（種類ごとの準備・保存）、`Dockerfile.lambda`（イメージ api・extract）、`deploy/aws/`（状態機械の定義、インフラ担当者向けの引き継ぎ資料 `README.md`）。画面は保存先が S3 のときファイルを S3 へ直接送る（`POST /api/uploads`）。テストは `tests/test_aws.py`・`tests/test_e2e_s3.py`、イメージの確認は `scripts/verify/lambda_images.py`
 - `src/dxf_analyzer.py` 展開図DXFの解析器 `DxfAnalyzer`（ルールベース。板厚は入力。方式は README の「解析方式」）
 
 ## 守ること

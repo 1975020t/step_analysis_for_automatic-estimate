@@ -13,7 +13,7 @@ from sqlalchemy.orm import selectinload
 from src.db.models import Case, Drawing, IssuedDocument, LibraryDocument, Quote
 from src.services.estimate import ServiceError
 from src.services.platform.core import Platform, iso
-from src.services.platform.drawings import pdf_text
+from src.services.extraction import pdf_text
 
 KINDS = ["図面", "見積書", "発注書", "ミルシート", "作業日報", "社内規格", "仕様書", "その他"]
 
@@ -48,7 +48,11 @@ def add_document(pf: Platform, data: bytes, filename: str, kind: str, title: str
     else:
         raise ServiceError("登録できる書類は PDF と Excel（.xlsx）です。", 415, "UNSUPPORTED_TYPE")
     meta = pf.files.save(data, filename)
-    text = pdf_text(pf.files.path(meta["file_id"])) if file_type == "PDF" else excel_text(data)
+    if file_type == "PDF":
+        with pf.files.local_path(meta["file_id"]) as path:
+            text = pdf_text(path)
+    else:
+        text = excel_text(data)
     with pf.session() as s:
         valid = [d for d in drawing_ids if s.get(Drawing, d) is not None]
         doc = LibraryDocument(kind=kind, title=title.strip() or filename, file_id=meta["file_id"], filename=meta["filename"],

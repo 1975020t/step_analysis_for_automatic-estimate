@@ -30,8 +30,9 @@ from src.services.jobs import JobError, JobQueue, JobStore
 from src.services.schemas import (ConditionInput, DrawingContext, DrawingItem, MatchOut, PastQuoteOut, PriceSummaryOut,
                                   ReferenceOut)
 from src.services.settings import Settings
-from src.services.storage import LocalFileStore
+from src.services.storage import FileStore
 from src.similar_quotes import Match, Reference, SimilarQuoteSearch, query_for
+from src.tenancy import DEFAULT_TENANT, current_tenant
 
 ReaderFactory = Callable[[], object]  # returns an object with .read(path) -> dict (src.pdf_reader.PdfConditionReader)
 # returns an object with .estimate(path, thickness_mm) -> PdfShapeResult (src.pdf_shape.PdfShapeEstimator)
@@ -96,7 +97,8 @@ class EstimateService:
                  shape_estimator_factory: ShapeEstimatorFactory | None = None) -> None:
         self.settings = settings or Settings.from_env()
         self.masters = MasterLoader(self.settings.data_dir)
-        self.files = LocalFileStore(self.settings.uploads_dir)
+        self.blobs = self.settings.blob_store()
+        self.files = FileStore(self.blobs)
         self.job_store = JobStore(self.settings.jobs_dir)
         self.reader_factory = reader_factory or default_reader_factory
         self._reader_available = reader_available or (llm_key_configured if reader_factory is None else (lambda: True))
@@ -161,6 +163,11 @@ class EstimateService:
         if not self.drawing_reader_available():
             raise ServiceError("図面PDFの読み取りには Claude APIキー（ANALYSIS_ANTHROPIC_API_KEY）の設定が必要です。"
                                "条件は手入力してください。", status=503, code="DRAWING_READER_UNAVAILABLE")
+        reading, evidence = self.read_drawing_raw(path)
+        return reading, self.drawing_context(reading, file_name, unregistered_process_texts(evidence, self.masters))
+
+    def read_drawing_raw(self, path: str | Path) -> tuple[dict, list | None]:
+        """The reading and its evidence, without the masters (the extraction step: no database)."""
         reading = dict(self.reader_factory().read(str(path)))
         evidence = reading.pop("evidence", None)
         texts = {}
@@ -171,7 +178,14 @@ class EstimateService:
                     texts[key] = str(text).strip()
         if texts:
             reading["source_texts"] = texts
-        return reading, self.drawing_context(reading, file_name, unregistered_process_texts(evidence, self.masters))
+        return reading, evidence
+
+    def extractor(self, progress=None):
+        """The extraction step's tools: the files and the reader (when available), no database."""
+        from src.services.extraction import Extractor
+
+        return Extractor(self.files, self.read_drawing_raw if self.drawing_reader_available() else None, progress,
+                         self.estimate_shape_raw if self.shape_estimator_available() else None)
 
     def drawing_context(self, reading: dict, file_name: str = "", unregistered: list[str] | None = None) -> DrawingContext:
         items = [DrawingItem(field=i.field, label=i.label, value=i.value, display=i.display, status=i.status,
@@ -180,14 +194,26 @@ class EstimateService:
                               items=items, flags=list(reading.get("flags") or []), unregistered_texts=unregistered or [])
 
     def run_drawing_job(self, payload: dict) -> dict:
+        return self.finish_drawing_job(self.extract_drawing_job(payload))
+
+    def extract_drawing_job(self, payload: dict) -> dict:
+        """The reading of a drawing job: the file and the reader only (the extraction step, no database)."""
         try:
             meta = self.files.meta(payload["file_id"])
         except KeyError:
             raise JobError("アップロードしたファイルが見つかりません。") from None
-        try:
-            reading, drawing = self.read_drawing(self.files.path(payload["file_id"]), meta["filename"])
-        except ServiceError as exc:
-            raise JobError(str(exc)) from None
+        if not self.drawing_reader_available():
+            raise JobError("図面PDFの読み取りには Claude APIキー（ANALYSIS_ANTHROPIC_API_KEY）の設定が必要です。"
+                           "条件は手入力してください。")
+        with self.files.local_path(payload["file_id"]) as path:
+            reading, evidence = self.read_drawing_raw(path)
+        return {"reading": reading, "evidence": evidence, "file_name": meta["filename"]}
+
+    def finish_drawing_job(self, extracted: dict) -> dict:
+        """The rules on the reading (the masters decide the codes)."""
+        reading = extracted["reading"]
+        drawing = self.drawing_context(reading, extracted["file_name"],
+                                       unregistered_process_texts(extracted["evidence"], self.masters))
         return {"reading": reading, "drawing": drawing.model_dump(mode="json")}
 
     # ------------------------------------------------------------ shape from the drawing PDF alone
@@ -206,17 +232,34 @@ class EstimateService:
             analysis = analysis.model_copy(update={"file_name": file_name})
         return analysis, list(result.dimensions_mm)
 
+    def estimate_shape_raw(self, path: str | Path, file_name: str = "", thickness_mm: float | None = None) -> dict:
+        """The extraction step's form: {"analysis": JSON, "max_dimension_mm"}. A failure is kept as an
+        unsupported analysis (the values are entered by hand then), never an error of the whole job."""
+        from src.pdf_shape import REASON_CODE
+
+        try:
+            analysis, dims = self.estimate_shape(path, file_name, float(thickness_mm) if thickness_mm else None)
+        except Exception:  # noqa: BLE001
+            return {"analysis": {"status": "unsupported", "file_name": file_name, "reason_code": REASON_CODE,
+                                 "reason_codes": [REASON_CODE], "message": "図面PDFから寸法を求められませんでした。"},
+                    "max_dimension_mm": None}
+        return {"analysis": analysis.model_dump(mode="json"), "max_dimension_mm": round(max(dims), 1) if dims else None}
+
     def run_shape_job(self, payload: dict) -> dict:
+        return self.extract_shape_job(payload)["analysis"]
+
+    def extract_shape_job(self, payload: dict) -> dict:
+        """The shape estimate of POST /api/drawings/shape-estimates: the file and the estimator only (no database)."""
         try:
             meta = self.files.meta(payload["file_id"])
         except KeyError:
             raise JobError("アップロードしたファイルが見つかりません。") from None
         try:
-            analysis, _ = self.estimate_shape(self.files.path(payload["file_id"]), meta["filename"],
-                                              payload.get("thickness_mm"))
+            with self.files.local_path(payload["file_id"]) as path:
+                analysis, _ = self.estimate_shape(path, meta["filename"], payload.get("thickness_mm"))
         except ServiceError as exc:
             raise JobError(str(exc)) from None
-        return analysis.model_dump(mode="json")
+        return {"analysis": analysis.model_dump(mode="json")}
 
     # ------------------------------------------------------------ jobs
     def job_queue(self, autostart: bool = True) -> JobQueue:
@@ -224,9 +267,16 @@ class EstimateService:
                                          "pdf_shape": self.run_shape_job},
                         workers=self.settings.job_workers, autostart=autostart)
 
+    def job_of_tenant(self, job_id: str) -> dict:
+        """A job of the current company (KeyError for another company's: it is not found)."""
+        job = self.job_store.read(job_id)
+        if (job.get("tenant_id") or DEFAULT_TENANT) != current_tenant():
+            raise KeyError(job_id)
+        return job
+
     def analysis_from_job(self, job_id: str) -> SheetMetalAnalysis:
         try:
-            job = self.job_store.read(job_id)
+            job = self.job_of_tenant(job_id)
         except KeyError:
             raise ServiceError("解析の受付番号が見つかりません。", 404, "NOT_FOUND") from None
         if job["kind"] not in ("analysis", "pdf_shape"):
@@ -356,24 +406,26 @@ class EstimateService:
             unregistered_texts=drawing.unregistered_texts if drawing else None)
         history = self.history_store()
         taken = [q.quote_no for q in self.search_index().quotes]
-        document.number = QuoteLog(self.settings.quote_log_path).issue(issued_at, log_row(document), taken)
+        document.number = self.quote_log().issue(issued_at, log_row(document), taken)
         files = {"quote": (f"{document.number}_{document.title}.pdf", render_quote(document))}
         if include_internal:
             files["internal"] = (f"{document.number}_見積根拠（社内用）.pdf", render_internal(document))
-        folder = self.settings.documents_dir / document.number
-        folder.mkdir(parents=True, exist_ok=True)
         for kind, (_, data) in files.items():
-            (folder / f"{kind}.pdf").write_bytes(data)
+            self.blobs.put(f"documents/{document.number}/{kind}.pdf", data)
         history.append([from_document(document, self.masters)])
         return IssuedDocument(document, files)
+
+    def quote_log(self):
+        """Where the quote numbers and the output log are kept (the CSV file here; the database in the API)."""
+        return QuoteLog(self.settings.quote_log_path)
 
     def document_file(self, quote_no: str, kind: str) -> bytes:
         if kind not in ("quote", "internal") or not quote_no.replace("-", "").isalnum():
             raise ServiceError("見積書が見つかりません。", 404, "NOT_FOUND")
-        path = self.settings.documents_dir / quote_no / f"{kind}.pdf"
-        if not path.exists():
-            raise ServiceError("見積書が見つかりません。", 404, "NOT_FOUND")
-        return path.read_bytes()
+        try:
+            return self.blobs.get(f"documents/{quote_no}/{kind}.pdf")
+        except KeyError:
+            raise ServiceError("見積書が見つかりません。", 404, "NOT_FOUND") from None
 
     # ------------------------------------------------------------ history and similar quotes
     def history_store(self) -> HistoryStore:
@@ -458,15 +510,17 @@ class EstimateService:
             raise ServiceError("アップロードしたファイルが見つかりません。", 404, "NOT_FOUND") from None
         if meta["kind"] != "step":
             raise ServiceError("3D表示の形状は STEP ファイルから作ります。")
-        cache = self.settings.viewer_dir / f"{file_id}.glb"
-        if cache.exists():
-            return cache.read_bytes()
+        cache = f"viewer/{file_id}.glb"
+        try:
+            return self.blobs.get(cache)
+        except KeyError:
+            pass
         from src.services.gltf import step_to_glb
 
         try:
-            data = step_to_glb(self.files.path(file_id))
+            with self.files.local_path(file_id) as path:
+                data = step_to_glb(path)
         except Exception:  # noqa: BLE001
             raise ServiceError("STEP を3D表示の形式に変換できませんでした。", 422, "CONVERSION_FAILED") from None
-        cache.parent.mkdir(parents=True, exist_ok=True)
-        cache.write_bytes(data)
+        self.blobs.put(cache, data)
         return data

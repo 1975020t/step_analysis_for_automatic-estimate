@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { day, del, get, num, post, put, stamp, yen } from "../api";
+import { blobUrl, day, del, get, num, post, put, stamp, yen } from "../api";
 import { ApiImage, ErrorBox, LineTabs, Loading, StatusTag, useMeta, useToast } from "../ui";
 import { FlatPattern, Model3D } from "../viewers";
 
@@ -139,7 +139,7 @@ export default function DrawingPage() {
               {d.documents.length === 0 && <div className="small muted">関連書類はありません。<Link to="/search">書類の登録</Link>で、この図面を関連づけられます。</div>}
               {d.documents.map((doc: any) => (
                 <div key={doc.id} className="row" style={{ borderBottom: "1px solid var(--line)", padding: "6px 0" }}>
-                  <span className="tag plain">{doc.kind}</span><a href={`/api/library/${doc.id}/file`} target="_blank" rel="noreferrer">{doc.title}</a><span className="small muted">{doc.file_type}</span>
+                  <span className="tag plain">{doc.kind}</span><button className="btn link small" style={{ padding: 0 }} onClick={async () => window.open(await blobUrl(`/api/library/${doc.id}/file`), "_blank")}>{doc.title}</button><span className="small muted">{doc.file_type}</span>
                 </div>
               ))}
             </div>

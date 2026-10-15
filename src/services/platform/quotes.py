@@ -15,11 +15,14 @@ from sqlalchemy.orm import selectinload
 from src.models import SheetMetalAnalysis
 from src.db.models import (Case, CaseStatus, CaseStatusLog, Drawing, DrawingRevision, IssuedDocument, Quote,
                            QuoteEditLog, now)
+from src.db.retry import retry_on_conflict
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
 from src.services.platform.cases import next_action, status_brief
 from src.services.platform.core import Platform, bump, check_version, iso
-from src.services.platform.drawings import estimate_pdf_shape, is_pdf_estimate, reading_for_pricing, sync_revision
+from src.services.extraction import extract
+from src.services.platform.drawings import (is_pdf_estimate, reading_for_pricing, reading_with_context, shape_plan,
+                                            store_shape, sync_revision)
 from src.services.platform.pricing import QuoteInputs, compute, evidence_texts, inputs_from_reading
 from src.services.platform.similar import similar
 from src.services.platform.wording import failure, input_errors, notes
@@ -130,44 +133,73 @@ def _store(quote: Quote, inputs: QuoteInputs) -> None:
 
 
 def run_estimate_job(pf: Platform, payload: dict) -> dict:
-    """The stages of an estimate (shown on the progress screen with the values found so far)."""
-    masters = pf.masters()
+    """The stages of an estimate (shown on the progress screen with the values found so far).
+    Three steps (src/services/extraction.py): prepare (database) -> extract (files only) -> finish (database)."""
     values: dict = {}
 
     def stage(i: int, **found) -> None:
         values.update(found)
         report_progress(step=i + 1, steps=len(STAGES), stage=STAGES[i], stages=STAGES, values=dict(values))
 
+    stage(0)
+    plan = retry_on_conflict(lambda: prepare_estimate(pf, payload))
+
+    def progress(**p) -> None:
+        if p["stage"] == STAGES[1] and not plan.get("shape"):  # the shape is known before the drawing is read
+            stage_shape(values, p.get("analysis") if plan["analysis"] else plan["analysis_done"])
+            stage(1)
+
+    extracted = extract(pf.service.extractor(progress), plan)
+    return retry_on_conflict(lambda: finish_estimate(pf, payload, plan, extracted, stage, values))
+
+
+def stage_shape(values: dict, analysis: dict | None) -> None:
+    a = analysis or {}
+    values["shape"] = {k: a.get(k) for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")}
+    values["shape_status"] = shape_state(a) if a else "CADデータなし"
+
+
+def prepare_estimate(pf: Platform, payload: dict) -> dict:
+    """What the estimate needs from the files: a new analysis when its conditions differ from the registration's,
+    a reading when the drawing has none yet (and no draft reading is still running)."""
     with pf.session() as s:
         quote = s.get(Quote, payload["quote_id"])
         if quote is None:
             raise JobError("見積が見つかりません。")
         revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
         inputs = _inputs(quote)
-        stage(0)
-        analysis = analyse(pf, revision, inputs)
-        quote.analysis = analysis
-        a = analysis or {}
-        values["shape"] = {k: a.get(k) for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")}
-        values["shape_status"] = shape_state(a) if a else "CADデータなし"
-        stage(1)
+        request, done = analysis_request(revision, inputs)
+        read, shape = False, None
         if revision is not None:
             sync_revision(pf, s, revision)
-            if revision.pdf_file_id and revision.reading is None and pf.service.drawing_reader_available() and \
-                    not (revision.reading_job_id and (pf.job(revision.reading_job_id) or {}).get("status") in ("queued", "running")):
-                try:
-                    r, ctx = pf.service.read_drawing(pf.files.path(revision.pdf_file_id), revision.pdf_name)
-                    revision.reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
-                except Exception:  # noqa: BLE001 - the conditions are entered by hand then
-                    pass
-        if revision is not None and analysis is None and revision.pdf_file_id and not revision.shape_file_id \
-                and revision.analysis is None:
-            estimate_pdf_shape(pf, revision)   # a drawing PDF only, registered before it could be estimated
-            analysis = analyse(pf, revision, inputs)
-            quote.analysis = analysis
-            a = analysis or {}
-            values["shape"] = {k: a.get(k) for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")}
-            values["shape_status"] = shape_state(a) if a else "CADデータなし"
+            read = bool(revision.pdf_file_id and revision.reading is None and not (
+                revision.reading_job_id and (pf.job(revision.reading_job_id) or {}).get("status") in ("queued", "running")))
+            if revision.analysis is None:   # a drawing PDF only, registered before its shape could be estimated
+                shape = shape_plan(pf, revision)
+        return {"analysis": request, "analysis_done": done, "pdf_file_id": revision.pdf_file_id if read or shape else None,
+                "pdf_text": False, "read": read, "shape": shape}
+
+
+def finish_estimate(pf: Platform, payload: dict, plan: dict, extracted: dict, stage, values: dict) -> dict:
+    masters = pf.masters()
+    with pf.session() as s:
+        quote = s.get(Quote, payload["quote_id"])
+        if quote is None:
+            raise JobError("見積が見つかりません。")
+        revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        inputs = _inputs(quote)
+        analysis = extracted["analysis"] if plan["analysis"] else plan["analysis_done"]
+        if revision is not None and plan.get("shape") and extracted.get("shape") and revision.analysis is None:
+            store_shape(revision, extracted["shape"])
+            analysis = revision.analysis
+        quote.analysis = analysis
+        if "shape" not in values:
+            stage_shape(values, analysis)
+            stage(1)
+        if revision is not None and plan["read"] and revision.reading is None:
+            reading = reading_with_context(pf, masters, extracted["reading"], revision.pdf_name)
+            if reading:
+                revision.reading = reading
         reading = reading_for_pricing(revision)
         quote.reading = reading
         values["reading"] = ({"items": len([k for k in ("material", "thickness_mm", "quantity", "surface_treatment", "rush")
@@ -202,24 +234,22 @@ def _metric(result: dict, name: str):
     return (result.get("shape") or {}).get(name, {}).get("value")
 
 
-def analyse(pf: Platform, revision: DrawingRevision | None, inputs: QuoteInputs) -> dict | None:
-    """The shape analysis with this quote's conditions (the registration analysis when they are the same)."""
+def analysis_request(revision: DrawingRevision | None, inputs: QuoteInputs) -> tuple[dict | None, dict | None]:
+    """(a request for a new analysis with this quote's conditions, or None; the analysis to use when no new one is
+    needed: the registration's when the conditions are the same, else None)."""
     if revision is not None and not revision.shape_file_id and is_pdf_estimate(revision.analysis):
-        return revision.analysis   # a drawing PDF only: the shape values estimated from it
+        return None, revision.analysis   # a drawing PDF only: the shape values estimated from it
     if revision is None or not revision.shape_file_id:
-        return None
+        return None, None
     if revision.shape_kind == "dxf" and not inputs.thickness_mm:
-        return None
+        return None, None
     same = (revision.analysis is not None and inputs.k_factor == 0.33 and not inputs.k_factor_confirmed
             and not inputs.flat_confirmed and (revision.shape_kind != "dxf" or inputs.thickness_mm == revision.thickness_mm))
     if same:
-        return revision.analysis
-    data, meta = pf.files.get(revision.shape_file_id)
-    try:
-        return pf.service.analyze_bytes(data, meta["filename"], inputs.thickness_mm, inputs.k_factor,
-                                        inputs.k_factor_confirmed, inputs.flat_confirmed).model_dump(mode="json")
-    except Exception:  # noqa: BLE001
-        return {"status": "error", "file_name": meta["filename"], "message": "CADデータを解析できませんでした。"}
+        return None, revision.analysis
+    return {"file_id": revision.shape_file_id, "file_name": revision.shape_name, "thickness_mm": inputs.thickness_mm,
+            "k_factor": inputs.k_factor, "k_factor_confirmed": inputs.k_factor_confirmed,
+            "flat_confirmed": inputs.flat_confirmed}, None
 
 
 # ---------------------------------------------------------------- reading
@@ -392,11 +422,15 @@ def update(pf: Platform, quote_id: int, body: EstimateUpdate, actor: str) -> dic
         if not inputs.customer.strip():
             raise ServiceError("顧客は必須です。")
         revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        request = None
         if any(getattr(inputs, k) != getattr(before, k) for k in ANALYSIS_KEYS):
-            quote.analysis = analyse(pf, revision, inputs)
+            # a new analysis with the new conditions runs as a job (the CAD analysis is not done in the API)
+            request, done = analysis_request(revision, inputs)
+            quote.analysis = None if request else done
         _store(quote, inputs)
-        quote.result = compute(inputs, masters, quote.analysis, quote.reading, file_name=revision.shape_name if revision else "",
-                               dxf=_is_dxf(revision))
+        pending = bool(request) or _reanalysing(pf, quote)
+        quote.result = compute(inputs, masters, quote.analysis, quote.reading, analysis_pending=pending,
+                               file_name=revision.shape_name if revision else "", dxf=_is_dxf(revision))
         quote.updated_at, quote.updated_by = now(), actor
         case = quote.case
         case.customer, case.title, case.staff, case.due_date = inputs.customer.strip(), inputs.title.strip(), inputs.staff, inputs.due_date
@@ -404,10 +438,65 @@ def update(pf: Platform, quote_id: int, body: EstimateUpdate, actor: str) -> dic
         summary = changes(before, inputs, masters) or "条件を保存"
         if body.note:
             summary += f"（{body.note}）"
-        s.add(QuoteEditLog(quote_id=quote.id, actor=actor, summary=summary, total_before=old_total,
-                           total_after=((quote.result or {}).get("price") or {}).get("subtotal")))
+        log = QuoteEditLog(quote_id=quote.id, actor=actor, summary=summary, total_before=old_total,
+                           total_after=((quote.result or {}).get("price") or {}).get("subtotal"))
+        s.add(log)
+        job = None
+        if request:
+            s.flush()
+            job = pf.submit("reanalysis", {"quote_id": quote.id, "log_id": log.id}, start=False)
+            quote.job_id = job["job_id"]
         s.commit()
+    if job:
+        pf.start(job["job_id"])  # only after the commit: the job reads the new conditions
     return detail(pf, quote_id)
+
+
+def _reanalysing(pf: Platform, quote: Quote) -> bool:
+    job = pf.job(quote.job_id) if quote.job_id else None
+    return bool(job and job["kind"] == "reanalysis" and job["status"] in ("queued", "running"))
+
+
+def run_reanalysis_job(pf: Platform, payload: dict) -> dict:
+    """The analysis again with a quote's changed conditions (k factor, thickness of a flat pattern, flat), in the
+    same three steps as an estimate: prepare (database) -> extract (files only) -> finish (database)."""
+    report_progress(step=1, steps=1, stage=STAGES[0], stages=STAGES[:1])
+    plan = retry_on_conflict(lambda: prepare_reanalysis(pf, payload))
+    extracted = extract(pf.service.extractor(), plan) if plan["analysis"] else {"analysis": None}
+    return retry_on_conflict(lambda: finish_reanalysis(pf, payload, plan, extracted))
+
+
+def prepare_reanalysis(pf: Platform, payload: dict) -> dict:
+    with pf.session() as s:
+        quote = s.get(Quote, payload["quote_id"])
+        if quote is None:
+            raise JobError("見積が見つかりません。")
+        revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        request, done = analysis_request(revision, _inputs(quote))
+        return {"analysis": request, "analysis_done": done, "pdf_file_id": None, "pdf_text": False, "read": False}
+
+
+def finish_reanalysis(pf: Platform, payload: dict, plan: dict, extracted: dict) -> dict:
+    masters = pf.masters()
+    with pf.session() as s:
+        quote = s.get(Quote, payload["quote_id"])
+        if quote is None:
+            raise JobError("見積が見つかりません。")
+        revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
+        inputs = _inputs(quote)
+        request, done = analysis_request(revision, inputs)
+        if request != plan["analysis"]:
+            return {"quote_id": quote.id, "superseded": True}  # the conditions changed again: a later job analyses
+        quote.analysis = extracted["analysis"] if request else done
+        quote.result = compute(inputs, masters, quote.analysis, quote.reading,
+                               file_name=revision.shape_name if revision else "", dxf=_is_dxf(revision))
+        subtotal = ((quote.result or {}).get("price") or {}).get("subtotal")
+        log = s.get(QuoteEditLog, payload.get("log_id")) if payload.get("log_id") else None
+        if log is not None and log.quote_id == quote.id:
+            log.total_after = subtotal  # the amount after the change is known now
+        quote.updated_at = now()
+        s.commit()
+    return {"quote_id": payload["quote_id"], "subtotal": subtotal}
 
 
 LABELS = {"customer": "顧客", "title": "案件名", "staff": "担当", "quantity": "数量", "due_date": "希望納期",

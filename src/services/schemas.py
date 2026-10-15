@@ -201,7 +201,7 @@ class OutcomeInput(BaseModel):
 
 class JobOut(BaseModel):
     job_id: str
-    kind: Literal["analysis", "drawing", "register", "estimate", "pdf_shape"]
+    kind: Literal["analysis", "drawing", "register", "estimate", "reanalysis", "pdf_shape"]
     status: Literal["queued", "running", "done", "failed"]
     progress: dict | None = Field(None, description="実行中の段階と、途中で分かった値（estimate / register）")
     created_at: str
@@ -221,6 +221,24 @@ class FileOut(BaseModel):
     filename: str
     kind: str
     size: int
+
+
+class UploadStart(BaseModel):
+    filename: str = Field(min_length=1, max_length=255)
+    size: int = Field(ge=1)
+
+
+class UploadForm(BaseModel):
+    """direct=true: post the file to `url` as a form with `fields` and then `file` (straight to S3)."""
+    direct: bool
+    file_id: str | None = None
+    filename: str | None = None
+    url: str | None = None
+    fields: dict[str, str] = {}
+
+
+class UploadDone(BaseModel):
+    filename: str = Field(min_length=1, max_length=255)
 
 
 class AnalysisJobRequest(BaseModel):

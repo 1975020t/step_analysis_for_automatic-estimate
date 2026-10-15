@@ -30,8 +30,9 @@ STEP・DXF がなく図面PDFしかないときに、図面から形状の値（
 
 ## 画面・API
 
-- 図面登録で PDF だけのとき、読み取りのあとに形状を概算して改訂の `analysis` に保存する（`platform/drawings.py` の `estimate_pdf_shape`）。
-  見積の作成時に未推定なら、そこで推定する（`platform/quotes.py`）
+- 図面登録で PDF だけのとき、形状を概算して改訂の `analysis` に保存する。見積の作成時に未推定なら、そこで推定する。
+  受付の3段階に合わせ、準備が計画に `shape` を入れ（`platform/drawings.py` の `shape_plan`）、抽出（`src/services/extraction.py`、
+  データベースなし。AWS では抽出の Lambda）が読み取りのあとに推定し、保存が改訂に入れる（`store_shape`）
 - 見積画面：状態「図面PDFから概算」、形状の表に「図面から推定」、条件修正の「寸法の値」欄に推定値を薄く表示し、上書きできる。
   確認事項に「形状の値は図面PDFからの概算です…誤差の目安は±20%」と、推定の根拠（画像で数えた／LLMが数えた）を出す
 - API：`POST /api/drawings/shape-estimates`（`file_id`、`thickness_mm`）で受付、`GET /api/jobs/{id}` で `SheetMetalAnalysis`。

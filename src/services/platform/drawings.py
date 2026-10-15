@@ -16,10 +16,12 @@ from sqlalchemy.orm import Session, selectinload
 
 from src.db.models import (Case, Category, Drawing, DrawingMemo, DrawingNote, DrawingRevision, LibraryDocument, Quote,
                            now)
+from src.db.retry import retry_on_conflict
 from src.master_loader import UNREGISTERED
 from src.pdf_shape import REASON_CODE as PDF_SHAPE_ESTIMATE
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
+from src.services.extraction import extract
 from src.services.pdfium_lock import PDFIUM_LOCK
 from src.services.platform.core import Platform, check_version, iso
 
@@ -112,71 +114,90 @@ def _meta(pf: Platform, file_id: str, kinds) -> dict:
 
 def run_register_job(pf: Platform, payload: dict) -> dict:
     """At registration: analyse the shape file, take the drawing reading (the draft read before registering, or a
-    new reading when none was made and the reader is available), extract the PDF text for the search."""
+    new reading when none was made and the reader is available), extract the PDF text for the search.
+    Three steps (src/services/extraction.py): prepare (database) -> extract (files only) -> finish (database)."""
+    plan = retry_on_conflict(lambda: prepare_register(pf, payload))
+    extracted = extract(pf.service.extractor(lambda **p: report_progress(stage=p["stage"])), plan)
+    return retry_on_conflict(lambda: finish_register(pf, payload, plan, extracted))
+
+
+def prepare_register(pf: Platform, payload: dict) -> dict:
+    with pf.session() as s:
+        revision = s.get(DrawingRevision, payload["revision_id"])
+        if revision is None:
+            raise JobError("図面の版が見つかりません。")
+        analysis = None
+        if revision.shape_file_id and not (revision.shape_kind == "dxf" and not revision.thickness_mm):
+            analysis = {"file_id": revision.shape_file_id, "file_name": revision.shape_name,
+                        "thickness_mm": revision.thickness_mm, "max_dimension": True}
+        draft = reading_of_job(pf, revision.reading_job_id) if revision.pdf_file_id else None
+        return {"analysis": analysis, "pdf_file_id": revision.pdf_file_id, "pdf_text": bool(revision.pdf_file_id),
+                "read": bool(revision.pdf_file_id and draft is None and not revision.reading_job_id),
+                "draft_reading": draft, "shape": shape_plan(pf, revision, draft),
+                "viewer_file_id": revision.shape_file_id if revision.shape_kind == "step" else None}
+
+
+def finish_register(pf: Platform, payload: dict, plan: dict, extracted: dict) -> dict:
+    masters = pf.masters()
     with pf.session() as s:
         revision = s.get(DrawingRevision, payload["revision_id"])
         if revision is None:
             raise JobError("図面の版が見つかりません。")
         result: dict = {}
         if revision.shape_file_id:
-            report_progress(stage="CADデータの解析")
-            if revision.shape_kind == "dxf" and not revision.thickness_mm:
+            if plan["analysis"] is None:
                 result["analysis"] = "板厚がないため未解析（見積のときに板厚を入力）"
             else:
-                try:
-                    data, meta = pf.files.get(revision.shape_file_id)
-                    analysis = pf.service.analyze_bytes(data, meta["filename"], revision.thickness_mm)
-                    revision.analysis = analysis.model_dump(mode="json")
-                    revision.max_dimension_mm = max_dimension(pf, revision, analysis)
-                    result["analysis"] = analysis.status
-                except Exception:  # noqa: BLE001 - recorded as a failed analysis; the quote asks for the values
-                    revision.analysis = {"status": "error", "file_name": revision.shape_name,
-                                         "message": "CADデータを解析できませんでした。"}
-                    result["analysis"] = "error"
+                revision.analysis = extracted["analysis"]
+                if extracted["analysis"].get("status") != "error":
+                    revision.max_dimension_mm = extracted["max_dimension_mm"]
+                result["analysis"] = extracted["analysis"].get("status")
         if revision.pdf_file_id:
-            report_progress(stage="図面の読み取り")
-            revision.pdf_text = pdf_text(pf.files.path(revision.pdf_file_id))
-            reading = reading_of_job(pf, revision.reading_job_id)
-            if reading is None and not revision.reading_job_id and pf.service.drawing_reader_available():
-                try:
-                    r, ctx = pf.service.read_drawing(pf.files.path(revision.pdf_file_id), revision.pdf_name)
-                    reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
-                except Exception:  # noqa: BLE001
-                    reading = None
+            revision.pdf_text = extracted["pdf_text"]
+            reading = plan["draft_reading"] or reading_with_context(pf, masters, extracted["reading"], revision.pdf_name)
             if reading:
                 revision.reading = reading
                 apply_reading(revision, reading["reading"])
             result["reading"] = bool(reading)
-            if not revision.shape_file_id:
-                report_progress(stage="図面PDFから形状を推定")
-                result["analysis"] = estimate_pdf_shape(pf, revision)
+            if plan.get("shape") and extracted.get("shape"):
+                result["analysis"] = store_shape(revision, extracted["shape"])
         s.commit()
     return result
 
 
-def estimate_pdf_shape(pf: Platform, revision: DrawingRevision) -> str | None:
-    """A drawing with a PDF and no STEP / DXF: estimate the shape values from the PDF alone (src/pdf_shape.py) and
-    keep them as the revision's analysis (always 概算; a person can overwrite each value in the estimate). The
-    thickness is the drawing's (the reading, or the one entered at registration). Nothing when the estimator is
-    not available (no API key): the values are then entered by hand, as before."""
+def shape_plan(pf: Platform, revision: DrawingRevision, draft: dict | None = None) -> dict | None:
+    """A drawing with a PDF and no STEP / DXF: ask the extraction step to estimate the shape values from the PDF
+    alone (src/pdf_shape.py). The thickness is the drawing's: the one entered at registration, else the reading's
+    (made in the same step, or the draft / stored one). None when the estimator is not available (no API key): the
+    values are then entered by hand, as before."""
     if revision.shape_file_id or not revision.pdf_file_id or not pf.service.shape_estimator_available():
         return None
-    reading = (revision.reading or {}).get("reading") or {}
-    thickness = revision.thickness_mm or reading.get("thickness_mm")
-    try:
-        analysis, dims = pf.service.estimate_shape(pf.files.path(revision.pdf_file_id), revision.pdf_name,
-                                                   float(thickness) if thickness else None)
-    except Exception:  # noqa: BLE001 - the values are entered by hand then
-        revision.analysis = {"status": "unsupported", "file_name": revision.pdf_name, "reason_code": PDF_SHAPE_ESTIMATE,
-                             "reason_codes": [PDF_SHAPE_ESTIMATE], "message": "図面PDFから寸法を求められませんでした。"}
-        return "unsupported"
-    revision.analysis = analysis.model_dump(mode="json")
-    revision.max_dimension_mm = round(max(dims), 1) if dims else None
-    return analysis.status
+    read = ((draft or revision.reading or {}).get("reading") or {}).get("thickness_mm")
+    return {"file_name": revision.pdf_name, "thickness_mm": revision.thickness_mm or read}
+
+
+def store_shape(revision: DrawingRevision, shape: dict) -> str:
+    """Keep the estimated shape as the revision's analysis (always 概算; a person can overwrite each value in the
+    estimate)."""
+    revision.analysis = shape["analysis"]
+    if shape.get("max_dimension_mm"):
+        revision.max_dimension_mm = shape["max_dimension_mm"]
+    return shape["analysis"].get("status")
 
 
 def is_pdf_estimate(analysis: dict | None) -> bool:
     return bool(analysis) and analysis.get("reason_code") == PDF_SHAPE_ESTIMATE
+
+
+def reading_with_context(pf: Platform, masters, raw: dict | None, file_name: str) -> dict | None:
+    """The stored form of a reading: the reading and its items judged against the masters (the finish step)."""
+    if not raw:
+        return None
+    from src.quote_document import unregistered_process_texts
+
+    reading = raw["reading"]
+    ctx = pf.service.drawing_context(reading, file_name, unregistered_process_texts(raw.get("evidence"), masters))
+    return {"reading": reading, "drawing": ctx.model_dump(mode="json")}
 
 
 def reading_of_job(pf: Platform, job_id: str) -> dict | None:
@@ -206,42 +227,8 @@ def sync_revision(pf: Platform, s: Session, revision: DrawingRevision) -> None:
             s.commit()
 
 
-def max_dimension(pf: Platform, revision: DrawingRevision, analysis) -> float | None:
-    if revision.shape_kind == "step":
-        try:
-            import cadquery as cq
-
-            box = cq.importers.importStep(str(pf.files.path(revision.shape_file_id))).val().BoundingBox()
-            return round(max(box.xlen, box.ylen, box.zlen), 1)
-        except Exception:  # noqa: BLE001
-            pass
-    box = analysis.flat_pattern.bounding_box_mm if analysis.flat_pattern else None
-    return round(max(box), 1) if box else None
-
-
-def pdf_text(path: Path) -> str:
-    """The text layer of a PDF (empty for a scan: no OCR)."""
-    import pypdfium2 as pdfium
-
-    with PDFIUM_LOCK:
-        try:
-            pdf = pdfium.PdfDocument(str(path))
-            texts = []
-            for page in pdf:
-                textpage = page.get_textpage()
-                texts.append(textpage.get_text_range())
-                textpage.close()
-                page.close()
-            pdf.close()
-            return "\n".join(texts).replace("\r", "")
-        except Exception:  # noqa: BLE001
-            return ""
-
-
-def render_png(path: Path, cache: Path, width: int = 900) -> bytes:
-    """The first page of a PDF as PNG (cached)."""
-    if cache.exists():
-        return cache.read_bytes()
+def render_png(path: Path, width: int = 900) -> bytes:
+    """The first page of a PDF as PNG."""
     import pypdfium2 as pdfium
 
     with PDFIUM_LOCK:
@@ -253,8 +240,6 @@ def render_png(path: Path, cache: Path, width: int = 900) -> bytes:
         pdf.close()
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
-    cache.parent.mkdir(parents=True, exist_ok=True)
-    cache.write_bytes(buffer.getvalue())
     return buffer.getvalue()
 
 
@@ -263,8 +248,16 @@ def revision_preview(pf: Platform, revision_id: int, width: int = 900) -> bytes:
         revision = s.get(DrawingRevision, revision_id)
         if revision is None or not revision.pdf_file_id:
             raise ServiceError("図面PDFがありません。", 404, "NOT_FOUND")
-        path = pf.files.path(revision.pdf_file_id)
-    return render_png(path, pf.settings.viewer_dir / f"rev{revision_id}_{width}.png", width)
+        file_id = revision.pdf_file_id
+    cache = f"viewer/{file_id}_{int(width)}.png"  # the uploaded file never changes: keyed by it
+    try:
+        return pf.service.blobs.get(cache)
+    except KeyError:
+        pass
+    with pf.files.local_path(file_id) as path:
+        data = render_png(path, width)
+    pf.service.blobs.put(cache, data)
+    return data
 
 
 # ---------------------------------------------------------------- reading the drawing objects

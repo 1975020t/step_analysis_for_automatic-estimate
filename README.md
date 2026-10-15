@@ -213,7 +213,7 @@ STEP・DXFがなく図面PDFしかないときは、図面から形状の値（�
 
 **テンプレート**（設定 ＞ 見積書テンプレート）：表示する項目（費目の内訳＝項目名と数量だけ・単価と数量・図番と改訂・有効期限・備考欄・社印）を切り替えます。適用する顧客を指定でき、原価・粗利は社外用に出しません（固定）。
 
-API だけで使う場合の見積書（`POST /api/documents`、番号は `Q20260928-001` 形式で `output/quote_log.csv` に記録）も今までどおり使えます。
+API だけで使う場合の見積書（`POST /api/documents`、番号は `Q20260928-001` 形式でデータベースの `quote_log` 表に記録）も今までどおり使えます。
 
 **書式**：A4縦1ページ。見本は [analysis/quote_document_sample.pdf](analysis/quote_document_sample.pdf)（確定）と [analysis/quote_document_sample_estimate.pdf](analysis/quote_document_sample_estimate.pdf)（概算）。概算の見本は、今は使いません。この機能で出力した例は [通常](analysis/quote_document_example.pdf)・[未登録の加工を別途見積にした例](analysis/quote_document_example_separate.pdf)・[社内用の見積根拠](analysis/quote_document_example_internal.pdf) です（仮の宛先。`python scripts/make_quote_examples.py` で作り直せます）。
 
@@ -245,7 +245,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 
 **自社情報の設定**：`data/company.csv` は仮の値です（リポジトリは公開のため、実在の会社名・住所・登録番号は入れません）。実際の自社情報は、同じ形式の `data/company.local.csv`（Git管理外）に書くと、そちらが優先されます。`remark_1`、`remark_2`… が備考の定型文、`delivery_place` が受渡場所の既定値です。税率・有効期限・納期は `data/pricing_policy.csv`（`tax_rate`、`quote_validity_days`、`lead_time_days_normal`、`lead_time_days_rush`）で設定します。
 
-**記録**：出力するたびに `output/quote_log.csv`（Git管理外）に、見積番号、発行日時、宛先、件名、図番、数量、合計、概算かどうか（今はつねに0。以前の記録との互換のため列を残す）、入力ファイル名を1行残します。見積番号の連番はこの記録から決めます（同じ日に何度出力しても重複しません）。
+**記録**：API で出力するたびにデータベースの `quote_log` 表に（API を使わず `src/quote_log.py` を直接呼ぶときは `output/quote_log.csv` に）、見積番号、発行日時、宛先、件名、図番、数量、合計、概算かどうか（今はつねに0。以前の記録との互換のため列を残す）、入力ファイル名を1行残します。見積番号の連番はこの記録から決めます（同じ日に何度出力しても重複しません）。
 
 **日本語フォント**：IPAゴシック（`fonts/ipag.ttf`、IPAフォントライセンスv1.0、[ライセンス文](fonts/IPA_Font_License_Agreement_v1.0.txt)）をPDFに埋め込むため、Windows でも文字化けしません。長い会社名・品名・仕様は縮小し、それでも入らなければ折り返して枠内に収めます。同じ入力・同じ発行日時なら同じPDFになります。
 
@@ -290,25 +290,44 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | ホーム・案件・実績分析 | `GET /api/home`、`GET /api/cases`、`PUT /api/cases/{id}/status`、`GET /api/review` |
 | 検索・書類・取引先 | `GET /api/search`、`GET/POST /api/library`、`GET/POST/PUT /api/partners` |
 | 設定・マスター | `/api/statuses`、`/api/categories`、`/api/attributes`、`/api/templates`、`/api/staff`、`/api/master-tables/{table}`、`GET /api/logic` |
+| ファイル | `POST /api/files`（API を通して送る）、`POST /api/uploads` → 保存先（S3）へ直接送る → `POST /api/uploads/{file_id}/complete`（保存先が S3 のとき。画面はこちらを使う） |
 | 形状の解析・図面PDFの読み取り（単体） | `POST /api/files` → `POST /api/analyses` または `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` |
 | 図面PDFだけからの形状の概算（単体） | `POST /api/files` → `POST /api/drawings/shape-estimates`（`file_id`、`thickness_mm`）→ `GET /api/jobs/{job_id}` |
 | 見積の計算・見積書・類似見積・履歴（画面を使わない呼び出し） | `POST /api/quotes`、`POST /api/documents`、`POST /api/similar-quotes`、`/api/history...` |
 
-更新は版（`version`）つきで受け付け、ほかの人が先に保存していたら 409（`CONFLICT`）を返します（黙って上書きしません）。解析と図面の読み取りは受付番号を返して裏で処理し、受付の状態はファイルに残るので、APIを再起動しても取れます。
+更新は版（`version`）つきで受け付け、ほかの人が先に保存していたら 409（`CONFLICT`）を返します（黙って上書きしません）。解析と図面の読み取りは受付番号を返して裏で処理し、受付の状態はデータベースに残るので、APIを再起動しても取れます。
 
 | 変数 | 既定 | 内容 |
 |---|---|---|
-| `DATABASE_URL` | なし（SQLite `<保存先>/app.db`） | データベース。PostgreSQL は `postgresql+psycopg://user:pass@host/db` |
+| `DATABASE_URL` | なし（SQLite `<保存先>/app.db`） | データベース。PostgreSQL は `postgresql+psycopg://user:pass@host/db`。Aurora DSQL は `auroradsql+psycopg://admin@<クラスターのエンドポイント>/postgres?region=ap-northeast-1`（パスワードは不要。IAM の権限から接続のたびに一時トークンを作る） |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスターと自社情報（評価とテストはこの CSV を直接読む） |
 | `ESTIMATE_STORAGE_DIR` | `output` | 図面PDF・形状ファイル・帳票・書類・受付・3D表示のファイル |
+| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` にすると、図面PDF・形状ファイル・帳票・書類・3D表示のファイルを S3 に置く（受付の状態と見積書の出力記録はデータベース。SQLite の場合はそのファイルが `ESTIMATE_STORAGE_DIR` に残る）。AWS の認証は boto3 の標準の方法（IAM ロールなど） |
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴 |
-| `QUOTE_LOG_PATH` | `output/quote_log.csv` | `POST /api/documents` の見積書の記録 |
+| `QUOTE_LOG_PATH` | `output/quote_log.csv` | 以前の版の見積書の記録。API の起動時にデータベースへ取り込む（今の記録はデータベース） |
 | `API_TOKEN` | なし | 設定すると `Authorization: Bearer <token>`（または `X-API-Token`）が必要。守りは `api/security.py` の1か所 |
+| `TENANT_TOKENS` | なし | 1つのシステムを複数の会社で使うときの、会社IDとその合言葉（`alpha=合言葉1,beta=合言葉2`）。会社の合言葉で呼ぶと、その会社のデータ・番号・マスター・ファイルだけを扱う。`API_TOKEN` は会社ID `default`（今までのデータ）の合言葉。新しい会社は最初に呼ばれたときにマスター・ステータスなどの初期データが入る（過去見積のお試しデータは入らない） |
+| `COGNITO_USER_POOL_ID` | なし | ログイン（Amazon Cognito）のユーザープール（例 `ap-northeast-1_AbCdEf123`）。`COGNITO_CLIENT_ID` と両方を設定すると、画面はログインの画面から始まり、ログインした人の会社（`custom:tenant_id`）のデータを扱い、操作者にはその人の名前が残る。合言葉（`API_TOKEN`・`TENANT_TOKENS`）はほかのシステムからの呼び出し用にそのまま使える |
+| `COGNITO_CLIENT_ID` | なし | 画面用のアプリクライアント（クライアントシークレットなし。認可コードと PKCE。コールバック URL は `https://<画面のホスト>/auth/callback`、サインアウト URL は `https://<画面のホスト>/`） |
+| `COGNITO_DOMAIN` | なし | ログインの画面のドメイン（`https://<接頭辞>.auth.<リージョン>.amazoncognito.com` か独自ドメイン） |
+| `COGNITO_TENANT_CLAIM` | `custom:tenant_id` | 会社IDを持つ属性。会社IDのない利用者は 403 |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限（種類と中身の先頭も確認） |
+| `DIRECT_DOWNLOAD_MB` | 4 | 保存先が S3 のとき、これより大きいファイル（図面PDF・3D表示）は S3 から直接取り出す（数分で切れるリンクへ転送。AWS Lambda の応答は約6MBまで） |
 | `JOB_WORKERS` | 2 | 裏で処理する数 |
+| `JOBS_STATE_MACHINE_ARN` | なし | AWS で、受付をこの Step Functions の状態機械の実行として動かす（準備 → 抽出 → 保存。API の中のスレッドでは動かさない）。[deploy/aws/README.md](deploy/aws/README.md) |
+| `CORS_ORIGINS` | なし | 画面を API と別のドメインに置くときの、呼び出しを許す画面の URL（`https://app.example.com,...`）。同じドメインで受けるなら不要 |
 | `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・資料の撮影用。API を呼ばない） |
 | `PDF_SHAPE_ESTIMATOR` | なし（APIキーがあれば使う） | 図面PDFだけからの形状の概算。`off` で使わない、`recorded:<file.json>` で記録済みの結果を返す（お試し・資料の撮影用） |
 | `WEB_DIST` | `web/dist` | API が配信する画面 |
+
+## AWS に載せる
+
+手元と同じコードを、環境変数と入口だけ変えて AWS Lambda で動かします。インフラ担当者向けの手順・設定・権限は [deploy/aws/README.md](deploy/aws/README.md) にまとめてあります。
+
+- **入口**：`api/aws_lambda.py` が、API（API Gateway から）と、受付の準備・保存・失敗の記録です。抽出（形の解析・図面の読み取り）は `src/services/aws_extract.py` です。受付の流れは `deploy/aws/jobs_state_machine.asl.json`（Step Functions）にあります
+- **イメージ**：`Dockerfile.lambda` から2つ作ります。API（CadQuery なし、約440MB）と、抽出（CadQuery 入り、約3.3GB）です
+- **ファイル**：画面は図面・STEP・DXF を S3 へ直接送り、大きいファイルは S3 から直接取り出します。Lambda の1回の要求と応答は約6MBまでなので、こうしています
+- **手元で確かめる**：`python scripts/verify/lambda_images.py --rie <aws-lambda-rie>` で、2つのイメージを Lambda と同じ形で動かし、図面の登録と見積を通します
 
 ## データベース
 

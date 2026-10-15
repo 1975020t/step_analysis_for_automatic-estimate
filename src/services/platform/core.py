@@ -13,14 +13,18 @@ from typing import Iterator
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
-from src.db.models import Counter, PastQuoteRow
+from src.db.models import Counter, PastQuoteRow, Tenant
+from src.db.retry import CHUNK
 from src.db.seed import seed
 from src.db.session import open_database
+from src.db.tenant_filter import key
 from src.master_loader import MasterLoader
 from src.past_quotes import PastQuote
 from src.services.estimate import EstimateService, ReaderFactory, ServiceError
+from src.services.platform.records import DbJobStore, DbQuoteLog, import_files, job_sessions
 from src.services.settings import Settings
 from src.similar_quotes import SimilarQuoteSearch
+from src.tenancy import DEFAULT_TENANT, current_tenant, tenant_scope
 
 PAST_FIELDS = [c for c in PastQuote.__dataclass_fields__]
 
@@ -35,21 +39,22 @@ def bump(session: Session, name: str, start: int = 0) -> int:
     dialect = session.get_bind().dialect.name
     if dialect in ("sqlite", "postgresql"):
         insert = __import__(f"sqlalchemy.dialects.{dialect}", fromlist=["insert"]).insert
-        session.execute(insert(Counter).values(name=name, value=start).on_conflict_do_nothing(index_elements=["name"]))
-    elif session.get(Counter, name) is None:
+        session.execute(insert(Counter).values(tenant_id=current_tenant(), name=name, value=start)
+                        .on_conflict_do_nothing(index_elements=["tenant_id", "name"]))
+    elif session.get(Counter, key(Counter, name)) is None:
         session.add(Counter(name=name, value=start))
         session.flush()
     session.execute(update(Counter).where(Counter.name == name).values(value=Counter.value + 1)
                     .execution_options(synchronize_session=False))
     value = session.execute(select(Counter.value).where(Counter.name == name)).scalar_one()
-    stale = session.identity_map.get(session.identity_key(Counter, name))
+    stale = session.identity_map.get(session.identity_key(Counter, (current_tenant(), name)))
     if stale is not None:
         session.expire(stale)
     return value
 
 
 def counter(session: Session, name: str) -> int:
-    row = session.get(Counter, name)
+    row = session.get(Counter, key(Counter, name))
     return row.value if row else 0
 
 
@@ -79,6 +84,8 @@ class DbHistory:
                 known.add(key)
                 s.add(PastQuoteRow(**{f: getattr(q, f) for f in PAST_FIELDS}, **links))
                 added += 1
+                if added % CHUNK == 0:  # a large import: several transactions (Aurora DSQL)
+                    s.commit()
             if added:
                 bump(s, "history_rev")
             s.commit()
@@ -122,6 +129,10 @@ class PlatformEstimateService(EstimateService):
                  shape_estimator_factory=None) -> None:
         self.platform = platform
         super().__init__(settings, reader_factory=reader_factory, shape_estimator_factory=shape_estimator_factory)
+        self.job_store = DbJobStore(platform.job_sessions)
+
+    def quote_log(self) -> DbQuoteLog:  # type: ignore[override]
+        return DbQuoteLog(self.platform.sessions)
 
     @property
     def masters(self) -> MasterLoader:  # type: ignore[override]
@@ -146,11 +157,17 @@ class Platform:
             reader_factory = lambda: RecordedReader(path)  # noqa: E731
         self.settings = settings
         self.sessions = open_database(settings.db_url)
-        with self.sessions() as s:
+        with tenant_scope(DEFAULT_TENANT), self.sessions() as s:
             seed(s, settings.data_dir, settings.history_path)
+            if s.get(Tenant, DEFAULT_TENANT) is None:
+                s.add(Tenant(tenant_id=DEFAULT_TENANT))
+                s.commit()
+        self.job_sessions = job_sessions(settings.db_url, self.sessions)
+        import_files(self.job_sessions, self.sessions, settings.jobs_dir, settings.quote_log_path)  # an earlier version's
         self._lock = threading.Lock()
-        self._masters: tuple[int, MasterLoader] | None = None
-        self._index: tuple[tuple, SimilarQuoteSearch] | None = None
+        self._tenants = {DEFAULT_TENANT}
+        self._masters: dict[str, tuple[int, MasterLoader]] = {}       # per company
+        self._index: dict[str, tuple[tuple, SimilarQuoteSearch]] = {}
         self.service = PlatformEstimateService(self, settings, reader_factory, shape_estimator_factory)
         self.files = self.service.files
         self.queue = None  # set by the API (JobQueue)
@@ -160,30 +177,48 @@ class Platform:
         with self.sessions() as s:
             yield s
 
+    # ------------------------------------------------------------ companies
+    def ensure_tenant(self, tenant: str) -> None:
+        """A company seen for the first time gets its starting data: the masters of data/*.csv, the statuses,
+        attributes and templates, empty company details (no sample history or partners)."""
+        if tenant in self._tenants:
+            return
+        with self._lock:
+            with tenant_scope(tenant), self.session() as s:
+                if s.get(Tenant, tenant) is None:
+                    seed(s, self.settings.data_dir, self.settings.history_path, sample=False)
+                    s.add(Tenant(tenant_id=tenant))
+                    s.commit()
+            self._tenants.add(tenant)
+
     # ------------------------------------------------------------ masters and history (cached until changed)
     def masters(self) -> MasterLoader:
         from src.services.platform.masters import load_masters
 
+        tenant = current_tenant()
         with self.session() as s:
             rev = counter(s, "masters_rev")
             with self._lock:
-                if self._masters and self._masters[0] == rev:
-                    return self._masters[1]
+                cached = self._masters.get(tenant)
+                if cached and cached[0] == rev:
+                    return cached[1]
             loaded = load_masters(s)
         with self._lock:
-            self._masters = (rev, loaded)
+            self._masters[tenant] = (rev, loaded)
         return loaded
 
     def history_index(self) -> SimilarQuoteSearch:
         with self.session() as s:
             key = (counter(s, "history_rev"), counter(s, "masters_rev"),
                    s.scalar(select(func.count()).select_from(PastQuoteRow)))
+        tenant = current_tenant()
         with self._lock:
-            if self._index and self._index[0] == key:
-                return self._index[1]
+            cached = self._index.get(tenant)
+            if cached and cached[0] == key:
+                return cached[1]
         index = SimilarQuoteSearch(DbHistory(self).load(), self.masters())
         with self._lock:
-            self._index = (key, index)
+            self._index[tenant] = (key, index)
         return index
 
     def company(self):
@@ -205,7 +240,7 @@ class Platform:
         if not job_id:
             return None
         try:
-            return self.service.job_store.read(job_id)
+            return self.service.job_of_tenant(job_id)
         except KeyError:
             return None
 

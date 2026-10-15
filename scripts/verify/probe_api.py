@@ -118,6 +118,9 @@ with TestClient(app, raise_server_exceptions=False) as c:
     note("update k out of range", put(qa, {"k_factor": 2}), 400)
     r = note("update k", put(qa, {"k_factor": 0.4, "k_factor_confirmed": True}), 200)
     qa = r.json()
+    if qa.get("job") and qa["job"]["status"] in ("queued", "running"):  # analysed again as a job
+        note("update k analysed", c.get(f"/api/jobs/{qa['job']['job_id']}"), lambda _: wait(c, qa["job"]["job_id"])["status"] == "done")
+        qa = c.get(f"/api/estimates/{qa['id']}").json()
     print("A after k", qa["analysis"]["state"], qa["result"]["price"] and qa["result"]["price"]["subtotal"])
     r = note("update rush", put(qa, {"rush": True}), 200); qa = r.json()
     r = note("update due clears", put(qa, {}, due_date=None), 200); qa = r.json()
@@ -264,6 +267,9 @@ with TestClient(app, raise_server_exceptions=False) as c:
         print("DXF missing:", d["inputs"]["thickness_mm"], [(m["field"], m["message"]) for m in d["result"]["missing"]], d["next_action"]["kind"])
         if d["inputs"]["thickness_mm"] is None:
             r = c.put(f"/api/estimates/{d['id']}", json={"version": d["version"], "inputs": {"thickness_mm": 1.6}})
+            if r.json().get("job"):
+                wait(c, r.json()["job"]["job_id"])
+            r = c.get(f"/api/estimates/{d['id']}")
             print("  after thickness:", r.json()["result"]["issuable"], r.json()["analysis"]["state"])
     a = [e for e in qd if e["drawing_no"] == "A-1"]
     for e in a:

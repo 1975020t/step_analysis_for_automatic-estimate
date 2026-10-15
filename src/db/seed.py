@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 
 from src.db.models import (AttributeDef, CaseStatus, Category, CompanyRow, FinishRow, MaterialRow, Partner,
                            PastQuoteRow, PolicyRow, ProcessRow, Staff, Template)
+from src.db.retry import CHUNK
 from src.past_quotes import HistoryStore
 
 STATUSES = [  # name, color, phase, role
@@ -57,7 +58,10 @@ def _empty(session: Session, model) -> bool:
     return not session.scalar(select(func.count()).select_from(model))
 
 
-def seed(session: Session, data_dir: str | Path = "data", history_path: str | Path | None = None) -> None:
+def seed(session: Session, data_dir: str | Path = "data", history_path: str | Path | None = None,
+         sample: bool = True) -> None:
+    """The initial data of the current company (src/tenancy.py). sample=False (a further company): the masters,
+    statuses, attributes and templates only, with empty company details; no history, partners or customers."""
     data_dir = Path(data_dir)
     if _empty(session, MaterialRow):
         for i, r in enumerate(_rows(data_dir / "materials.csv")):
@@ -80,7 +84,7 @@ def seed(session: Session, data_dir: str | Path = "data", history_path: str | Pa
         local = data_dir / "company.local.csv"
         for i, r in enumerate(_rows(local if local.exists() else data_dir / "company.csv")):
             if r.get("key"):
-                session.add(CompanyRow(key=r["key"].strip(), value=(r.get("value") or "").strip(),
+                session.add(CompanyRow(key=r["key"].strip(), value=(r.get("value") or "").strip() if sample else "",
                                        description=r.get("description") or "", sort=i))
     if _empty(session, CaseStatus):
         for i, (name, color, phase, role) in enumerate(STATUSES):
@@ -92,13 +96,17 @@ def seed(session: Session, data_dir: str | Path = "data", history_path: str | Pa
     if _empty(session, Template):
         session.add(Template(name="標準（内訳なし）", customers=[], options=dict(TEMPLATE_OPTIONS), is_default=True, sort=0))
         session.add(Template(name="内訳付き", customers=[], options={**TEMPLATE_OPTIONS, "breakdown": True}, sort=1))
-    history = HistoryStore(history_path or data_dir / "past_quotes" / "history.csv").load()
+    history = HistoryStore(history_path or data_dir / "past_quotes" / "history.csv").load() if sample else []
     if _empty(session, Staff):
-        names = sorted({q.staff for q in history if q.staff}) or ["佐藤"]
+        names = sorted({q.staff for q in history if q.staff}) or (["佐藤"] if sample else ["担当者"])
         for i, name in enumerate(names):
             session.add(Staff(name=name, sort=i))
     if _empty(session, PastQuoteRow) and history:
-        session.execute(insert(PastQuoteRow), [asdict(q) for q in history])
+        session.commit()
+        rows = [asdict(q) for q in history]
+        for start in range(0, len(rows), CHUNK):  # a few thousand rows: several transactions (Aurora DSQL)
+            session.execute(insert(PastQuoteRow), rows[start:start + CHUNK])
+            session.commit()
     if _empty(session, Category):
         customers = [c for c, _ in _top_customers(history, 5)]
         for i, (group, names) in enumerate((("顧客別", customers), ("製品別", PRODUCTS), ("部品種別", PART_KINDS))):
@@ -107,7 +115,7 @@ def seed(session: Session, data_dir: str | Path = "data", history_path: str | Pa
             session.flush()
             for j, name in enumerate(names):
                 session.add(Category(name=name, parent_id=parent.id, sort=j))
-    if _empty(session, Partner):
+    if _empty(session, Partner) and sample:
         for name, category, special, price, lead, deals, rating in PARTNERS:
             session.add(Partner(kind="協力会社", name=name, category=category, specialties=special, price_records=price,
                                 avg_lead_days=lead, deal_count=deals, rating=rating))

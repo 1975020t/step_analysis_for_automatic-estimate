@@ -1,0 +1,39 @@
+# AWS Lambda container images (deploy/aws/README.md). Two images from this file:
+#   docker build -f Dockerfile.lambda --target api     -t estimate-api .      # the API and job steps 1 and 3 (no CadQuery)
+#   docker build -f Dockerfile.lambda --target extract -t estimate-extract .  # job step 2: shape analysis, drawing reading
+# Each Lambda function picks its entry point with the image's CMD (override it in the function's settings):
+#   api:     api.aws_lambda.api (API Gateway), api.aws_lambda.prepare, api.aws_lambda.finish, api.aws_lambda.fail
+#   extract: src.services.aws_extract.handler
+# The base is Python 3.11 on Debian, the same as Dockerfile: CadQuery's OpenCASCADE needs a newer C library than the
+# AWS Python 3.11 base image (Amazon Linux 2) has. awslambdaric lets Lambda run it.
+ARG BASE_IMAGE=python:3.11-slim
+FROM ${BASE_IMAGE} AS base
+# Lambda may write only to /tmp
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 HOME=/tmp ESTIMATE_STORAGE_DIR=/tmp/estimate
+WORKDIR /var/task
+RUN pip install "awslambdaric>=2.2,<4"
+ENTRYPOINT ["python", "-m", "awslambdaric"]
+
+# ---------------------------------------------------------------- the API (about 440MB)
+FROM base AS api
+COPY deploy/aws/requirements-api.txt .
+RUN pip install -r requirements-api.txt
+COPY src ./src
+COPY api ./api
+COPY migrations ./migrations
+COPY alembic.ini ./
+COPY data ./data
+COPY fonts ./fonts
+CMD ["api.aws_lambda.api"]
+
+# ---------------------------------------------------------------- the extraction (CadQuery, about 3.3GB)
+FROM base AS extract
+# OpenCASCADE (CadQuery) needs the OpenGL / X runtime libraries even without a display
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libgl1 libglu1-mesa libxrender1 libxext6 libsm6 libfontconfig1 \
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY src ./src
+COPY data ./data
+CMD ["src.services.aws_extract.handler"]

@@ -16,12 +16,14 @@ from urllib.parse import quote as urlquote
 
 from fastapi import Depends, FastAPI, File, Form, Query, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 
 from src.models import SheetMetalAnalysis
 from src.quote_document import PartInfo, Recipient
+from api.conflict import ConflictRetryMiddleware
+from api.login import CognitoVerifier
 from api.platform_routes import build_router
-from api.security import token_guard
+from api.security import TenantMiddleware, current_user, token_guard
 from src.services.estimate import EstimateService, ReaderFactory, ServiceError
 from src.services.platform.core import Platform
 from src.services.platform.documents import NotIssuable
@@ -29,31 +31,66 @@ from src.services.jobs import JobQueue
 from src.services.schemas import (AnalysisJobRequest, AnalysisSource, DocumentFileOut, DocumentRequest,
                                   DocumentResponse, DrawingJobRequest, FileOut, HistoryImportResponse, HistoryPage,
                                   JobOut, OutcomeInput, PastQuoteOut, QuoteRequest, QuoteResponse,
-                                  ShapeEstimateJobRequest, SimilarRequest, SimilarResponse)
+                                  ShapeEstimateJobRequest, SimilarRequest, SimilarResponse, UploadDone, UploadForm,
+                                  UploadStart)
 from src.services.settings import Settings
+from src.tenancy import current_tenant
 
 ALLOWED = {".step": "step", ".stp": "step", ".dxf": "dxf", ".pdf": "pdf"}
 SIGNATURES = {"step": (b"ISO-10303-21",), "pdf": (b"%PDF-",), "dxf": (b"SECTION", b"AutoCAD Binary DXF")}
 
 
+def start_queue(app: FastAPI, start_jobs: bool = True) -> None:
+    """The jobs: threads of this process, or on AWS (JOBS_STATE_MACHINE_ARN) executions of the state machine."""
+    from src.services.platform.drawings import run_register_job
+    from src.services.platform.quotes import run_estimate_job, run_reanalysis_job
+
+    platform, service, settings = app.state.platform, app.state.service, app.state.settings
+    handlers = {"register": lambda p: run_register_job(platform, p),
+                "estimate": lambda p: run_estimate_job(platform, p),
+                "reanalysis": lambda p: run_reanalysis_job(platform, p)}
+    if settings.jobs_state_machine:
+        from src.services.stepfunctions import StepFunctionsQueue
+
+        queue = StepFunctionsQueue(service.job_store, ["analysis", "drawing", "pdf_shape", *handlers],
+                                   settings.jobs_state_machine)
+    else:
+        queue = service.job_queue(autostart=start_jobs)
+        queue.add_handlers(handlers)
+    app.state.queue = platform.queue = queue
+
+
+def _kind_of(name: str) -> str:
+    kind = ALLOWED.get(Path(name or "").suffix.lower())
+    if kind is None:
+        raise ServiceError("対応していないファイルの種類です（.step .stp .dxf .pdf）。", 415, "UNSUPPORTED_TYPE")
+    return kind
+
+
+def _check_content(kind: str, head: bytes, size: int, limit: int) -> None:
+    if size > limit:
+        raise ServiceError(f"ファイルが大きすぎます（上限 {limit // (1024 * 1024)} MB）。", 413, "TOO_LARGE")
+    if not size:
+        raise ServiceError("ファイルが空です。")
+    if not any(sig in head for sig in SIGNATURES[kind]):
+        raise ServiceError("ファイルの中身が拡張子と一致しません。", 415, "UNSUPPORTED_TYPE")
+
+
 def create_app(settings: Settings | None = None, reader_factory: ReaderFactory | None = None,
-               start_jobs: bool = True, shape_estimator_factory=None) -> FastAPI:
+               start_jobs: bool = True, login_keys=None, shape_estimator_factory=None) -> FastAPI:
     """The API. `reader_factory` replaces the drawing-PDF reader and `shape_estimator_factory` the shape estimate
     from a drawing PDF (tests use fake ones; no LLM call).
-    `start_jobs=False` accepts jobs without running them (for tests of the queue state)."""
+    `start_jobs=False` accepts jobs without running them (for tests of the queue state). `login_keys` replaces the
+    fetch of the user pool's signing keys (tests sign their own tokens; no AWS call)."""
     settings = settings or Settings.from_env()
+    verifier = (CognitoVerifier(settings, **({"keys": login_keys} if login_keys else {}))
+                if settings.login else None)
     platform = Platform(settings, reader_factory=reader_factory, shape_estimator_factory=shape_estimator_factory)
     service: EstimateService = platform.service
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        from src.services.platform.drawings import run_register_job
-        from src.services.platform.quotes import run_estimate_job
-
-        app.state.queue = service.job_queue(autostart=start_jobs)
-        app.state.queue.add_handlers({"register": lambda p: run_register_job(platform, p),
-                                      "estimate": lambda p: run_estimate_job(platform, p)})
-        platform.queue = app.state.queue
+        start_queue(app, start_jobs)
         app.state.queue.resume()  # jobs a previous run left queued or running
         yield
         app.state.queue.shutdown(wait=False)
@@ -61,6 +98,15 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     app = FastAPI(title="板金見積 API", version="1.0.0", lifespan=lifespan,
                   description="STEP・DXFの解析、図面PDFの読み取り、見積、見積書、類似見積、過去見積の履歴。"
                               "金額はマスターとルールだけで決まります（LLMは計算しません）。")
+    app.add_middleware(ConflictRetryMiddleware)  # Aurora DSQL: a request that met a conflicting write runs again
+    if settings.cors_origins:  # screens on another domain (not needed when one domain serves both)
+        from fastapi.middleware.cors import CORSMiddleware
+
+        app.add_middleware(CORSMiddleware, allow_origins=list(settings.cors_origins), allow_methods=["*"],
+                           allow_headers=["Authorization", "Content-Type", "X-API-Token", "X-Actor"],
+                           expose_headers=["Content-Disposition"], max_age=600)
+    app.add_middleware(TenantMiddleware, tokens=settings.tokens(), prepare=platform.ensure_tenant,
+                       verifier=verifier)  # the caller and their company
     app.state.service = service
     app.state.platform = platform
     app.state.settings = settings
@@ -86,7 +132,7 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     async def unexpected(_: Request, exc: Exception):
         return JSONResponse(status_code=500, content={"error": {"code": "INTERNAL", "message": "サーバーでエラーが発生しました。"}})
 
-    guarded = [Depends(token_guard(settings.api_token))]
+    guarded = [Depends(token_guard(settings.tokens(), login=settings.login))]
 
     def queue() -> JobQueue:
         return app.state.queue
@@ -104,6 +150,23 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
         return {"status": "ok", "drawing_reader": service.drawing_reader_available(),
                 "pdf_shape_estimator": service.shape_estimator_available()}
 
+    @app.get("/api/auth/config", tags=["system"])
+    def auth_config() -> dict:
+        """How the screens sign in: `login` (Cognito's sign-in pages), `token` (an API token) or `open`."""
+        if not settings.login:
+            return {"mode": "token" if settings.tokens() else "open"}
+        domain = settings.cognito_domain
+        return {"mode": "login", "client_id": settings.cognito_client_id, "scopes": "openid email profile",
+                "authorize_url": f"{domain}/oauth2/authorize", "token_url": f"{domain}/oauth2/token",
+                "logout_url": f"{domain}/logout"}
+
+    @app.get("/api/me", tags=["system"], dependencies=guarded)
+    def me(request: Request) -> dict:
+        """The signed-in user and their company (or the company of the API token)."""
+        user = current_user(request)
+        return {"name": user.name if user else "", "email": user.email if user else "",
+                "tenant": current_tenant(), "signed_in": user is not None}
+
     @app.get("/api/masters", tags=["masters"], dependencies=guarded)
     def masters() -> dict:
         """材料・工程・表面処理・価格方針・自社情報。"""
@@ -114,18 +177,33 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     async def upload(file: UploadFile = File(...)) -> FileOut:
         """STEP（.step/.stp）・展開図DXF（.dxf）・図面PDF（.pdf）をアップロードする。"""
         name = file.filename or "upload"
-        kind = ALLOWED.get(Path(name).suffix.lower())
-        if kind is None:
-            raise ServiceError("対応していないファイルの種類です（.step .stp .dxf .pdf）。", 415, "UNSUPPORTED_TYPE")
+        kind = _kind_of(name)
         data = await file.read(settings.max_upload_bytes + 1)
-        if len(data) > settings.max_upload_bytes:
-            raise ServiceError(f"ファイルが大きすぎます（上限 {settings.max_upload_bytes // (1024 * 1024)} MB）。", 413, "TOO_LARGE")
-        if not data:
-            raise ServiceError("ファイルが空です。")
-        head = data[:4096]
-        if not any(sig in head for sig in SIGNATURES[kind]):
-            raise ServiceError("ファイルの中身が拡張子と一致しません。", 415, "UNSUPPORTED_TYPE")
+        _check_content(kind, data[:4096], len(data), settings.max_upload_bytes)
         return FileOut(**service.files.save(data, name))
+
+    @app.post("/api/uploads", tags=["files"], dependencies=guarded, response_model=UploadForm)
+    def start_upload(body: UploadStart) -> UploadForm:
+        """ファイルを保存先（S3）へブラウザから直接送るための、送り先とフォーム。送ったあと
+        POST /api/uploads/{file_id}/complete で取り込む。保存先がフォルダーのときは direct=false（POST /api/files を使う）。"""
+        _kind_of(body.filename)
+        if body.size > settings.max_upload_bytes:
+            raise ServiceError(f"ファイルが大きすぎます（上限 {settings.max_upload_bytes // (1024 * 1024)} MB）。", 413, "TOO_LARGE")
+        if not service.files.direct:
+            return UploadForm(direct=False)
+        return UploadForm(direct=True, **service.files.upload_form(body.filename, settings.max_upload_bytes))
+
+    @app.post("/api/uploads/{file_id}/complete", tags=["files"], dependencies=guarded, response_model=FileOut,
+              status_code=201)
+    def complete_upload(file_id: str, body: UploadDone) -> FileOut:
+        """保存先へ直接送ったファイルを取り込む（中身の種類と大きさを確かめる）。"""
+        kind = _kind_of(body.filename)
+        try:
+            meta = service.files.complete(
+                file_id, body.filename, lambda head, size: _check_content(kind, head, size, settings.max_upload_bytes))
+        except KeyError:
+            raise ServiceError("送ったファイルが見つかりません。もう一度アップロードしてください。", 404, "NOT_FOUND") from None
+        return FileOut(**meta)
 
     # ------------------------------------------------------------ jobs
     @app.post("/api/analyses", tags=["analysis"], dependencies=guarded, response_model=JobOut, status_code=202)
@@ -166,10 +244,10 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     def job(job_id: str) -> JobOut:
         """受付の状態（queued / running / done / failed）と結果。"""
         try:
-            data = service.job_store.read(job_id)
+            data = service.job_of_tenant(job_id)
         except KeyError:
             raise ServiceError("受付番号が見つかりません。", 404, "NOT_FOUND") from None
-        return JobOut(**{k: v for k, v in data.items() if k != "input"})
+        return JobOut(**{k: v for k, v in data.items() if k not in ("input", "tenant_id")})
 
     # ------------------------------------------------------------ quote and document
     @app.post("/api/quotes", tags=["quote"], dependencies=guarded, response_model=QuoteResponse)
@@ -258,7 +336,11 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
              responses={200: {"content": {"model/gltf-binary": {}}}})
     def model_glb(file_id: str) -> Response:
         """アップロードした STEP を、ブラウザで表示できる glTF（GLB、単位 mm）にして返す。"""
-        return Response(service.glb(file_id), media_type="model/gltf-binary")
+        data = service.glb(file_id)
+        if len(data) > settings.direct_download_bytes and service.blobs.direct:  # too large for a response of AWS Lambda
+            return RedirectResponse(service.blobs.download_url(f"viewer/{file_id}.glb", f"{file_id}.glb",
+                                                               "model/gltf-binary"), status_code=307)
+        return Response(data, media_type="model/gltf-binary")
 
     app.include_router(build_router(platform, guarded))
     mount_screens(app, settings)

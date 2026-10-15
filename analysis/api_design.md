@@ -20,11 +20,14 @@ React の画面（web/、Vite。npm run build で web/dist）
    similar.py   類似の図面と実績（src/similar_quotes.is_similar）
    library.py   書類と検索、admin.py 設定とマスター編集と見積ロジック、masters.py DB のマスター
    core.py      Platform（DB・マスターと履歴の読み込み直し・受付）
+   jobsteps.py  受付の種類ごとの準備と保存の段（AWS の状態機械が1段ずつ呼ぶ）
         ▼
   src/services/（処理の層。Web の枠組みに依存しない）
    estimate.py  EstimateService：解析・図面の読み取り・見積・見積書・類似見積・履歴・3D表示（今までの API もこれを呼ぶ）
    jobs.py      受付（状態をファイルに保存、スレッドで実行、途中の進み具合）
-   storage.py   ファイルの置き場（LocalFileStore）、settings.py 置き場所と制限、pdfium_lock.py
+   stepfunctions.py  AWS の受付（Step Functions の実行として始める）
+   aws_extract.py    AWS の抽出の段の入口（CadQuery 入りのコンテナ、データベースなし）
+   storage.py   ファイルの置き場（FileStore。中身はフォルダか S3 の BlobStore）、settings.py 置き場所と制限、pdfium_lock.py
         ▼
   src/db/（SQLAlchemy のモデル・接続・初期データ）、migrations/（Alembic）
   既存の処理：sheetmetal_analyzer・dxf_analyzer・pdf_reader・pdf_quote・quote_engine・quote_document・
@@ -121,41 +124,99 @@ GET  /api/history?customer=...&limit=50&offset=0
 
 ## 受付（重い処理）の仕組み
 
-- `JobStore` が受付ごとに `<ESTIMATE_STORAGE_DIR>/jobs/<job_id>.json` を持つ（種類、入力、状態、時刻、結果か失敗の理由）。受け付けたら書いてすぐ返す（テストでは処理に3秒かかっても受付は0.5秒以内）
+- 受付はデータベースの `jobs` 表に1行ずつ持つ（`DbJobStore`。種類、入力、状態、時刻、進み具合、結果か失敗の理由）。以前の版の `<ESTIMATE_STORAGE_DIR>/jobs/*.json` は起動時に1回だけ取り込む。SQLite のときは受付だけ別のファイル（`jobs.db`）に置く（処理中の見積が `app.db` の書き込みの鍵を持ったままでも、進み具合を書けるように）。受け付けたら書いてすぐ返す（テストでは処理に3秒かかっても受付は0.5秒以内）
 - `JobQueue` が同じプロセスのスレッドで実行する（`JOB_WORKERS` 本）
+- 画面の受付（登録 `register`・見積 `estimate`・条件変更後の再解析 `reanalysis`）は3つの段に分かれている：**準備**（`prepare_register`・`prepare_estimate`・`prepare_reanalysis`。データベースを読み、どのファイルをどの条件で解析・読み取りするかを JSON の「計画」にする）→ **抽出**（`src/services/extraction.py` の `extract`。ファイルと読み取り器だけを使い、データベースは使わない。結果も JSON）→ **保存**（`finish_register`・`finish_estimate`・`finish_reanalysis`。マスター照合・金額・類似・保存）。今は1つの受付の中で順に呼ぶ。AWS ではそれぞれを Step Functions の段にでき、抽出の段にはデータベースの権限が要らない（`tests/test_extraction.py` が、抽出がデータベースを読み込まないことと、各段を JSON で受け渡しても同じ結果になることを確かめる）
+- 見積の条件のうち解析に効くもの（Kファクター・その指定・DXF の板厚・曲げなし）を `PUT /api/estimates/{id}` で変えると、API は条件を保存してすぐ返し、解析し直しは受付 `reanalysis` で行う（API の中では CAD の解析をしない。AWS では API の Lambda に CadQuery を載せない）。返る詳細の `job` が queued / running の間は、未入力の項目に「CADデータの解析がまだ終わっていません」が出て発行できない。画面は終わるまで読み直す。終わると金額を計算し直し、修正履歴の「変更後の金額」を埋める。終わる前に条件をまた変えたときは、古い受付は何もせず新しい受付が解析する。登録時と同じ条件に戻したときは登録時の解析をそのまま使う（受付なし）
+- **AWS**（`JOBS_STATE_MACHINE_ARN`）：受付を Step Functions の状態機械（`deploy/aws/jobs_state_machine.asl.json`）の実行として始める（`StepFunctionsQueue`。実行の名前は受付番号）。段は Lambda で、準備 `api.aws_lambda.prepare` → 抽出 `src.services.aws_extract.handler` → 保存 `api.aws_lambda.finish`、どこかで失敗したら `api.aws_lambda.fail` が受付を失敗にする（`JobError` の文言はそのまま、それ以外は安全な文言）。準備と保存はスレッドのときと同じ関数（`src/services/platform/jobsteps.py`）。段の間で渡すのは `{job_id, tenant_id, kind}` だけで、計画と結果はファイル置き場の `jobs/<受付番号>/plan.json`・`extracted.json`（Step Functions の状態は 256KB まで）。登録の抽出の段で 3D表示のファイル（GLB）も作る（API の Lambda には CadQuery がない）。実行を始められなかった受付は失敗にする。`tests/test_aws.py` が状態機械の定義どおりに受付を動かし、スレッドのときと同じ結果になることと、API 側が CadQuery なしで動くことを確かめる
 - **再起動**：起動時に queued / running のままの受付を並べ直す（アップロードしたファイルは残っている）。完了した受付の結果はそのまま読める（`tests/test_api.py::test_jobs_survive_a_restart`）
 
 ## 設定（環境変数）
 
 | 変数 | 既定 | 内容 |
 |---|---|---|
-| `DATABASE_URL` | なし（SQLite `<ESTIMATE_STORAGE_DIR>/app.db`） | データベース |
+| `DATABASE_URL` | なし（SQLite `<ESTIMATE_STORAGE_DIR>/app.db`） | データベース（PostgreSQL、Aurora DSQL は `auroradsql+psycopg://admin@<エンドポイント>/postgres?region=...`） |
 | `ESTIMATE_DATA_DIR` | `data` | 初期データのマスター（材料・工程・表面処理・価格方針・自社情報） |
-| `ESTIMATE_STORAGE_DIR` | `output` | アップロード（uploads/）、受付（jobs/）、見積書（documents/）、3D表示（viewer/） |
+| `ESTIMATE_STORAGE_DIR` | `output` | アップロード（uploads/）、見積書（documents/）、3D表示（viewer/）、SQLite の `app.db` |
+| `ESTIMATE_STORAGE_URL` | なし | `s3://<バケット>/<接頭辞>` で uploads/・documents/・viewer/ を S3 に置く（SQLite の `app.db` はフォルダのまま） |
 | `PAST_QUOTES_PATH` | `data/past_quotes/history.csv` | 初期データの見積履歴（コミットする。データベースに取り込んだ後は書き換えない） |
-| `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 見積書の出力記録 |
+| `QUOTE_LOG_PATH` | `<ESTIMATE_STORAGE_DIR>/quote_log.csv` | 以前の版の見積書の出力記録（起動時にデータベースの `quote_log` 表へ取り込む） |
 | `API_TOKEN` | なし | 設定すると API の利用に `Authorization: Bearer <token>` か `X-API-Token` が必要（`/api/health` を除く） |
+| `TENANT_TOKENS` | なし | 会社ID と合言葉（`alpha=合言葉1,beta=合言葉2`）。下の「複数の会社」 |
+| `COGNITO_USER_POOL_ID`・`COGNITO_CLIENT_ID` | なし | 両方あるとログイン（Cognito）を使う。下の「ログイン」 |
+| `COGNITO_DOMAIN` | なし | ログインの画面のドメイン（`https://<接頭辞>.auth.<リージョン>.amazoncognito.com`） |
+| `COGNITO_TENANT_CLAIM` | `custom:tenant_id` | 会社IDを持つ属性 |
+| `COGNITO_ISSUER` | ユーザープールから決まる | テストで偽のユーザープールを使うときだけ |
 | `MAX_UPLOAD_MB` | 50 | アップロードの上限 |
+| `DIRECT_DOWNLOAD_MB` | 4 | 保存先が S3 のとき、これより大きいファイルは S3 から直接取り出す（307 で署名付きの URL へ） |
 | `JOB_WORKERS` | 2 | 受付を処理するスレッド数 |
+| `JOBS_STATE_MACHINE_ARN` | なし | 受付を Step Functions の実行として動かす（上の「受付（重い処理）の仕組み」） |
+| `CORS_ORIGINS` | なし | 画面を別のドメインに置くときに呼び出しを許す画面の URL（カンマ区切り） |
 | `ANALYSIS_ANTHROPIC_API_KEY` | なし | 図面PDFの読み取りにだけ使う（LLM を使う機能は増やしていない） |
 | `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・撮影・通しのテスト用） |
 | `WEB_DIST` | `web/dist` | API が配信する画面 |
 
 アップロードは拡張子（.step .stp .dxf .pdf、履歴の取り込みは .csv）と中身の先頭（STEP は `ISO-10303-21`、PDF は `%PDF-`、DXF は `SECTION`）の両方を確かめる。ファイル名は正規化し、保存場所は受付側で決める（利用者の入力からパスを作らない）。
 
+保存先が S3 のときは、画面は図面・STEP・DXF を S3 へ直接送る（AWS Lambda の1回の要求は約6MBまで）。`POST /api/uploads`（ファイル名と大きさ）が、新しいファイル番号と、その1つのキーだけに `MAX_UPLOAD_MB` までを送れる署名付きのフォーム（10分）を返す。ブラウザはそのフォームで S3 に送り、`POST /api/uploads/{file_id}/complete` で取り込みを頼む。API は S3 の先頭 4KB と大きさを見て、拡張子・中身・大きさを `POST /api/files` と同じく確かめてから記録する（同じファイルを2回取り込まない）。保存先がフォルダーのときは `direct: false` を返し、画面は `POST /api/files` で送る。取り出しは、`DIRECT_DOWNLOAD_MB`（4MB）を超えるファイル（`/api/files/{id}/raw`・`model.glb`）を数分で切れる署名付きの URL へ 307 で転送する（ブラウザは転送先に認証のヘッダーを付けない）。バケットには画面のドメインからの GET・POST を許す CORS が要る（`deploy/aws/README.md`）。
+
 ## 差し替えられる部分
 
 | 部分 | 今 | 差し替え先 | 差し替え方 |
 |---|---|---|---|
-| 受付の実行 | `JobQueue`（同じプロセスのスレッド） | RQ・Celery などの処理待ちの列と別プロセスの worker | `JobQueue.submit` を「列に入れる」に替え、worker が `JobQueue.execute(job_id)` を呼ぶ |
-| 受付の状態 | `JobStore`（JSONファイル） | データベースの表 | `create / read / update / unfinished` を実装し直す |
-| ファイル | `LocalFileStore`（`ESTIMATE_STORAGE_DIR`） | オブジェクトストレージ（S3互換、社内なら MinIO） | `FileStore`（`save / get / path / meta`）を実装し直す |
-| 認証 | 共通の合言葉（`API_TOKEN`）と、画面で選んだ担当者 | ログイン・権限・利用者の招待 | `api/security.py` の2つの関数を差し替える。`*_by` の列はそのまま使う |
-| データベース | SQLite（既定）／PostgreSQL（`DATABASE_URL`） | 管理サービスの PostgreSQL | `DATABASE_URL` を替えるだけ |
-| 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または複数工場のクラウド | どちらもこの構成で動く。クラウド固有のサービスには依存していない |
+| 受付の実行 | `JobQueue`（同じプロセスのスレッド）か `StepFunctionsQueue`（`JOBS_STATE_MACHINE_ARN`） | 済み（AWS Step Functions） | 準備・抽出・保存の3段を状態機械の段（Lambda）として動かす（`api/aws_lambda.py`・`src/services/aws_extract.py`、`deploy/aws/`） |
+| 受付の状態 | `DbJobStore`（データベースの `jobs` 表） | 済み | `src/services/platform/records.py`。見積書の出力記録も `DbQuoteLog`（`quote_log` 表、番号の重なりは主キーで防ぐ） |
+| ファイル | `FileStore` ＋ `LocalBlobStore`（`ESTIMATE_STORAGE_DIR`）か `S3BlobStore`（`ESTIMATE_STORAGE_URL`） | 済み（S3。S3互換の MinIO も同じ） | `BlobStore`（`put / get / exists / local_file`）。CadQuery・pdfium のようにファイルを自分で開く処理には `FileStore.local_path` が手元のパスを渡す（S3 では一時的な写し） |
+| 認証 | ログイン（Cognito、`COGNITO_*`）。ほかのシステムは会社ごとの合言葉（`API_TOKEN`・`TENANT_TOKENS`） | 済み（ログイン）。権限（役割）・利用者の招待は未 | `api/login.py` が ID トークンを確かめ、`api/security.py` が会社と操作者を決める。`*_by` の列はそのまま使う |
+| データベース | SQLite（既定）／PostgreSQL／Aurora DSQL（`DATABASE_URL`） | Aurora DSQL | `DATABASE_URL` を替えるだけ。DSQL への対応は下の「Aurora DSQL で動かす」 |
+| 置き方 | `docker compose`（db・api・web） | 工場ごとの社内サーバー、または AWS（Lambda・Step Functions・S3・Aurora DSQL・Cognito） | 同じコードを環境変数と入口で切り替える。AWS 用のイメージは `Dockerfile.lambda`（API と抽出の2つ）、手順は `deploy/aws/README.md` |
+
+## 複数の会社（マルチテナント）
+
+1つのデータベースとファイル置き場を、複数の会社で分けて使う（プール型）。
+
+- 会社は合言葉で決まる（`TENANT_TOKENS`、`API_TOKEN` は会社ID `default`）。要求ごとに `TenantMiddleware`（`api/security.py`）が会社を決め、処理の間ずっと `current_tenant()`（`src/tenancy.py`）で参照できる。画面用の API と業務の処理は会社を意識しない
+- 会社のデータの表にはすべて `tenant_id` がある（`TenantScoped`、マイグレーション 0005。今までのデータは `default`）。セッションの読み書きには、今の会社の行だけを対象にする条件が自動で付き（`src/db/tenant_filter.py`）、新しい行には今の会社が入る。ほかの会社の番号を指定しても 404
+- 図番・案件番号・見積番号・帳票番号・担当者名は会社の中で重ならなければよい。番号の数え（`counters`）・マスター・自社情報・見積書の出力記録は、主キーに会社を含む。番号は会社ごとに1から振る
+- ファイルは `tenants/<会社ID>/` の下（S3 でも同じ。`default` は今までの場所のまま）
+- 受付（バックグラウンドの処理）は、受け付けた会社を受付の中に持ち、その会社として動く。受付番号の照会もほかの会社のものは 404
+- 新しい会社は最初に呼ばれたときに、マスター（`data/*.csv`）・ステータス・属性・テンプレートが入る。自社情報は空（画面で入れる）。過去見積・協力会社のお試しデータは入れない
+- マスターと類似見積の索引の作り置きは会社ごと
+
+ログインを使うときは、ログインした利用者の会社（ID トークンの `custom:tenant_id`）で決まる（下の「ログイン」）。
+
+## ログイン（Amazon Cognito）
+
+`COGNITO_USER_POOL_ID` と `COGNITO_CLIENT_ID` を設定すると使う。
+
+- 画面（`web/src/auth.ts`）は最初に `GET /api/auth/config`（守りなし）で方式を知る。`{"mode": "login", "client_id", "scopes", "authorize_url", "token_url", "logout_url"}` なら、ログインの画面を出し、Cognito のログインの画面（Hosted UI / Managed Login）へ移る。認可コードと PKCE（S256）で、画面にシークレットを置かない。パスワードは本システムのサーバーを通らない
+- 戻り先は `/auth/callback`（`state` を照合し、コードを ID トークン・リフレッシュトークンに替える）。ID トークンは `localStorage` に置き、期限の1分前にリフレッシュトークンで取り直す。API が 401 を返したらログインし直す
+- API の呼び出しは `Authorization: Bearer <ID トークン>`。`api/login.py`（`CognitoVerifier`）がユーザープールの鍵（`<issuer>/.well-known/jwks.json`、知らない鍵 ID のときだけ取り直す）で署名を確かめ、発行元・アプリクライアント（`aud`）・ID トークンであること（`token_use`）・期限（30秒の幅）を確かめる
+- 会社は `custom:tenant_id`（`COGNITO_TENANT_CLAIM`）。ない・形が正しくない利用者は 403 `NO_TENANT`。初めての会社には初期データが入る（合言葉の会社と同じ）
+- 操作者（`*_by` の列と履歴）はログインした人の `name`（なければメールアドレス）。`X-Actor` は使わない。`GET /api/me` が名前・メール・会社を返す
+- 合言葉（`API_TOKEN`・`TENANT_TOKENS`）も同時に使える（ほかのシステム・スクリプト用。先に合言葉として照合する）
+- ログアウトは画面のトークンを消し、Cognito の `/logout`（`logout_uri` は画面の `/`）へ移る
+- ユーザープール側の設定：アプリクライアントはシークレットなし、許可するフローは認可コード、スコープ `openid email profile`、コールバック `https://<画面>/auth/callback`、サインアウト `https://<画面>/`、カスタム属性 `tenant_id`（利用者が書き換えられないようにする）
+- 試験は AWS を呼ばない：`tests/test_login.py` は自前の鍵で ID トークンを作り、`tests/test_e2e_login.py` は偽の鍵の配布元（`COGNITO_ISSUER`）とブラウザの通信の差し替えでログインからログアウトまでを通す
+
+## Aurora DSQL で動かす
+
+`DATABASE_URL=auroradsql+psycopg://admin@<エンドポイント>/postgres?region=ap-northeast-1` で Aurora DSQL につなぐ（方言は公式の `aurora-dsql-sqlalchemy`）。DSQL は PostgreSQL と同じ書き方で動くが、次の点が違うので合わせてある。
+
+| DSQL の違い | 対応 |
+|---|---|
+| パスワードの代わりに IAM の一時トークン | 接続のたびにコネクタが作る（Lambda のロールの権限）。1時間で切れる接続は 50分で作り直す（`src/db/session.py`） |
+| 構造の変更（DDL）は1文ずつ、データの変更と同じトランザクションにできない | 空のデータベースには、モデルから表を一度に作り（`create_all`、方言が1文ずつ確定）、最新のマイグレーションとして記録する。モデルとマイグレーションが同じ形になることはテストで確かめる。以後のマイグレーションは DSQL でできる変更だけにする |
+| 番号（ID）は 64ビットで、接続ごとに 65,536 個ずつ先取りされる（番号が飛ぶ） | 番号と、番号を指す列をすべて `BIGINT` にした（マイグレーション 0004。SQLite は INTEGER のまま）。画面は番号の連続を前提にしていない |
+| 鍵で待たない。同じ行を同時に変えると、後から確定した方が失敗する（SQLSTATE 40001） | 画面の操作は、まだ何も確定していなければ最初からやり直す（最大5回、`api/conflict.py`）。何か確定した後なら 409 で「もう一度」と返す。受付の DB の段（準備・仕上げ）、受付の状態の書き込み、見積番号もやり直す（`src/db/retry.py`） |
+| 1つのトランザクションで変えられるのは 3,000行まで | 過去見積の初期データ（約2,100行）と取り込みは 1,000行ずつ確定する |
+
+DSQL の実機では未確認（手元で動く DSQL はない）。AWS に置くときに、お試しデータの投入と画面の巡回を実機で通す。
 
 ## 今の制限
 
-- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列が要る（受付の状態もファイルなので、複数台では共有のディスクかデータベースに移す）
+- `JobQueue` は1つのプロセスの中で動くため、API を複数台に増やすときは処理待ちの列が要る（受付の状態と出力記録はデータベースにあるので、複数台で共有できる）。AWS では Step Functions がその役をする
+- AWS の実機（Lambda・Step Functions・S3・DSQL）では未確認。手元では、2つのイメージを Lambda の実行環境の代わり（aws-lambda-rie）で動かし、状態機械の定義どおりに登録と見積を通した（`scripts/verify/lambda_images.py`）。起動の遅さと抽出に要るメモリは実機で測る
+- AWS では、書類（書類と検索）と過去見積の CSV の取り込みは API を通るので、約4MBまで（図面・STEP・DXF は S3 へ直接送るので 50MB まで）
 - 図面PDFの読み取りは今の読み取り器を呼ぶだけ（LLM の呼び出しの中身は変えていない）。pdfium は同時に使えないため、ページの読み込みとプレビュー・文字の取り出しは1つずつ行う
 - 図面の検索・類似の候補は、図面をすべて読んでから絞り込む（数千件までを想定）。それ以上はデータベースの索引と検索に移す

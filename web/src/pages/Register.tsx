@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { get, post, upload, waitJob } from "../api";
+import { get, post, uploadFile, waitJob } from "../api";
 import { ErrorBox, useMeta, useToast } from "../ui";
 
 type Row = {
@@ -53,7 +53,7 @@ export default function RegisterPage() {
     setBusy(true);
     try {
       const uploaded = [];
-      for (const f of good) uploaded.push(await upload("/api/files", f));
+      for (const f of good) uploaded.push(await uploadFile(f));
       const next = [...rows];
       for (const u of uploaded) {
         const key = stem(u.filename);
