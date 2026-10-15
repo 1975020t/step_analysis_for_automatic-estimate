@@ -147,9 +147,6 @@ def seed_demo(client, platform, actor: str = "佐藤") -> dict:
                 p["unit_price"] = 120
                 p["quantity"] = p["quantity"] or 6
             q = ok(client.put(f"/api/estimates/{q['id']}", json={"version": q["version"], "inputs": {"custom_processes": cp}}, headers=headers))
-        if plan == "drafting" and q["drawing"] and q["drawing"]["drawing_no"] == "KA421-2456":
-            q = ok(client.put(f"/api/estimates/{q['id']}", json={"version": q["version"], "inputs": {
-                "shape": {"thickness_mm": 1.2, "blank_area_mm2": 5200, "cut_length_mm": 420, "hole_count": 4}}}, headers=headers))
         if plan in ("won", "issued", "lost", "production"):
             ok(client.post(f"/api/estimates/{q['id']}/documents", json={"kind": "quote"}, headers=headers))
         case = next(c for c in ok(client.get("/api/cases"))["cases"] if c["quote_id"] == q["id"])
