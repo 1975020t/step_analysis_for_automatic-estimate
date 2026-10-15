@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 
 from src.master_loader import UNREGISTERED, MasterLoader
 from src.models import AdditionalProcess, QuoteCondition, SheetMetalAnalysis
+from src.pdf_shape import REASON_CODE as PDF_SHAPE_ESTIMATE
 from src.quote_document import price_summary
 from src.quote_engine import QuoteEngine
 from src.services.platform.masters import CUSTOM_FINISH, CUSTOM_PROCESS_PREFIX, with_custom
@@ -172,15 +173,20 @@ def evidence_texts(reading: dict) -> dict:
 # ---------------------------------------------------------------- shape
 def effective_analysis(analysis: dict | None, shape: ShapeInput, file_name: str = "") -> tuple[SheetMetalAnalysis | None, dict]:
     """The analysis that is priced: the analysis values, and the user's values for what the analysis could not
-    give. Returns (analysis or None when a value is still missing, {field: {"value", "source"}})."""
+    give. Returns (analysis or None when a value is still missing, {field: {"value", "source"}}).
+    The values estimated from a drawing PDF alone (no CAD data, src/pdf_shape.py) are source "drawing", and a value
+    the user entered replaces them (they are estimates, a CAD analysis is not)."""
     base = SheetMetalAnalysis.model_validate(analysis) if analysis else None
     usable = base is not None and base.status in ("success", "partial")
+    from_pdf = base is not None and base.reason_code == PDF_SHAPE_ESTIMATE
     values, sources = {}, {}
     for name in SHAPE_FIELDS:
         own = getattr(base, name) if base is not None else None
         entered = getattr(shape, name)
-        if usable and own is not None:
-            values[name], sources[name] = own, "analysis"
+        if from_pdf and entered is not None:
+            values[name], sources[name] = entered, "input"
+        elif usable and own is not None:
+            values[name], sources[name] = own, "drawing" if from_pdf else "analysis"
         elif entered is not None:
             values[name], sources[name] = entered, "input"
         else:
@@ -188,7 +194,7 @@ def effective_analysis(analysis: dict | None, shape: ShapeInput, file_name: str 
     detail = {k: {"value": values[k], "source": sources[k]} for k in SHAPE_FIELDS}
     if any(v is None for v in values.values()):
         return None, detail
-    if usable and all(s == "analysis" for s in sources.values()):
+    if usable and all(s in ("analysis", "drawing") for s in sources.values()):
         return base, detail
     if usable:
         return base.model_copy(update=values), detail
@@ -198,7 +204,7 @@ def effective_analysis(analysis: dict | None, shape: ShapeInput, file_name: str 
 
 # ---------------------------------------------------------------- missing items
 def missing_items(inputs: QuoteInputs, masters: MasterLoader, shape_detail: dict, analysis_pending: bool,
-                  dxf: bool = False) -> list[Missing]:
+                  dxf: bool = False, from_pdf: bool = False) -> list[Missing]:
     out: list[Missing] = []
     if not inputs.quantity:
         out.append(Missing(field="quantity", label="数量", message="数量が未入力です"))
@@ -237,9 +243,10 @@ def missing_items(inputs: QuoteInputs, masters: MasterLoader, shape_detail: dict
         out.append(Missing(field="dxf_thickness", label="板厚",
                            message="板厚が未入力です（展開図DXFには板厚がないため入力します。入力すると寸法を求めます）"))
     else:
+        where = "図面PDFからもCADデータからも求められませんでした" if from_pdf else "CADデータから求められませんでした"
         for name, label in SHAPE_FIELDS.items():
             if shape_detail[name]["value"] is None:
-                out.append(Missing(field=f"shape.{name}", label=label, message=f"{label}が未入力です（CADデータから求められませんでした）"))
+                out.append(Missing(field=f"shape.{name}", label=label, message=f"{label}が未入力です（{where}）"))
     return out
 
 
@@ -277,7 +284,8 @@ def compute(inputs: QuoteInputs, masters: MasterLoader, analysis: dict | None, r
     """Everything the estimate screen shows, computed on the server. The amounts are present only when nothing
     is missing (then the quotation can be issued)."""
     effective, shape_detail = effective_analysis(analysis, inputs.shape, file_name)
-    missing = missing_items(inputs, masters, shape_detail, analysis_pending, dxf)
+    missing = missing_items(inputs, masters, shape_detail, analysis_pending, dxf,
+                            from_pdf=(analysis or {}).get("reason_code") == PDF_SHAPE_ESTIMATE)
     out: dict = {"missing": [m.model_dump() for m in missing], "issuable": not missing, "shape": shape_detail,
                  "hints": hints(inputs, analysis, reading, masters),
                  "hint_items": hint_items(inputs, analysis, reading, masters), "items": drawing_items(reading, inputs, masters, analysis),
@@ -356,14 +364,22 @@ def hint_items(inputs: QuoteInputs, analysis: dict | None, reading: dict | None,
         a = SheetMetalAnalysis.model_validate(analysis)
         estimated = a.status == "partial" or a.assumptions or any(
             q.confidence in {"medium", "low"} for q in a.metric_quality.values())
-        if a.status in ("success", "partial") and estimated:
+        if a.status in ("success", "partial") and a.reason_code == PDF_SHAPE_ESTIMATE:
+            entered = [SHAPE_FIELDS[k] for k in SHAPE_FIELDS if getattr(inputs.shape, k) is not None]
+            out.append({"message": "形状の値は図面PDFからの概算です（CADデータがないため、図面の外形寸法・曲げ数・穴数から計算。"
+                                   "金額の誤差の目安は±20%）" + (f"。入力した値：{'・'.join(entered)}" if entered else ""),
+                        "field": "shape", "label": "寸法の値"})
+            out += [{"message": f"図面からの推定：{n}", "field": "shape", "label": "寸法の値"} for n in notes(analysis)
+                    if not n.startswith("形状の値は図面PDFからの概算")]
+        elif a.status in ("success", "partial") and estimated:
             why = "／".join(notes(analysis))
             kfactor = any("Kファクター" in (t or "") for t in list(a.assumptions or []))
             out.append({"message": "展開寸法は概算です" + (f"（{why}）" if why else ""),
                         "field": "k_factor" if kfactor and not inputs.k_factor_confirmed else None,
                         "label": "Kファクター（曲げの伸び）"})
         drawn = (reading or {}).get("thickness_mm")
-        if drawn is not None and a.thickness_mm is not None and abs(float(drawn) - float(a.thickness_mm)) > 1e-6:
+        if drawn is not None and a.thickness_mm is not None and abs(float(drawn) - float(a.thickness_mm)) > 1e-6 \
+                and a.reason_code != PDF_SHAPE_ESTIMATE:
             out.append({"message": f"板厚が図面（{float(drawn):g} mm）とCADデータ（{a.thickness_mm:g} mm）で違います。"
                                    "CADデータの板厚で計算しています", "field": "shape", "label": "CADデータ"})
     flags = {"inspection": "検査成績書の指定があります", "tolerance": "厳しい公差の指定があります",
@@ -393,13 +409,14 @@ def drawing_items(reading: dict | None, inputs: QuoteInputs, masters: MasterLoad
                               + [f"{p.name}（マスタ未登録）" for p in inputs.custom_processes]) or "なし",
         "rush": "あり" if inputs.rush else "なし",
     }
-    shape_t = (analysis or {}).get("thickness_mm")
-    used["thickness_mm"] = f"{shape_t:g} mm（CADデータ）" if shape_t is not None else (
+    from_pdf = (analysis or {}).get("reason_code") == PDF_SHAPE_ESTIMATE
+    shape_t = (analysis or {}).get("thickness_mm") if not (from_pdf and inputs.shape.thickness_mm) else None
+    used["thickness_mm"] = f"{shape_t:g} mm（{'図面' if from_pdf else 'CADデータ'}）" if shape_t is not None else (
         f"{inputs.shape.thickness_mm:g} mm" if inputs.shape.thickness_mm else "未入力")
     rows = []
     for item in condition_items(reading, masters):
         notice = ""
-        if item.field == "thickness_mm" and item.value is not None and shape_t is not None and \
+        if item.field == "thickness_mm" and item.value is not None and shape_t is not None and not from_pdf and \
                 abs(float(item.value) - float(shape_t)) > 1e-6:
             notice = f"CADデータの板厚（{shape_t:g} mm）と違います"
         rows.append({"field": item.field, "label": item.label, "read": item.display, "status": item.status,

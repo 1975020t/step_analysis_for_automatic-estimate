@@ -125,7 +125,7 @@ export default function EstimatePage() {
           <section className="block" data-testid="shape-views">
             <ShapeViews q={q} />
             <div className="shape-line">
-              <span className={q.analysis?.state === "確定" ? "tag soft" : "tag solid"}>{q.analysis ? q.analysis.state : "CADデータなし"}</span>
+              <span className={q.analysis?.state === "確定" ? "tag soft" : "tag solid"}>{q.analysis ? (q.analysis.reason_code === "PDF_SHAPE_ESTIMATE" ? "図面PDFから概算" : q.analysis.state) : "CADデータなし"}</span>
               <span>板厚 <b>{shape.thickness_mm.value === null ? "—" : num(shape.thickness_mm.value, 2)}</b> mm</span>
               <span>穴 <b>{shape.hole_count.value ?? "—"}</b></span>
               <span>曲げ <b>{shape.bend_count.value ?? "—"}</b></span>
@@ -459,18 +459,20 @@ function SimilarList({ items, rates }: { items: any[]; rates: (number | null)[] 
 function ShapePanel({ q }: { q: any }) {
   const a = q.analysis;
   const shape = q.result.shape;
-  const statusText = !a ? "CADデータなし" : a.state;
+  const fromPdf = a?.reason_code === "PDF_SHAPE_ESTIMATE";
+  const statusText = !a ? "CADデータなし" : fromPdf ? "図面PDFから概算" : a.state;
   return (
     <div className="stack" id="shape-panel" tabIndex={-1}>
       <div className="row"><span className={a?.state === "確定" ? "tag soft" : "tag solid"}>{statusText}</span>
         <span className="small muted">{q.drawing?.shape_name}</span></div>
       {a?.failure && <div className="small">{a.failure}。「条件修正」で寸法の値を入力してください。</div>}
+      {fromPdf && !a?.failure && <div className="small">CADデータがないため、図面PDFの寸法・曲げ・穴から形状の値を概算しました（金額の誤差の目安は±20%）。「条件修正」で書き換えられます。</div>}
       {(a?.notes || []).length > 0 && <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{a.notes.map((x: string, i: number) => <li key={i}>{x}</li>)}</ul>}
       <table className="rule">
         <tbody>
           {SHAPE.map(([k, label, unit]) => (
             <tr key={k}><td>{label}</td><td className="right">{shape[k].value === null ? <span className="warn">未入力</span> : `${num(shape[k].value, 2)} ${unit}`}</td>
-              <td className="small muted">{shape[k].source === "input" ? "入力値" : ""}</td></tr>
+              <td className="small muted">{shape[k].source === "input" ? "入力値" : shape[k].source === "drawing" ? "図面から推定" : ""}</td></tr>
           ))}
         </tbody>
       </table>
@@ -628,11 +630,12 @@ function Conditions({ q, onSave }: { q: any; onSave: (inputs: any, extra?: any) 
 
       {shapeNeeded.length > 0 && (
         <>
-          <h3 style={{ margin: "16px 0 6px" }}>寸法の値（CADデータから求められなかった値）</h3>
+          <h3 style={{ margin: "16px 0 6px" }}>{shapeNeeded.some(([k]) => shape[k].source === "drawing") ? "寸法の値（図面PDFからの概算。分かる値は書き換えてください）" : "寸法の値（CADデータから求められなかった値）"}</h3>
           <div className="grid3">
             {shapeNeeded.map(([k, label, unit]) => (
               <div className="field" key={k}><label>{label}{unit && `（${unit}）`}</label>
                 <input id={`c-shape-${k}`} aria-label={`寸法 ${label}`} type="number" min={0} className={shape[k].value === null ? "missing" : ""} value={f.shape?.[k] ?? ""}
+                  placeholder={shape[k].source === "drawing" && shape[k].value !== null ? `図面から ${num(shape[k].value, 1)}` : undefined}
                   onChange={(e) => set("shape", { ...(f.shape || {}), [k]: e.target.value })} /></div>
             ))}
           </div>

@@ -23,4 +23,6 @@ def _history_copy(tmp_path, monkeypatch):
     monkeypatch.setenv("PAST_QUOTES_PATH", str(copy))
     monkeypatch.setenv("QUOTE_LOG_PATH", str(tmp_path / "quote_log.csv"))
     monkeypatch.setenv("ESTIMATE_STORAGE_DIR", str(tmp_path / "storage"))  # uploads, jobs, documents
+    for key in ("ANALYSIS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY", "PDF_SHAPE_ESTIMATOR"):
+        monkeypatch.delenv(key, raising=False)  # never the real Claude API from a test (a test sets a key itself)
     return copy

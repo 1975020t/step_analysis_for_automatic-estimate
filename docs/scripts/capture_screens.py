@@ -226,7 +226,8 @@ def main() -> int:
     subprocess.run([sys.executable, str(ROOT / "scripts" / "seed_demo.py"), "--storage", str(storage), "--fresh"],
                    cwd=ROOT, env=env, check=True)
     env.update(ESTIMATE_STORAGE_DIR=str(storage), PAST_QUOTES_PATH=str(storage / "history.csv"),
-               QUOTE_LOG_PATH=str(storage / "quote_log.csv"), DRAWING_READER=f"recorded:{storage / 'readings.json'}")
+               QUOTE_LOG_PATH=str(storage / "quote_log.csv"), DRAWING_READER=f"recorded:{storage / 'readings.json'}",
+               PDF_SHAPE_ESTIMATOR=f"recorded:{ROOT / 'docs' / 'scripts' / 'recorded_shape.json'}")
     port = free_port()
     server = subprocess.Popen([sys.executable, "-m", "uvicorn", "api.main:app", "--port", str(port)], cwd=ROOT, env=env,
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

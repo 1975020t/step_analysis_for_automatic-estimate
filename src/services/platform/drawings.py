@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session, selectinload
 from src.db.models import (Case, Category, Drawing, DrawingMemo, DrawingNote, DrawingRevision, LibraryDocument, Quote,
                            now)
 from src.master_loader import UNREGISTERED
+from src.pdf_shape import REASON_CODE as PDF_SHAPE_ESTIMATE
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
 from src.services.pdfium_lock import PDFIUM_LOCK
@@ -146,8 +147,36 @@ def run_register_job(pf: Platform, payload: dict) -> dict:
                 revision.reading = reading
                 apply_reading(revision, reading["reading"])
             result["reading"] = bool(reading)
+            if not revision.shape_file_id:
+                report_progress(stage="図面PDFから形状を推定")
+                result["analysis"] = estimate_pdf_shape(pf, revision)
         s.commit()
     return result
+
+
+def estimate_pdf_shape(pf: Platform, revision: DrawingRevision) -> str | None:
+    """A drawing with a PDF and no STEP / DXF: estimate the shape values from the PDF alone (src/pdf_shape.py) and
+    keep them as the revision's analysis (always 概算; a person can overwrite each value in the estimate). The
+    thickness is the drawing's (the reading, or the one entered at registration). Nothing when the estimator is
+    not available (no API key): the values are then entered by hand, as before."""
+    if revision.shape_file_id or not revision.pdf_file_id or not pf.service.shape_estimator_available():
+        return None
+    reading = (revision.reading or {}).get("reading") or {}
+    thickness = revision.thickness_mm or reading.get("thickness_mm")
+    try:
+        analysis, dims = pf.service.estimate_shape(pf.files.path(revision.pdf_file_id), revision.pdf_name,
+                                                   float(thickness) if thickness else None)
+    except Exception:  # noqa: BLE001 - the values are entered by hand then
+        revision.analysis = {"status": "unsupported", "file_name": revision.pdf_name, "reason_code": PDF_SHAPE_ESTIMATE,
+                             "reason_codes": [PDF_SHAPE_ESTIMATE], "message": "図面PDFから寸法を求められませんでした。"}
+        return "unsupported"
+    revision.analysis = analysis.model_dump(mode="json")
+    revision.max_dimension_mm = round(max(dims), 1) if dims else None
+    return analysis.status
+
+
+def is_pdf_estimate(analysis: dict | None) -> bool:
+    return bool(analysis) and analysis.get("reason_code") == PDF_SHAPE_ESTIMATE
 
 
 def reading_of_job(pf: Platform, job_id: str) -> dict | None:
@@ -270,6 +299,7 @@ def card(drawing: Drawing, revision: DrawingRevision | None, quote: Quote | None
         "has_pdf": bool(revision and revision.pdf_file_id), "has_shape": bool(revision and revision.shape_file_id),
         "shape_kind": revision.shape_kind if revision else "", "shape_file_id": revision.shape_file_id if revision else "",
         "metrics": metrics, "analysis_status": (revision.analysis or {}).get("status") if revision else None,
+        "metrics_from_pdf": bool(revision and is_pdf_estimate(revision.analysis)),
         "flat_pattern": ((revision.analysis or {}).get("flat_pattern") if revision else None),
         "created_at": iso(drawing.created_at), "attrs": drawing.attrs or {},
         "category_ids": [c.id for c in drawing.categories], "version": drawing.version,

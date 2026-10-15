@@ -201,7 +201,7 @@ class OutcomeInput(BaseModel):
 
 class JobOut(BaseModel):
     job_id: str
-    kind: Literal["analysis", "drawing", "register", "estimate"]
+    kind: Literal["analysis", "drawing", "register", "estimate", "pdf_shape"]
     status: Literal["queued", "running", "done", "failed"]
     progress: dict | None = Field(None, description="実行中の段階と、途中で分かった値（estimate / register）")
     created_at: str
@@ -230,6 +230,11 @@ class AnalysisJobRequest(BaseModel):
     k_factor_confirmed: bool = Field(False, description="Kファクターが指定済みの加工条件か（未指定なら曲げ部品は概算）")
     flat_confirmed: bool = Field(False, description="DXF：曲げのない平板であることを利用者が確認済みか"
                                  "（曲げ線がない展開図は、これがないと概算。曲げ線が描き漏れている可能性があるため）")
+
+
+class ShapeEstimateJobRequest(BaseModel):
+    file_id: str = Field(description="図面PDFのファイルID")
+    thickness_mm: float | None = Field(None, gt=0, description="板厚（図面の読み取りや担当者の入力。なければ板厚は未入力のまま）")
 
 
 class DrawingJobRequest(BaseModel):

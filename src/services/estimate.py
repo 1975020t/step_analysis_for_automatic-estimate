@@ -34,6 +34,8 @@ from src.services.storage import LocalFileStore
 from src.similar_quotes import Match, Reference, SimilarQuoteSearch, query_for
 
 ReaderFactory = Callable[[], object]  # returns an object with .read(path) -> dict (src.pdf_reader.PdfConditionReader)
+# returns an object with .estimate(path, thickness_mm) -> PdfShapeResult (src.pdf_shape.PdfShapeEstimator)
+ShapeEstimatorFactory = Callable[[], object]
 
 
 class ServiceError(Exception):
@@ -74,6 +76,12 @@ def default_reader_factory():
     return PdfConditionReader()
 
 
+def default_shape_estimator_factory():
+    from src.pdf_shape import PdfShapeEstimator
+
+    return PdfShapeEstimator()
+
+
 def llm_key_configured() -> bool:
     return bool(os.getenv("ANALYSIS_ANTHROPIC_API_KEY", "").strip() or os.getenv("ANTHROPIC_API_KEY", "").strip())
 
@@ -84,13 +92,24 @@ _INDEX_CACHE: dict[str, tuple[float, SimilarQuoteSearch]] = {}
 
 class EstimateService:
     def __init__(self, settings: Settings | None = None, reader_factory: ReaderFactory | None = None,
-                 reader_available: Callable[[], bool] | None = None) -> None:
+                 reader_available: Callable[[], bool] | None = None,
+                 shape_estimator_factory: ShapeEstimatorFactory | None = None) -> None:
         self.settings = settings or Settings.from_env()
         self.masters = MasterLoader(self.settings.data_dir)
         self.files = LocalFileStore(self.settings.uploads_dir)
         self.job_store = JobStore(self.settings.jobs_dir)
         self.reader_factory = reader_factory or default_reader_factory
         self._reader_available = reader_available or (llm_key_configured if reader_factory is None else (lambda: True))
+        if shape_estimator_factory is None and self.settings.pdf_shape_estimator.startswith("recorded:"):
+            from src.pdf_shape import RecordedShapeEstimator
+
+            recorded = self.settings.pdf_shape_estimator.split(":", 1)[1]
+            shape_estimator_factory = lambda: RecordedShapeEstimator(recorded)  # noqa: E731
+        self.shape_estimator_factory = shape_estimator_factory or default_shape_estimator_factory
+        if self.settings.pdf_shape_estimator.lower() == "off":
+            self._shape_available: Callable[[], bool] = lambda: False
+        else:
+            self._shape_available = llm_key_configured if shape_estimator_factory is None else (lambda: True)
 
     # ------------------------------------------------------------ masters
     def masters_payload(self) -> dict:
@@ -171,9 +190,38 @@ class EstimateService:
             raise JobError(str(exc)) from None
         return {"reading": reading, "drawing": drawing.model_dump(mode="json")}
 
+    # ------------------------------------------------------------ shape from the drawing PDF alone
+    def shape_estimator_available(self) -> bool:
+        return self._shape_available()
+
+    def estimate_shape(self, path: str | Path, file_name: str = "", thickness_mm: float | None = None):
+        """The five shape values estimated from a drawing PDF when there is no STEP / DXF (src/pdf_shape.py).
+        Returns (SheetMetalAnalysis: always an estimate, the overall dimensions read from the drawing)."""
+        if not self.shape_estimator_available():
+            raise ServiceError("図面PDFからの形状の推定には Claude APIキー（ANALYSIS_ANTHROPIC_API_KEY）の設定が必要です。"
+                               "寸法の値は手入力してください。", status=503, code="SHAPE_ESTIMATOR_UNAVAILABLE")
+        result = self.shape_estimator_factory().estimate(str(path), thickness_mm=thickness_mm)
+        analysis = result.analysis
+        if file_name:
+            analysis = analysis.model_copy(update={"file_name": file_name})
+        return analysis, list(result.dimensions_mm)
+
+    def run_shape_job(self, payload: dict) -> dict:
+        try:
+            meta = self.files.meta(payload["file_id"])
+        except KeyError:
+            raise JobError("アップロードしたファイルが見つかりません。") from None
+        try:
+            analysis, _ = self.estimate_shape(self.files.path(payload["file_id"]), meta["filename"],
+                                              payload.get("thickness_mm"))
+        except ServiceError as exc:
+            raise JobError(str(exc)) from None
+        return analysis.model_dump(mode="json")
+
     # ------------------------------------------------------------ jobs
     def job_queue(self, autostart: bool = True) -> JobQueue:
-        return JobQueue(self.job_store, {"analysis": self.run_analysis_job, "drawing": self.run_drawing_job},
+        return JobQueue(self.job_store, {"analysis": self.run_analysis_job, "drawing": self.run_drawing_job,
+                                         "pdf_shape": self.run_shape_job},
                         workers=self.settings.job_workers, autostart=autostart)
 
     def analysis_from_job(self, job_id: str) -> SheetMetalAnalysis:
@@ -181,7 +229,7 @@ class EstimateService:
             job = self.job_store.read(job_id)
         except KeyError:
             raise ServiceError("解析の受付番号が見つかりません。", 404, "NOT_FOUND") from None
-        if job["kind"] != "analysis":
+        if job["kind"] not in ("analysis", "pdf_shape"):
             raise ServiceError("解析の受付番号ではありません。")
         if job["status"] != "done":
             raise ServiceError(f"解析がまだ完了していません（状態: {job['status']}）。", 409, "NOT_READY")

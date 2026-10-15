@@ -118,9 +118,10 @@ class PlatformEstimateService(EstimateService):
     """EstimateService whose masters and history are the database's (the API endpoints of the first stage keep
     working, with the same data as the screens)."""
 
-    def __init__(self, platform: "Platform", settings: Settings, reader_factory: ReaderFactory | None) -> None:
+    def __init__(self, platform: "Platform", settings: Settings, reader_factory: ReaderFactory | None,
+                 shape_estimator_factory=None) -> None:
         self.platform = platform
-        super().__init__(settings, reader_factory=reader_factory)
+        super().__init__(settings, reader_factory=reader_factory, shape_estimator_factory=shape_estimator_factory)
 
     @property
     def masters(self) -> MasterLoader:  # type: ignore[override]
@@ -138,7 +139,8 @@ class PlatformEstimateService(EstimateService):
 
 
 class Platform:
-    def __init__(self, settings: Settings, reader_factory: ReaderFactory | None = None) -> None:
+    def __init__(self, settings: Settings, reader_factory: ReaderFactory | None = None,
+                 shape_estimator_factory=None) -> None:
         if reader_factory is None and settings.drawing_reader.startswith("recorded:"):
             path = settings.drawing_reader.split(":", 1)[1]
             reader_factory = lambda: RecordedReader(path)  # noqa: E731
@@ -149,7 +151,7 @@ class Platform:
         self._lock = threading.Lock()
         self._masters: tuple[int, MasterLoader] | None = None
         self._index: tuple[tuple, SimilarQuoteSearch] | None = None
-        self.service = PlatformEstimateService(self, settings, reader_factory)
+        self.service = PlatformEstimateService(self, settings, reader_factory, shape_estimator_factory)
         self.files = self.service.files
         self.queue = None  # set by the API (JobQueue)
 

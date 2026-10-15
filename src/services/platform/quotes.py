@@ -19,7 +19,7 @@ from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
 from src.services.platform.cases import next_action, status_brief
 from src.services.platform.core import Platform, bump, check_version, iso
-from src.services.platform.drawings import reading_for_pricing, sync_revision
+from src.services.platform.drawings import estimate_pdf_shape, is_pdf_estimate, reading_for_pricing, sync_revision
 from src.services.platform.pricing import QuoteInputs, compute, evidence_texts, inputs_from_reading
 from src.services.platform.similar import similar
 from src.services.platform.wording import failure, input_errors, notes
@@ -160,6 +160,14 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
                     revision.reading = {"reading": r, "drawing": ctx.model_dump(mode="json")}
                 except Exception:  # noqa: BLE001 - the conditions are entered by hand then
                     pass
+        if revision is not None and analysis is None and revision.pdf_file_id and not revision.shape_file_id \
+                and revision.analysis is None:
+            estimate_pdf_shape(pf, revision)   # a drawing PDF only, registered before it could be estimated
+            analysis = analyse(pf, revision, inputs)
+            quote.analysis = analysis
+            a = analysis or {}
+            values["shape"] = {k: a.get(k) for k in ("thickness_mm", "blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")}
+            values["shape_status"] = shape_state(a) if a else "CADデータなし"
         reading = reading_for_pricing(revision)
         quote.reading = reading
         values["reading"] = ({"items": len([k for k in ("material", "thickness_mm", "quantity", "surface_treatment", "rush")
@@ -196,6 +204,8 @@ def _metric(result: dict, name: str):
 
 def analyse(pf: Platform, revision: DrawingRevision | None, inputs: QuoteInputs) -> dict | None:
     """The shape analysis with this quote's conditions (the registration analysis when they are the same)."""
+    if revision is not None and not revision.shape_file_id and is_pdf_estimate(revision.analysis):
+        return revision.analysis   # a drawing PDF only: the shape values estimated from it
     if revision is None or not revision.shape_file_id:
         return None
     if revision.shape_kind == "dxf" and not inputs.thickness_mm:
