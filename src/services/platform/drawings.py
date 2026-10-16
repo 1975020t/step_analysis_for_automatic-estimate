@@ -18,6 +18,7 @@ from src.db.models import (Case, Category, Drawing, DrawingMemo, DrawingNote, Dr
                            now)
 from src.db.retry import retry_on_conflict
 from src.master_loader import UNREGISTERED
+from src.pdf_shape import REASON_CODE as PDF_SHAPE_ESTIMATE
 from src.services.estimate import ServiceError
 from src.services.jobs import JobError, report_progress
 from src.services.extraction import extract
@@ -132,7 +133,7 @@ def prepare_register(pf: Platform, payload: dict) -> dict:
         draft = reading_of_job(pf, revision.reading_job_id) if revision.pdf_file_id else None
         return {"analysis": analysis, "pdf_file_id": revision.pdf_file_id, "pdf_text": bool(revision.pdf_file_id),
                 "read": bool(revision.pdf_file_id and draft is None and not revision.reading_job_id),
-                "draft_reading": draft,
+                "draft_reading": draft, "shape": shape_plan(pf, revision, draft),
                 "viewer_file_id": revision.shape_file_id if revision.shape_kind == "step" else None}
 
 
@@ -158,8 +159,34 @@ def finish_register(pf: Platform, payload: dict, plan: dict, extracted: dict) ->
                 revision.reading = reading
                 apply_reading(revision, reading["reading"])
             result["reading"] = bool(reading)
+            if plan.get("shape") and extracted.get("shape"):
+                result["analysis"] = store_shape(revision, extracted["shape"])
         s.commit()
     return result
+
+
+def shape_plan(pf: Platform, revision: DrawingRevision, draft: dict | None = None) -> dict | None:
+    """A drawing with a PDF and no STEP / DXF: ask the extraction step to estimate the shape values from the PDF
+    alone (src/pdf_shape.py). The thickness is the drawing's: the one entered at registration, else the reading's
+    (made in the same step, or the draft / stored one). None when the estimator is not available (no API key): the
+    values are then entered by hand, as before."""
+    if revision.shape_file_id or not revision.pdf_file_id or not pf.service.shape_estimator_available():
+        return None
+    read = ((draft or revision.reading or {}).get("reading") or {}).get("thickness_mm")
+    return {"file_name": revision.pdf_name, "thickness_mm": revision.thickness_mm or read}
+
+
+def store_shape(revision: DrawingRevision, shape: dict) -> str:
+    """Keep the estimated shape as the revision's analysis (always 概算; a person can overwrite each value in the
+    estimate)."""
+    revision.analysis = shape["analysis"]
+    if shape.get("max_dimension_mm"):
+        revision.max_dimension_mm = shape["max_dimension_mm"]
+    return shape["analysis"].get("status")
+
+
+def is_pdf_estimate(analysis: dict | None) -> bool:
+    return bool(analysis) and analysis.get("reason_code") == PDF_SHAPE_ESTIMATE
 
 
 def reading_with_context(pf: Platform, masters, raw: dict | None, file_name: str) -> dict | None:
@@ -265,6 +292,7 @@ def card(drawing: Drawing, revision: DrawingRevision | None, quote: Quote | None
         "has_pdf": bool(revision and revision.pdf_file_id), "has_shape": bool(revision and revision.shape_file_id),
         "shape_kind": revision.shape_kind if revision else "", "shape_file_id": revision.shape_file_id if revision else "",
         "metrics": metrics, "analysis_status": (revision.analysis or {}).get("status") if revision else None,
+        "metrics_from_pdf": bool(revision and is_pdf_estimate(revision.analysis)),
         "flat_pattern": ((revision.analysis or {}).get("flat_pattern") if revision else None),
         "created_at": iso(drawing.created_at), "attrs": drawing.attrs or {},
         "category_ids": [c.id for c in drawing.categories], "version": drawing.version,

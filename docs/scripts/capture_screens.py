@@ -124,6 +124,7 @@ def run_screens(browser, port: int) -> None:
             ("05_estimate_conditions.png", f"/estimates/{main['id']}?tab=conditions", 1900),
             ("05_estimate_shape_input.png", f"/estimates/{by_no['KA421-2456']['id']}?tab=conditions", 1900),
             ("05_estimate_shape.png", f"/estimates/{main['id']}?tab=shape", 1250),
+            ("05_estimate_pdf_shape.png", f"/estimates/{by_no['KA421-2456']['id']}?tab=shape", 1250),
             ("06_cases.png", "/cases", 900), ("06_cases_kanban.png", "/cases?view=kanban", 900),
             ("07_drawings.png", "/drawings", 1300), ("08_drawing.png", f"/drawings/{drawing['id']}", 1500),
             ("12_categories.png", "/settings/categories", 1000), ("13_search.png", "/search?q=DB-25-0367", 900),
@@ -138,7 +139,7 @@ def run_screens(browser, port: int) -> None:
         if name.startswith("05_"):
             loaded(page)
         if name == "05_estimate_shape_input.png":
-            page.get_by_text("寸法の値（CADデータから").wait_for()
+            page.get_by_text("寸法の値（図面PDFからの概算").wait_for()
         shot(page, name, height)
     page.goto(f"{base}/estimates/{main['id']}")
     loaded(page)
@@ -226,7 +227,8 @@ def main() -> int:
     subprocess.run([sys.executable, str(ROOT / "scripts" / "seed_demo.py"), "--storage", str(storage), "--fresh"],
                    cwd=ROOT, env=env, check=True)
     env.update(ESTIMATE_STORAGE_DIR=str(storage), PAST_QUOTES_PATH=str(storage / "history.csv"),
-               QUOTE_LOG_PATH=str(storage / "quote_log.csv"), DRAWING_READER=f"recorded:{storage / 'readings.json'}")
+               QUOTE_LOG_PATH=str(storage / "quote_log.csv"), DRAWING_READER=f"recorded:{storage / 'readings.json'}",
+               PDF_SHAPE_ESTIMATOR=f"recorded:{ROOT / 'docs' / 'scripts' / 'recorded_shape.json'}")
     port = free_port()
     server = subprocess.Popen([sys.executable, "-m", "uvicorn", "api.main:app", "--port", str(port)], cwd=ROOT, env=env,
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

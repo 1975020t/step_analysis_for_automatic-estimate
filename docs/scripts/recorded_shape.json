@@ -1,0 +1,79 @@
+{
+ "_comment": "pdf_data/pdf/Lv1_0032.pdf を図面PDFだけから推定した結果（src.pdf_shape.PdfShapeEstimator の記録）。お試しデータと資料の画面写真で使う（PDF_SHAPE_ESTIMATOR=recorded:このファイル）。LLM を呼ばない",
+ "shapes": {
+  "Lv1_0032": {
+   "analysis": {
+    "status": "partial",
+    "file_name": "Lv1_0032.pdf",
+    "thickness_mm": 1.0,
+    "blank_area_mm2": 11489.6,
+    "cut_length_mm": 640.2,
+    "hole_count": 4,
+    "bend_count": 1,
+    "reason_code": "PDF_SHAPE_ESTIMATE",
+    "reason_codes": [
+     "PDF_SHAPE_ESTIMATE"
+    ],
+    "message": "図面PDFから推定した概算の形状（CADデータがあれば置き換えてください）",
+    "flat_pattern": null,
+    "stages": [],
+    "thickness_evidence": [],
+    "bend_evidence": [],
+    "hole_evidence": [],
+    "warnings": [
+     "展開図を折った形が図面の外形寸法と合いませんでした（縮尺を決められません）"
+    ],
+    "assumptions": [
+     "図面PDFから測った値（展開図を外形寸法で縮尺を合わせて計測、展開図がなければ投影図から組んだ形。CADデータがあれば置き換える）"
+    ],
+    "metric_quality": {
+     "hole_count": {
+      "method": "drawing_pdf_estimate",
+      "confidence": "medium",
+      "evidence": [
+       "展開図の内側の閉じた輪郭を画像で数えた（4。LLMの数 4）"
+      ]
+     },
+     "bend_count": {
+      "method": "drawing_pdf_estimate",
+      "confidence": "medium",
+      "evidence": [
+       "展開図の曲げ線を画像で数えた（1。LLMの数 1）"
+      ]
+     },
+     "cut_length_mm": {
+      "method": "drawing_pdf_estimate",
+      "confidence": "low",
+      "evidence": [
+       "展開図から測れないため、投影図から部品をベースとフランジの組み合わせとして書き出し（LLM）、その展開形の外周と穴の周長を計算",
+       "書き出した形を折ると外形 132.7 × 53.6 × 38.1 mm で、図面の外形寸法と一致",
+       "外形寸法 38.1 × 132.7 × 54.1 mm（図面に書かれた寸法）"
+      ]
+     },
+     "blank_area_mm2": {
+      "method": "drawing_pdf_estimate",
+      "confidence": "low",
+      "evidence": [
+       "展開図から測れないため、投影図から部品をベースとフランジの組み合わせとして書き出し（LLM）、その展開形の外周と穴の周長を計算",
+       "書き出した形を折ると外形 132.7 × 53.6 × 38.1 mm で、図面の外形寸法と一致",
+       "外形寸法 38.1 × 132.7 × 54.1 mm（図面に書かれた寸法）"
+      ]
+     },
+     "thickness_mm": {
+      "method": "drawing",
+      "confidence": "medium",
+      "evidence": [
+       "図面に書かれた板厚"
+      ]
+     }
+    },
+    "thickness_candidates": []
+   },
+   "dimensions_mm": [
+    38.1,
+    132.7,
+    54.1
+   ]
+  }
+ }
+}

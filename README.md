@@ -156,6 +156,23 @@ Kファクター未指定（既定0.33）で曲げがある場合は、従来ど
 
 ホールドアウトは、実行中にClaude APIのクレジット残高が尽き、200枚中52枚が読み取れていません（上の値はこの52枚を不正解として数えたもの）。読み取れた148枚では価格項目の正解率95.3〜100%、自動確定90.5%、危険誤答0件、開発用にない様式（28枚）でも92.9〜100%でした。ただしFAX図面の表面処理が76.7%（値はすべて正しく、要確認になったもの）で、種類別の条件（90%以上）を下回っています。クレジット追加後に同じコマンドを再実行すると、残り52枚だけAPIを呼んで判定を完了できます。方式ごとの精度・危険誤答・時間・トークンの比較は [analysis/pdf_llm_comparison.md](analysis/pdf_llm_comparison.md)。1枚あたりの時間は約6〜7秒、トークンは入力約19,000／出力約900です。
 
+### 図面PDFだけからの見積（`src/pdf_shape.py`）
+
+STEP・DXFがなく図面PDFしかないときは、図面から形状の値（穴数・曲げ数・展開面積・切断長）を **概算** して、いつもの見積の計算に渡します。板厚は図面の読み取り（または登録時の入力）を使います。結果は常に概算（`status="partial"`、`reason_code="PDF_SHAPE_ESTIMATE"`）で、画面の「条件修正」で値を上書きできます。金額の誤差の目安は±20%です。
+
+1. Claude に図面を1回読ませ、外形寸法（書かれた数字のまま。CAD出力はテキスト層と照合）、展開図の位置、曲げと穴の一覧を返させる
+2. 展開図があれば、画像で曲げ線（実線・破線）と穴（閉じた輪郭）を数え、外周と穴の周長・面積を画素で測る（`src/pdf_flat_pattern.py`、LLMを使わない）
+3. 展開図を曲げ線で3次元に折り、折った形が図面の外形寸法と合う縮尺（px/mm）を求めて、切断長 =（外周＋穴の周長）÷縮尺、展開面積 = 面積÷縮尺² とする（`src/pdf_fold.py`。曲げ角は90°から試し、30〜180°も混ぜる）
+4. 展開図がない・FAXのようにノイズが多い・折っても寸法に合わないときは、Claude に投影図から部品を「ベースとフランジと穴」として書き出させ、その形を展開して切断長と面積を計算する。折った形が外形寸法と合うときだけ使い、合わなければ切断長・展開面積は手で入れる
+
+データに当てた式や係数は使わない（切断長・面積は図面の形と寸法から測る）。
+
+精度は、図面と同じ部品のSTEPから出した見積を正解として測りました（`scripts/evaluate_pdf_shape.py`）。金額が±20%以内の図面は、開発用300枚で86.7%、開発に使っていない別のデータ100枚（seed=51）で84.0%です。展開図を測れた図面（186枚・59枚）は99.5%・100%、投影図から組んだ図面は83.3%・89.3%で、測れなかった図面（24枚・13枚、FAXに多い）は値の入力が必要です（[analysis/pdf_shape_eval_latest.md](analysis/pdf_shape_eval_latest.md)、[analysis/pdf_shape_eval_seed51.md](analysis/pdf_shape_eval_seed51.md)、設計は [analysis/handoff_pdf_shape.md](analysis/handoff_pdf_shape.md)）。APIキーがないときは使わず、寸法の値を手で入れます。
+
+```powershell
+.venv\Scripts\python.exe scripts\evaluate_pdf_shape.py --data pdf_data --workers 8 --gate --report analysis\pdf_shape_eval_latest.md
+```
+
 ## 対象形状
 
 - 曲げのない一定板厚の平板
@@ -278,6 +295,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | 設定・マスター | `/api/statuses`、`/api/categories`、`/api/attributes`、`/api/templates`、`/api/staff`、`/api/master-tables/{table}`、`GET /api/logic` |
 | ファイル | `POST /api/files`（API を通して送る）、`POST /api/uploads` → 保存先（S3）へ直接送る → `POST /api/uploads/{file_id}/complete`（保存先が S3 のとき。画面はこちらを使う） |
 | 形状の解析・図面PDFの読み取り（単体） | `POST /api/files` → `POST /api/analyses` または `POST /api/drawings/readings` → `GET /api/jobs/{job_id}` |
+| 図面PDFだけからの形状の概算（単体） | `POST /api/files` → `POST /api/drawings/shape-estimates`（`file_id`、`thickness_mm`）→ `GET /api/jobs/{job_id}` |
 | 見積の計算・見積書・類似見積・履歴（画面を使わない呼び出し） | `POST /api/quotes`、`POST /api/documents`、`POST /api/similar-quotes`、`/api/history...` |
 
 更新は版（`version`）つきで受け付け、ほかの人が先に保存していたら 409（`CONFLICT`）を返します（黙って上書きしません）。解析と図面の読み取りは受付番号を返して裏で処理し、受付の状態はデータベースに残るので、APIを再起動しても取れます。
@@ -302,6 +320,7 @@ API だけで使う場合の見積書（`POST /api/documents`、番号は `Q2026
 | `JOBS_STATE_MACHINE_ARN` | なし | AWS で、受付をこの Step Functions の状態機械の実行として動かす（準備 → 抽出 → 保存。API の中のスレッドでは動かさない）。[deploy/aws/README.md](deploy/aws/README.md) |
 | `CORS_ORIGINS` | なし | 画面を API と別のドメインに置くときの、呼び出しを許す画面の URL（`https://app.example.com,...`）。同じドメインで受けるなら不要 |
 | `DRAWING_READER` | なし | `recorded:<file.json>` で記録済みの読み取り結果を返す（お試し・資料の撮影用。API を呼ばない） |
+| `PDF_SHAPE_ESTIMATOR` | なし（APIキーがあれば使う） | 図面PDFだけからの形状の概算。`off` で使わない、`recorded:<file.json>` で記録済みの結果を返す（お試し・資料の撮影用） |
 | `WEB_DIST` | `web/dist` | API が配信する画面 |
 
 ## AWS に載せる
@@ -329,7 +348,7 @@ OpenAI API呼び出しが失敗してもMockへ切り替えず、現在の条件
 
 OpenAIへ送信するのは、チャット文章、現在の材料・数量・追加工程条件、利用可能な材料コード・工程コードだけです。STEP、3D/2D画像、形状座標、寸法、面積、単価、見積金額は送信しません。3Dメッシュと2D輪郭はローカルで生成します。
 
-ただし、解析ロジックへのLLM活用を検証する Claude API（後述）では、形状由来の解析情報（面・寸法・座標の要約など）を送信することがあります（2026-09-27 承認済み）。チャット機能の送信範囲は上記のまま変わりません。図面PDFをアップロードした場合は、加工条件の読み取りのため、図面の画像と文字データを Claude API へ送信します。
+ただし、解析ロジックへのLLM活用を検証する Claude API（後述）では、形状由来の解析情報（面・寸法・座標の要約など）を送信することがあります（2026-09-27 承認済み）。チャット機能の送信範囲は上記のまま変わりません。図面PDFをアップロードした場合は、加工条件の読み取りのため、図面の画像と文字データを Claude API へ送信します。CADデータがない図面では、形状の概算のため図面の画像（展開図・投影図の拡大を含む）も送信します。
 
 `.env`、`.env.local`、`secrets.toml`、秘密鍵形式はGit除外されています。プッシュ前に次を実行します。
 

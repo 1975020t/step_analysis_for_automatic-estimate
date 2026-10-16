@@ -178,6 +178,7 @@ function Info({ d, rev, meta, onSaved, onError }: any) {
   if (!f) return null;
   const custom = (meta?.attributes || []).filter((a: any) => !a.builtin);
   const m = rev?.metrics || {};
+  const pdfMark = rev?.analysis?.reason_code === "PDF_SHAPE_ESTIMATE" ? <span className="tag plain" title="CADデータがないため、図面PDFから概算した値">図面から概算</span> : null;
   const readMark = (field: string) => rev?.reading_items?.some((i: any) => i.field === field && i.status !== "記載なし") ? <span className="tag plain" title="図面PDFから読み取った値">読取</span> : null;
   async function save() {
     try {
@@ -208,8 +209,8 @@ function Info({ d, rev, meta, onSaved, onError }: any) {
             <option value="">—</option>{(meta?.surface_treatments || []).map((s: any) => <option key={s.code} value={s.code}>{s.name}</option>)}</select>, readMark("surface_treatment"))}
           {row("加工", d.processes.join("・"))}
           {row("板厚", m.thickness_mm ? `${m.thickness_mm} mm` : "—")}
-          {row("穴数・曲げ数", m.hole_count !== null && m.hole_count !== undefined ? `穴 ${m.hole_count} ・ 曲げ ${m.bend_count}` : "—")}
-          {row("展開面積・切断長", m.blank_area_mm2 ? `${num(m.blank_area_mm2, 0)} mm² ・ ${num(m.cut_length_mm, 0)} mm` : "—")}
+          {row("穴数・曲げ数", m.hole_count !== null && m.hole_count !== undefined ? `穴 ${m.hole_count} ・ 曲げ ${m.bend_count}` : "—", undefined, pdfMark)}
+          {row("展開面積・切断長", m.blank_area_mm2 ? `${num(m.blank_area_mm2, 0)} mm² ・ ${num(m.cut_length_mm, 0)} mm` : "—", undefined, pdfMark)}
           {row("最大寸法", d.max_dimension_mm ? `${d.max_dimension_mm} mm` : "—")}
           {row("登録日", day(d.created_at))}
           {row("分類", categories.filter((c: any) => d.category_ids.includes(c.id)).map((c: any) => `${c.group}/${c.name}`).join("、"),

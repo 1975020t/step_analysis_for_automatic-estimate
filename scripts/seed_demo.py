@@ -1,9 +1,11 @@
 """Fill a storage folder with demo data through the API (fictional customers; drawings and shapes from the
 development data pdf_data / dxf_data). No Claude API call: the one drawing reading is the recorded one
-(docs/scripts/recorded_reading.json); the other drawings are registered with their conditions typed in.
+(docs/scripts/recorded_reading.json), and so is the one shape estimated from a drawing PDF alone
+(docs/scripts/recorded_shape.json); the other drawings are registered with their conditions typed in.
 
     python scripts/seed_demo.py --storage output/demo
-    ESTIMATE_STORAGE_DIR=output/demo DRAWING_READER=recorded:output/demo/readings.json uvicorn api.main:app
+    ESTIMATE_STORAGE_DIR=output/demo DRAWING_READER=recorded:output/demo/readings.json \
+        PDF_SHAPE_ESTIMATOR=recorded:docs/scripts/recorded_shape.json uvicorn api.main:app
 
 Used for the screenshots of the documents (docs/scripts/capture_screens.py). Dates are moved back a little so
 that the progress warnings (納期超過, 回答待ち, 更新なし) show.
@@ -25,6 +27,7 @@ sys.path.insert(0, str(ROOT))
 
 PDF, STEP, DXF = ROOT / "pdf_data" / "pdf", ROOT / "pdf_data" / "step", ROOT / "dxf_data"
 RECORDED = ROOT / "docs" / "scripts" / "recorded_reading.json"
+RECORDED_SHAPE = ROOT / "docs" / "scripts" / "recorded_shape.json"   # the shape estimated from pdf_data/pdf/Lv1_0032.pdf alone
 
 # (pdf stem or None, shape path or None, drawing no, rev, name, customer, material, quantity, finish, plan)
 DRAWINGS = [
@@ -144,9 +147,6 @@ def seed_demo(client, platform, actor: str = "佐藤") -> dict:
                 p["unit_price"] = 120
                 p["quantity"] = p["quantity"] or 6
             q = ok(client.put(f"/api/estimates/{q['id']}", json={"version": q["version"], "inputs": {"custom_processes": cp}}, headers=headers))
-        if plan == "drafting" and q["drawing"] and q["drawing"]["drawing_no"] == "KA421-2456":
-            q = ok(client.put(f"/api/estimates/{q['id']}", json={"version": q["version"], "inputs": {
-                "shape": {"thickness_mm": 1.2, "blank_area_mm2": 5200, "cut_length_mm": 420, "hole_count": 4}}}, headers=headers))
         if plan in ("won", "issued", "lost", "production"):
             ok(client.post(f"/api/estimates/{q['id']}/documents", json={"kind": "quote"}, headers=headers))
         case = next(c for c in ok(client.get("/api/cases"))["cases"] if c["quote_id"] == q["id"])
@@ -211,12 +211,15 @@ def main() -> None:
     from src.services.settings import Settings
 
     path = readings_file(storage)
-    app = create_app(Settings.from_env(), reader_factory=lambda: RecordedReader(path))
+    from src.pdf_shape import RecordedShapeEstimator
+
+    app = create_app(Settings.from_env(), reader_factory=lambda: RecordedReader(path),
+                     shape_estimator_factory=lambda: RecordedShapeEstimator(RECORDED_SHAPE))
     with TestClient(app) as client:
         result = seed_demo(client, app.state.platform)
     print(f"demo data in {storage}: {len(result['estimates'])} estimates")
     print(f"start:  ESTIMATE_STORAGE_DIR={storage} PAST_QUOTES_PATH={history} DRAWING_READER=recorded:{path} "
-          "uvicorn api.main:app --port 8000")
+          f"PDF_SHAPE_ESTIMATOR=recorded:{RECORDED_SHAPE} uvicorn api.main:app --port 8000")
 
 
 if __name__ == "__main__":

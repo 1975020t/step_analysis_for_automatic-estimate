@@ -44,6 +44,7 @@ python scripts/evaluate_pdf.py --data pdf_data --reader src.pdf_reader:PdfCondit
 python scripts/generate_pdf_golden.py --per-level 20 --seed 41 --vocab golden/vocab/shift_dev.json --out pdf_shift_dev   # 語彙をずらした100枚
 python scripts/evaluate_pdf.py --data pdf_shift_dev --reader src.pdf_reader:PdfConditionReader \
     --verify-frozen golden/datasets/pdf_shift_dev_v1.json --gate --gate-profile safety     # 知らない語への安全性
+python scripts/evaluate_pdf_shape.py --data pdf_data --workers 8 --gate --report analysis/pdf_shape_eval_latest.md   # 図面PDFだけからの見積（STEPの見積との差。結果は pdf_data/shape_results.csv）
 ```
 
 部品ごとの結果は `golden_data/results.csv`（誤差・理由コード・展開方式・LLMトークン数）。失敗の分析はまずここから。
@@ -65,6 +66,7 @@ python scripts/evaluate_pdf.py --data pdf_shift_dev --reader src.pdf_reader:PdfC
 - `golden/pdf_naive_baseline.py` 図面PDFの素朴なベースライン（比較用）
 - `golden/vocab/shift_dev.json` 語彙をずらした図面の語彙（開発用）。`golden/datasets/pdf_shift_dev_v1.json` が正解。判定用の語彙ずらしはリポジトリにない
 - `src/pdf_reader.py`・`src/pdf_terms.py`・`src/pdf_quote.py` 図面PDFの読み取り、語の解釈ルール、見積への反映
+- `src/pdf_shape.py`・`src/pdf_flat_pattern.py`・`src/pdf_fold.py` CADデータがないとき図面PDFだけから形状の値を測る（展開図の外周・穴を画像で測り、曲げ線で折った形を外形寸法に合わせて縮尺を決める。展開図がなければ投影図から組んだ形。データに当てた式は使わない）。評価は `scripts/evaluate_pdf_shape.py`（同じ部品のSTEPの見積との金額の差、`analysis/handoff_pdf_shape.md`）
 - `data/` マスター：材料・工程（追加加工を含む）・表面処理・価格方針（粗利率、特急割増）。各行の `aliases` が表記ゆれ。照合は `MasterLoader.resolve_alias`
 - `src/quote_document.py`・`src/quote_pdf.py`・`src/quote_log.py` 見積書PDF（中身と金額の端数処理、reportlab での描画、見積番号と `output/quote_log.csv`）。自社情報は `data/company.csv`（`data/company.local.csv` を優先）、フォントは `fonts/ipag.ttf`。例は `python scripts/make_quote_examples.py`
 - `src/past_quotes.py`・`src/similar_quotes.py` 見積履歴（`data/past_quotes/history.csv`、コミットする）と類似見積の検索。取り込みは `scripts/import_past_quotes.py`、効果の評価は `scripts/evaluate_similar_quotes.py`（`analysis/similar_quotes_eval.md`）。テストは履歴の一時コピーを使う（`tests/conftest.py`）

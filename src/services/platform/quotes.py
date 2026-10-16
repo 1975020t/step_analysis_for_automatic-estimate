@@ -21,7 +21,8 @@ from src.services.jobs import JobError, report_progress
 from src.services.platform.cases import next_action, status_brief
 from src.services.platform.core import Platform, bump, check_version, iso
 from src.services.extraction import extract
-from src.services.platform.drawings import reading_for_pricing, reading_with_context, sync_revision
+from src.services.platform.drawings import (is_pdf_estimate, reading_for_pricing, reading_with_context, shape_plan,
+                                            store_shape, sync_revision)
 from src.services.platform.pricing import QuoteInputs, compute, evidence_texts, inputs_from_reading
 from src.services.platform.similar import similar
 from src.services.platform.wording import failure, input_errors, notes
@@ -144,7 +145,7 @@ def run_estimate_job(pf: Platform, payload: dict) -> dict:
     plan = retry_on_conflict(lambda: prepare_estimate(pf, payload))
 
     def progress(**p) -> None:
-        if p["stage"] == STAGES[1]:  # the shape is known before the drawing is read
+        if p["stage"] == STAGES[1] and not plan.get("shape"):  # the shape is known before the drawing is read
             stage_shape(values, p.get("analysis") if plan["analysis"] else plan["analysis_done"])
             stage(1)
 
@@ -168,13 +169,15 @@ def prepare_estimate(pf: Platform, payload: dict) -> dict:
         revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
         inputs = _inputs(quote)
         request, done = analysis_request(revision, inputs)
-        read = False
+        read, shape = False, None
         if revision is not None:
             sync_revision(pf, s, revision)
             read = bool(revision.pdf_file_id and revision.reading is None and not (
                 revision.reading_job_id and (pf.job(revision.reading_job_id) or {}).get("status") in ("queued", "running")))
-        return {"analysis": request, "analysis_done": done, "pdf_file_id": revision.pdf_file_id if read else None,
-                "pdf_text": False, "read": read}
+            if revision.analysis is None:   # a drawing PDF only, registered before its shape could be estimated
+                shape = shape_plan(pf, revision)
+        return {"analysis": request, "analysis_done": done, "pdf_file_id": revision.pdf_file_id if read or shape else None,
+                "pdf_text": False, "read": read, "shape": shape}
 
 
 def finish_estimate(pf: Platform, payload: dict, plan: dict, extracted: dict, stage, values: dict) -> dict:
@@ -186,6 +189,9 @@ def finish_estimate(pf: Platform, payload: dict, plan: dict, extracted: dict, st
         revision = s.get(DrawingRevision, quote.revision_id) if quote.revision_id else None
         inputs = _inputs(quote)
         analysis = extracted["analysis"] if plan["analysis"] else plan["analysis_done"]
+        if revision is not None and plan.get("shape") and extracted.get("shape") and revision.analysis is None:
+            store_shape(revision, extracted["shape"])
+            analysis = revision.analysis
         quote.analysis = analysis
         if "shape" not in values:
             stage_shape(values, analysis)
@@ -231,6 +237,8 @@ def _metric(result: dict, name: str):
 def analysis_request(revision: DrawingRevision | None, inputs: QuoteInputs) -> tuple[dict | None, dict | None]:
     """(a request for a new analysis with this quote's conditions, or None; the analysis to use when no new one is
     needed: the registration's when the conditions are the same, else None)."""
+    if revision is not None and not revision.shape_file_id and is_pdf_estimate(revision.analysis):
+        return None, revision.analysis   # a drawing PDF only: the shape values estimated from it
     if revision is None or not revision.shape_file_id:
         return None, None
     if revision.shape_kind == "dxf" and not inputs.thickness_mm:

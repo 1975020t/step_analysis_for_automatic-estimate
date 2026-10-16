@@ -125,9 +125,10 @@ class PlatformEstimateService(EstimateService):
     """EstimateService whose masters and history are the database's (the API endpoints of the first stage keep
     working, with the same data as the screens)."""
 
-    def __init__(self, platform: "Platform", settings: Settings, reader_factory: ReaderFactory | None) -> None:
+    def __init__(self, platform: "Platform", settings: Settings, reader_factory: ReaderFactory | None,
+                 shape_estimator_factory=None) -> None:
         self.platform = platform
-        super().__init__(settings, reader_factory=reader_factory)
+        super().__init__(settings, reader_factory=reader_factory, shape_estimator_factory=shape_estimator_factory)
         self.job_store = DbJobStore(platform.job_sessions)
 
     def quote_log(self) -> DbQuoteLog:  # type: ignore[override]
@@ -149,7 +150,8 @@ class PlatformEstimateService(EstimateService):
 
 
 class Platform:
-    def __init__(self, settings: Settings, reader_factory: ReaderFactory | None = None) -> None:
+    def __init__(self, settings: Settings, reader_factory: ReaderFactory | None = None,
+                 shape_estimator_factory=None) -> None:
         if reader_factory is None and settings.drawing_reader.startswith("recorded:"):
             path = settings.drawing_reader.split(":", 1)[1]
             reader_factory = lambda: RecordedReader(path)  # noqa: E731
@@ -166,7 +168,7 @@ class Platform:
         self._tenants = {DEFAULT_TENANT}
         self._masters: dict[str, tuple[int, MasterLoader]] = {}       # per company
         self._index: dict[str, tuple[tuple, SimilarQuoteSearch]] = {}
-        self.service = PlatformEstimateService(self, settings, reader_factory)
+        self.service = PlatformEstimateService(self, settings, reader_factory, shape_estimator_factory)
         self.files = self.service.files
         self.queue = None  # set by the API (JobQueue)
 

@@ -24,6 +24,8 @@
                                                                          default: SQLite <storage>/app.db
   DRAWING_READER         "recorded:<file.json>" replays recorded drawing readings (demo / screenshots,
                          no Claude API call)                              default: the Claude API reader
+  PDF_SHAPE_ESTIMATOR    "recorded:<file.json>" replays recorded shape estimates of drawing PDFs (demo / screenshots),
+                         "off" never estimates shapes from drawing PDFs        default: the Claude API estimator
   WEB_DIST               the built screens (web/dist) served by the API at /   default: web/dist when present
   CORS_ORIGINS           screens on another domain that may call the API, "https://app.example.com,..." (not needed
                          when the screens and the API are behind one domain)   default: none
@@ -49,6 +51,7 @@ class Settings:
     job_workers: int = 2
     database_url: str = ""
     drawing_reader: str = ""
+    pdf_shape_estimator: str = ""
     web_dist: Path | None = None
     storage_url: str = ""
     tenant_tokens: str = ""
@@ -77,6 +80,7 @@ class Settings:
             job_workers=max(1, int(env.get("JOB_WORKERS") or 2)),
             database_url=env.get("DATABASE_URL", "").strip(),
             drawing_reader=env.get("DRAWING_READER", "").strip(),
+            pdf_shape_estimator=env.get("PDF_SHAPE_ESTIMATOR", "").strip(),
             web_dist=Path(env["WEB_DIST"]) if env.get("WEB_DIST") else None,
             tenant_tokens=env.get("TENANT_TOKENS", "").strip(),
             cognito_user_pool_id=env.get("COGNITO_USER_POOL_ID", "").strip(),

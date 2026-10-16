@@ -35,7 +35,7 @@ def prepare(pf: Platform, job: dict) -> dict:
     if kind == "reanalysis":
         report_progress(step=1, steps=1, stage=STAGES[0], stages=STAGES[:1])
         return retry_on_conflict(lambda: prepare_reanalysis(pf, payload))
-    if kind in ("analysis", "drawing"):
+    if kind in ("analysis", "drawing", "pdf_shape"):
         return payload  # the first API's jobs: the request is the plan
     raise KeyError(kind)
 
@@ -49,7 +49,7 @@ def finish(pf: Platform, job: dict, plan: dict, extracted: dict) -> dict:
         return retry_on_conflict(lambda: finish_estimate(pf, payload, plan, extracted, _estimate_stage(values), values))
     if kind == "reanalysis":
         return retry_on_conflict(lambda: finish_reanalysis(pf, payload, plan, extracted))
-    if kind == "analysis":
+    if kind in ("analysis", "pdf_shape"):
         return extracted["analysis"]
     if kind == "drawing":
         return pf.service.finish_drawing_job(extracted)

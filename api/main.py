@@ -30,8 +30,9 @@ from src.services.platform.documents import NotIssuable
 from src.services.jobs import JobQueue
 from src.services.schemas import (AnalysisJobRequest, AnalysisSource, DocumentFileOut, DocumentRequest,
                                   DocumentResponse, DrawingJobRequest, FileOut, HistoryImportResponse, HistoryPage,
-                                  JobOut, OutcomeInput, PastQuoteOut, QuoteRequest, QuoteResponse, SimilarRequest,
-                                  SimilarResponse, UploadDone, UploadForm, UploadStart)
+                                  JobOut, OutcomeInput, PastQuoteOut, QuoteRequest, QuoteResponse,
+                                  ShapeEstimateJobRequest, SimilarRequest, SimilarResponse, UploadDone, UploadForm,
+                                  UploadStart)
 from src.services.settings import Settings
 from src.tenancy import current_tenant
 
@@ -51,7 +52,8 @@ def start_queue(app: FastAPI, start_jobs: bool = True) -> None:
     if settings.jobs_state_machine:
         from src.services.stepfunctions import StepFunctionsQueue
 
-        queue = StepFunctionsQueue(service.job_store, ["analysis", "drawing", *handlers], settings.jobs_state_machine)
+        queue = StepFunctionsQueue(service.job_store, ["analysis", "drawing", "pdf_shape", *handlers],
+                                   settings.jobs_state_machine)
     else:
         queue = service.job_queue(autostart=start_jobs)
         queue.add_handlers(handlers)
@@ -75,14 +77,15 @@ def _check_content(kind: str, head: bytes, size: int, limit: int) -> None:
 
 
 def create_app(settings: Settings | None = None, reader_factory: ReaderFactory | None = None,
-               start_jobs: bool = True, login_keys=None) -> FastAPI:
-    """The API. `reader_factory` replaces the drawing-PDF reader (tests use a fake one; no LLM call).
+               start_jobs: bool = True, login_keys=None, shape_estimator_factory=None) -> FastAPI:
+    """The API. `reader_factory` replaces the drawing-PDF reader and `shape_estimator_factory` the shape estimate
+    from a drawing PDF (tests use fake ones; no LLM call).
     `start_jobs=False` accepts jobs without running them (for tests of the queue state). `login_keys` replaces the
     fetch of the user pool's signing keys (tests sign their own tokens; no AWS call)."""
     settings = settings or Settings.from_env()
     verifier = (CognitoVerifier(settings, **({"keys": login_keys} if login_keys else {}))
                 if settings.login else None)
-    platform = Platform(settings, reader_factory=reader_factory)
+    platform = Platform(settings, reader_factory=reader_factory, shape_estimator_factory=shape_estimator_factory)
     service: EstimateService = platform.service
 
     @asynccontextmanager
@@ -144,7 +147,8 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
     # ------------------------------------------------------------ health and masters
     @app.get("/api/health", tags=["system"])
     def health() -> dict:
-        return {"status": "ok", "drawing_reader": service.drawing_reader_available()}
+        return {"status": "ok", "drawing_reader": service.drawing_reader_available(),
+                "pdf_shape_estimator": service.shape_estimator_available()}
 
     @app.get("/api/auth/config", tags=["system"])
     def auth_config() -> dict:
@@ -222,6 +226,19 @@ def create_app(settings: Settings | None = None, reader_factory: ReaderFactory |
             raise ServiceError("図面PDFの読み取りには Claude APIキー（ANALYSIS_ANTHROPIC_API_KEY）の設定が必要です。"
                                "条件は手入力してください。", 503, "DRAWING_READER_UNAVAILABLE")
         return JobOut(**queue().submit("drawing", body.model_dump()))
+
+    @app.post("/api/drawings/shape-estimates", tags=["drawing"], dependencies=guarded, response_model=JobOut, status_code=202)
+    def submit_shape_estimate(body: ShapeEstimateJobRequest) -> JobOut:
+        """STEP・DXF がないとき、図面PDFだけから形状の値（展開面積・切断長・穴数・曲げ数）を推定する（概算）。
+        結果は GET /api/jobs/{job_id} の解析結果（status は partial、reason_code は PDF_SHAPE_ESTIMATE）で、
+        POST /api/quotes の analysis_job_id にそのまま使える。APIキーがない環境では 503（SHAPE_ESTIMATOR_UNAVAILABLE）。"""
+        meta = _file_meta(service, body.file_id)
+        if meta["kind"] != "pdf":
+            raise ServiceError("形状を推定できるのは図面PDFです。")
+        if not service.shape_estimator_available():
+            raise ServiceError("図面PDFからの形状の推定には Claude APIキー（ANALYSIS_ANTHROPIC_API_KEY）の設定が必要です。"
+                               "寸法の値は手入力してください。", 503, "SHAPE_ESTIMATOR_UNAVAILABLE")
+        return JobOut(**queue().submit("pdf_shape", body.model_dump()))
 
     @app.get("/api/jobs/{job_id}", tags=["analysis"], dependencies=guarded, response_model=JobOut)
     def job(job_id: str) -> JobOut:

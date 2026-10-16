@@ -19,21 +19,26 @@ from src.services.storage import FileStore
 # plan = {"analysis": {"file_id", "thickness_mm", "k_factor", "k_factor_confirmed", "flat_confirmed",
 #                      "max_dimension": bool} | None,
 #         "pdf_file_id": str | None, "pdf_text": bool, "read": bool,
-#         "viewer_file_id": str | None}   (a STEP whose 3D view file is made now: the API on AWS has no CadQuery)
+#         "viewer_file_id": str | None,   (a STEP whose 3D view file is made now: the API on AWS has no CadQuery)
+#         "shape": {"file_name", "thickness_mm"} | None}   (a drawing PDF only: its shape estimated from the PDF)
 # result = {"analysis": dict | None, "max_dimension_mm": float | None, "pdf_text": str | None,
-#           "reading": {"reading": dict, "evidence": list | None} | None}
+#           "reading": {"reading": dict, "evidence": list | None} | None,
+#           "shape": {"analysis": dict, "max_dimension_mm": float | None} | None}
 
 ANALYSIS_FAILED = "CADデータを解析できませんでした。"
+SHAPE_STAGE = "図面PDFから形状を推定"
 
 
 class Extractor:
     """What the extraction step may use: the files and, when available, the drawing reader (no database)."""
 
     def __init__(self, files: FileStore, read_pdf: Callable[[Path], tuple[dict, list | None]] | None = None,
-                 progress: Callable[..., None] | None = None) -> None:
+                 progress: Callable[..., None] | None = None,
+                 estimate_shape: Callable[[Path, str, float | None], dict] | None = None) -> None:
         self.files = files
         self.read_pdf = read_pdf          # None: no reader (no API key); the conditions are entered by hand
         self.progress = progress or (lambda **_: None)
+        self.estimate_shape = estimate_shape   # None: no shape estimate from a drawing PDF (no API key)
 
 
 def extract_job(service, kind: str, plan: dict, progress: Callable[..., None] | None = None) -> dict:
@@ -43,11 +48,13 @@ def extract_job(service, kind: str, plan: dict, progress: Callable[..., None] | 
         return {"analysis": service.run_analysis_job(plan)}
     if kind == "drawing":
         return service.extract_drawing_job(plan)
+    if kind == "pdf_shape":
+        return service.extract_shape_job(plan)
     return extract(service.extractor(progress), plan)
 
 
 def extract(ex: Extractor, plan: dict) -> dict:
-    out: dict = {"analysis": None, "max_dimension_mm": None, "pdf_text": None, "reading": None}
+    out: dict = {"analysis": None, "max_dimension_mm": None, "pdf_text": None, "reading": None, "shape": None}
     request = plan.get("analysis")
     if request:
         ex.progress(stage="CADデータの解析")
@@ -55,7 +62,8 @@ def extract(ex: Extractor, plan: dict) -> dict:
     if plan.get("viewer_file_id"):
         viewer(ex.files, plan["viewer_file_id"])
     pdf_file_id = plan.get("pdf_file_id")
-    if pdf_file_id and (plan.get("pdf_text") or (plan.get("read") and ex.read_pdf is not None)):
+    shape = plan.get("shape") if ex.estimate_shape is not None else None
+    if pdf_file_id and (plan.get("pdf_text") or (plan.get("read") and ex.read_pdf is not None) or shape):
         ex.progress(stage="図面の読み取り", analysis=out["analysis"])
         with ex.files.local_path(pdf_file_id) as path:
             if plan.get("pdf_text"):
@@ -66,6 +74,10 @@ def extract(ex: Extractor, plan: dict) -> dict:
                     out["reading"] = {"reading": reading, "evidence": evidence}
                 except Exception:  # noqa: BLE001 - the conditions are entered by hand then
                     out["reading"] = None
+            if shape:
+                ex.progress(stage=SHAPE_STAGE, analysis=out["analysis"])
+                thickness = shape.get("thickness_mm") or ((out["reading"] or {}).get("reading") or {}).get("thickness_mm")
+                out["shape"] = ex.estimate_shape(path, shape.get("file_name") or "", thickness)
     return out
 
 

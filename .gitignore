@@ -32,10 +32,12 @@ data/company.local.csv
 # Development data sets are committed (golden_data, stress_data, dxf_data, pdf_data, pdf_shift_dev);
 # regenerating them gives byte-identical files. Evaluation output is not.
 /*/results.csv
+/*/shape_results.csv
 # Holdout data are never committed (regenerate them for a final judgement only)
 golden_holdout/
 dxf_holdout/
 pdf_holdout/
+pdf_shape_check/
 golden_seed*/
 dxf_seed*/
 
