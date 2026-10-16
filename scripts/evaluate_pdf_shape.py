@@ -35,6 +35,8 @@ from src.models import AdditionalProcess, QuoteCondition, SheetMetalAnalysis  # 
 from src.quote_engine import QuoteEngine  # noqa: E402
 
 KIND_LABEL = {"vector": "ベクター（CAD出力）", "scan": "スキャン", "fax": "FAX", "handwritten": "手書き・押印"}
+SOURCE_LABEL = {"flat": "展開図を測った（縮尺は外形寸法から）", "model": "投影図から組んだ形（外形寸法と照合）",
+                "none": "測れなかった（入力が必要）"}
 METRICS = ("blank_area_mm2", "cut_length_mm", "hole_count", "bend_count")
 # acceptance: the price of a PDF-only quote within ±20% of the price from the STEP for 90% of the drawings
 GATE = {"within20": 0.90, "within20_kind": 0.80}
@@ -84,8 +86,14 @@ def run_one(estimator, data: Path, item: dict, engine: QuoteEngine, masters: Mas
     for k in METRICS:
         row[f"true_{k}"] = truth[k]
         row[f"est_{k}"] = getattr(a, k)
-    if a.status not in ("success", "partial"):
-        return row
+    ev = ((result.raw or {}).get("_counts") or {})
+    fold = ev.get("fold") or {}
+    row["length_source"] = "none" if a.cut_length_mm is None else ("flat" if fold else "model")
+    row["fold_scale"] = fold.get("px_per_mm")
+    row["fold_angles"] = " ".join(str(x) for x in fold.get("angles") or [])
+    row["fold_ambiguous"] = fold.get("ambiguous")
+    if a.status not in ("success", "partial") or a.cut_length_mm is None or a.blank_area_mm2 is None:
+        return row   # not priced: the person enters the lengths (counts as a miss)
     values = {k: getattr(a, k) for k in ("thickness_mm",) + METRICS}
     true_values = {k: truth[k] for k in ("thickness_mm",) + METRICS}
     for label, qty in (("", None), ("_q1", 1), ("_q100", 100)):
@@ -115,14 +123,15 @@ def summarize(rows: list[dict], key: str = "price_err") -> dict:
 
 def metric_summary(rows: list[dict]) -> dict:
     ok = [r for r in rows if r.get("est_cut_length_mm") is not None]
+    counted = [r for r in rows if r.get("est_bend_count") is not None and r.get("est_hole_count") is not None]
     out = {}
     for k in ("blank_area_mm2", "cut_length_mm"):
         errs = [abs(r[f"est_{k}"] / r[f"true_{k}"] - 1) for r in ok]
         out[k] = {"median": statistics.median(errs) if errs else None,
                   "within20": sum(e <= 0.2 for e in errs) / len(rows) if rows else 0}
     for k in ("hole_count", "bend_count"):
-        out[k] = {"exact": sum(r[f"est_{k}"] == r[f"true_{k}"] for r in ok) / len(rows) if rows else 0,
-                  "within1": sum(abs(r[f"est_{k}"] - r[f"true_{k}"]) <= 1 for r in ok) / len(rows) if rows else 0}
+        out[k] = {"exact": sum(r[f"est_{k}"] == r[f"true_{k}"] for r in counted) / len(rows) if rows else 0,
+                  "within1": sum(abs(r[f"est_{k}"] - r[f"true_{k}"]) <= 1 for r in counted) / len(rows) if rows else 0}
     return out
 
 
@@ -149,14 +158,15 @@ def report(rows: list[dict], args, elapsed: float) -> str:
     for r in rows:
         by[("kind", r["kind"])].append(r)
         by[("level", r["level"])].append(r)
-        by[("flat", "展開図を画像で計測できた" if r.get("flat_ok") else "展開図なし・計測できず（LLMの数）")].append(r)
+        by[("flat", SOURCE_LABEL.get(r.get("length_source"), "-"))].append(r)
     for kind in KIND_LABEL:
         if ("kind", kind) in by:
             row_of(KIND_LABEL[kind], by[("kind", kind)])
     for lv in sorted(k[1] for k in by if k[0] == "level"):
         row_of(lv, by[("level", lv)])
-    for key in sorted(k for k in by if k[0] == "flat"):
-        row_of(key[1], by[key])
+    for label in SOURCE_LABEL.values():
+        if ("flat", label) in by:
+            row_of(label, by[("flat", label)])
     m = metric_summary(rows)
     lines += ["", "## 形状の値", "", "| 値 | 指標 | 結果 |", "|---|---|---:|",
               f"| 展開面積 | 誤差の中央値 / ±20%以内 | {_pct(m['blank_area_mm2']['median'] or 0)} / {_pct(m['blank_area_mm2']['within20'])} |",
@@ -169,18 +179,19 @@ def report(rows: list[dict], args, elapsed: float) -> str:
     flat_ok = sum(1 for r in rows if r.get("flat_ok"))
     lines += ["", "## その他", "",
               f"- 金額を出せなかった図面: {len(errors)}枚" + (f"（{', '.join(r['name'] + ':' + (r.get('error') or r.get('status', '')) for r in errors[:10])}）" if errors else ""),
+              f"- 切断長・展開面積を測れず、入力が必要な図面: {sum(1 for r in rows if r.get('length_source') == 'none')}枚（±20%以内には数えない）",
               f"- 展開図を画像で計測できた図面: {flat_ok}枚（{_pct(flat_ok / len(rows)) if rows else '-'}）",
               f"- LLMのトークン数: 入力 {tokens_in:,}・出力 {tokens_out:,}（1枚あたり 入力 {tokens_in // max(1, len(rows)):,}・出力 {tokens_out // max(1, len(rows)):,}）",
               f"- 1枚あたりの処理時間（平均、キャッシュ込み）: {statistics.mean([r.get('seconds') or 0 for r in rows]):.1f} 秒"]
     worst = sorted([r for r in rows if r.get("price_err") is not None], key=lambda r: -abs(r["price_err"]))[:12]
     if worst and not args.hide_examples:
-        lines += ["", "## 誤差の大きい図面", "", "| 図面 | 種類 | 誤差 | 曲げ（推定/正解） | 穴（推定/正解） | 切断長（推定/正解） | 寸法 | 展開図の計測 |",
+        lines += ["", "## 誤差の大きい図面", "", "| 図面 | 種類 | 誤差 | 曲げ（推定/正解） | 穴（推定/正解） | 切断長（推定/正解） | 寸法 | 長さの出どころ |",
                   "|---|---|---:|---|---|---|---|---|"]
         for r in worst:
             lines.append(f"| {r['name']} | {r['kind']} | {'+' if r['price_err'] >= 0 else ''}{_pct(r['price_err'])} | "
                          f"{r['est_bend_count']}/{r['true_bend_count']} | {r['est_hole_count']}/{r['true_hole_count']} | "
                          f"{r['est_cut_length_mm']:.0f}/{r['true_cut_length_mm']:.0f} | {r.get('dims', '')} | "
-                         f"{'可' if r.get('flat_ok') else (r.get('flat_reason') or '-')} |")
+                         f"{SOURCE_LABEL.get(r.get('length_source'), '-')}{'' if r.get('flat_ok') or r.get('length_source') == 'flat' else '（' + (r.get('flat_reason') or '-') + '）'} |")
     if args.gate:
         lines += ["", "## 合否", ""] + [f"- {name}: {'合格' if ok else '不合格'}（{detail}）" for name, ok, detail in gate(rows)]
     return "\n".join(lines) + "\n"

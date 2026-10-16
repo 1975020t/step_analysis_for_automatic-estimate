@@ -161,10 +161,13 @@ Kファクター未指定（既定0.33）で曲げがある場合は、従来ど
 STEP・DXFがなく図面PDFしかないときは、図面から形状の値（穴数・曲げ数・展開面積・切断長）を **概算** して、いつもの見積の計算に渡します。板厚は図面の読み取り（または登録時の入力）を使います。結果は常に概算（`status="partial"`、`reason_code="PDF_SHAPE_ESTIMATE"`）で、画面の「条件修正」で値を上書きできます。金額の誤差の目安は±20%です。
 
 1. Claude に図面を1回読ませ、外形寸法（書かれた数字のまま。CAD出力はテキスト層と照合）、展開図の位置、曲げと穴の一覧を返させる
-2. 展開図があれば、画像で曲げ線（実線・破線）と穴（閉じた輪郭）を数える（`src/pdf_flat_pattern.py`、LLMを使わない）。FAXのようにノイズが多い、展開図がないときは、拡大した図で Claude にもう一度数えさせる
-3. 外形寸法 a≥b≥c・曲げ n・穴 h から、切断長 = 2.279(a+b+c) + 23.636n + 38.436h − 55.351、展開面積 = 0.959ab + 0.373c(a+b) + 0.377c² （係数は STEP の開発用データで当てた。`scripts/fit_pdf_shape_formula.py`）
+2. 展開図があれば、画像で曲げ線（実線・破線）と穴（閉じた輪郭）を数え、外周と穴の周長・面積を画素で測る（`src/pdf_flat_pattern.py`、LLMを使わない）
+3. 展開図を曲げ線で3次元に折り、折った形が図面の外形寸法と合う縮尺（px/mm）を求めて、切断長 =（外周＋穴の周長）÷縮尺、展開面積 = 面積÷縮尺² とする（`src/pdf_fold.py`。曲げ角は90°から試し、30〜180°も混ぜる）
+4. 展開図がない・FAXのようにノイズが多い・折っても寸法に合わないときは、Claude に投影図から部品を「ベースとフランジと穴」として書き出させ、その形を展開して切断長と面積を計算する。折った形が外形寸法と合うときだけ使い、合わなければ切断長・展開面積は手で入れる
 
-精度は、図面と同じ部品のSTEPから出した見積を正解として測りました（`scripts/evaluate_pdf_shape.py`）。金額が±20%以内の図面は、開発用300枚で97.7%、開発に使っていない別のデータ100枚（seed=51）で95.0%です（[analysis/pdf_shape_eval_latest.md](analysis/pdf_shape_eval_latest.md)、[analysis/pdf_shape_eval_seed51.md](analysis/pdf_shape_eval_seed51.md)、設計は [analysis/handoff_pdf_shape.md](analysis/handoff_pdf_shape.md)）。APIキーがないときは使わず、寸法の値を手で入れます。
+データに当てた式や係数は使わない（切断長・面積は図面の形と寸法から測る）。
+
+精度は、図面と同じ部品のSTEPから出した見積を正解として測りました（`scripts/evaluate_pdf_shape.py`）。金額が±20%以内の図面は、開発用300枚で86.7%、開発に使っていない別のデータ100枚（seed=51）で84.0%です。展開図を測れた図面（186枚・59枚）は99.5%・100%、投影図から組んだ図面は83.3%・89.3%で、測れなかった図面（24枚・13枚、FAXに多い）は値の入力が必要です（[analysis/pdf_shape_eval_latest.md](analysis/pdf_shape_eval_latest.md)、[analysis/pdf_shape_eval_seed51.md](analysis/pdf_shape_eval_seed51.md)、設計は [analysis/handoff_pdf_shape.md](analysis/handoff_pdf_shape.md)）。APIキーがないときは使わず、寸法の値を手で入れます。
 
 ```powershell
 .venv\Scripts\python.exe scripts\evaluate_pdf_shape.py --data pdf_data --workers 8 --gate --report analysis\pdf_shape_eval_latest.md

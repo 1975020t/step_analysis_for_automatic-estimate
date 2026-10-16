@@ -10,16 +10,20 @@ Division of labour
   1. Claude reads what is WRITTEN or DRAWN (src/claude_api.py, one call): the overall dimensions as written
      (width / depth / height, verbatim), where the flat pattern is on the page (if any), and its own list of the
      bends and the holes. Claude never computes a shape value.
-  2. Image measurement checks and replaces the counts (src/pdf_flat_pattern.py): in the region Claude points
-     at, the flat pattern's outline is found on the page image, and its closed inner contours (holes) and its
-     bend lines (chain / dashed lines and straight chords inside the outline) are counted geometrically.
-  3. Checks on the numbers Claude read: on a vector PDF every dimension must exist in the text layer; a
-     dimension that is not there, counts that disagree between Claude and the image, a missing flat pattern
-     etc. lower the confidence and are listed as warnings.
-  4. Rules turn them into the shape values (estimate_metrics): blank area and cut length from the three
-     overall dimensions, the bend count and the hole count with a fixed formula. Its coefficients were fitted
-     once on the STEP development data (golden_data, 500 parts; scripts/fit_pdf_shape_formula.py), not on the
-     drawing PDFs it is evaluated on.
+  2. Image measurement of the flat pattern (src/pdf_flat_pattern.py): in the region Claude points at, the flat
+     pattern's outline is found on the page image; its closed inner contours (holes), its bend lines, the length
+     of the outline and of every hole, and its area are measured in page pixels.
+  3. The scale of the flat pattern (src/pdf_fold.py): the flat pattern is folded along its bend lines into the
+     part; the fold whose box has the proportions of the written overall dimensions gives pixels per mm. Cut
+     length = outline + holes, blank area = area inside, both converted with that scale. Nothing is fitted to
+     data: the length comes from the drawing's own geometry and its own dimensions.
+  4. No flat pattern (or one that cannot be measured or scaled): Claude describes the part as a base with
+     flanges and holes (a second call); the description is unfolded and folded back, and used only when the
+     folded part has the written overall dimensions (low confidence). Otherwise the lengths stay empty and the
+     person enters them.
+  5. Checks on the numbers Claude read: on a vector PDF every dimension must exist in the text layer; a
+     dimension that is not there, counts that disagree between Claude and the image, an ambiguous scale etc.
+     lower the confidence and are listed as warnings.
 Money is never computed here (QuoteEngine does that from the master).
 """
 from __future__ import annotations
@@ -37,30 +41,7 @@ MEASURE_LONG_EDGE = 3000  # image measured by src/pdf_flat_pattern.py (long edge
 VECTOR_MIN_CHARS = 20
 METHOD = "drawing_pdf_estimate"
 REASON_CODE = "PDF_SHAPE_ESTIMATE"
-ASSUMPTION = "図面PDFから推定した値（外形寸法・曲げ数・穴数から概算。CADデータがあれば置き換える）"
-
-# ---------------------------------------------------------------- formula
-# Fitted by scripts/fit_pdf_shape_formula.py on golden_data (STEP development set, 500 parts): least squares
-# on the relative error. a >= b >= c are the three overall dimensions (c = the thickness for a flat part).
-CUT_COEF = {"perimeter": 2.279, "bend": 23.636, "hole": 38.436, "const": -55.351}   # cut = k1*(a+b+c) + k2*n + k3*h + k4
-AREA_COEF = {"ab": 0.959, "c_ab": 0.373, "cc": 0.377}                              # area = k1*a*b + k2*c*(a+b) + k3*c*c
-
-
-def estimate_metrics(dimensions: list[float], thickness_mm: float | None, bend_count: int,
-                     hole_count: int) -> dict[str, float]:
-    """Blank area (mm²) and cut length (mm) from the overall dimensions and the counts (rules only)."""
-    dims = sorted([float(d) for d in dimensions if d and d > 0], reverse=True)[:3]
-    if len(dims) < 2:
-        raise ValueError("外形寸法が2つ以上必要です")
-    while len(dims) < 3:
-        dims.append(float(thickness_mm or 0.0))
-    a, b, c = dims
-    cut = (CUT_COEF["perimeter"] * (a + b + c) + CUT_COEF["bend"] * bend_count + CUT_COEF["hole"] * hole_count
-           + CUT_COEF["const"])
-    area = AREA_COEF["ab"] * a * b + AREA_COEF["c_ab"] * c * (a + b) + AREA_COEF["cc"] * c * c
-    floor = 2.0 * (a + b)  # never below the bounding rectangle of the largest face
-    return {"blank_area_mm2": round(area, 1), "cut_length_mm": round(max(cut, floor), 1)}
-
+ASSUMPTION = "図面PDFから測った値（展開図を外形寸法で縮尺を合わせて計測、展開図がなければ投影図から組んだ形。CADデータがあれば置き換える）"
 
 # ---------------------------------------------------------------- pages
 @dataclass
@@ -156,6 +137,35 @@ RECOUNT_SCHEMA = {
         "holes": {"type": "array", "items": {"type": "object", "properties": {"where": {"type": "string"}}, "required": ["where"]}},
     },
     "required": ["bends", "holes"],
+}
+MODEL_PROMPT = """あなたは板金部品の図面（投影図）を見て、部品の形を「ベース（いちばん大きな平らな面）と、その辺から曲げたフランジ」の組み合わせとして書き出す担当者です。この図面には展開図がありません。
+長さは図に書かれた寸法の数値を使い、書かれていない長さは図の比率から読み取ってください。書き出した形はあとで折り曲げて、図面の外形寸法と照合します。計算や推測で形を足さないでください。
+1. base：ベースの width（平面図で見た左右の長さ）と depth（前後の長さ）を mm で。
+2. flanges：ベースの辺から曲がる面を1つずつ。edge はどの辺か（平面図で見て right / left / back（奥）/ front（手前））。
+   length は曲げの外側から先端までの長さ、angle は曲げ角（90 など）、direction は up（平面図の見る側へ曲がる）か down。
+   辺の一部だけから曲がる面（タブなど）は、その面の width と、辺の端（right/left なら手前、back/front なら左）からの offset も書く。
+   その面の先でさらに曲がる面（Z曲げ・ヘミング・段曲げ）は then に順に書く（length・angle・direction）。
+3. holes：部品の内側の穴・抜き（外周からの切り欠きは含めない）。shape は round / slot / rect、size は丸穴の直径・長穴の全長・角穴の幅、
+   size2 は長穴の幅・角穴の高さ、count は同じ穴の数。注記に径が書かれていればその値を使う。
+"""
+_SEG = {"type": "object", "properties": {"length": {"type": "number"}, "angle": {"type": "number"},
+                                         "direction": {"type": "string", "enum": ["up", "down"]}},
+        "required": ["length", "angle", "direction"]}
+MODEL_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "base": {"type": "object", "properties": {"width": {"type": "number"}, "depth": {"type": "number"}},
+                 "required": ["width", "depth"]},
+        "flanges": {"type": "array", "items": {"type": "object", "properties": {
+            "edge": {"type": "string", "enum": ["right", "left", "back", "front"]},
+            "length": {"type": "number"}, "angle": {"type": "number"}, "direction": {"type": "string", "enum": ["up", "down"]},
+            "width": {"type": "number"}, "offset": {"type": "number"}, "then": {"type": "array", "items": _SEG}},
+            "required": ["edge", "length", "angle", "direction"]}},
+        "holes": {"type": "array", "items": {"type": "object", "properties": {
+            "shape": {"type": "string", "enum": ["round", "slot", "rect"]}, "size": {"type": "number"},
+            "size2": {"type": "number"}, "count": {"type": "integer"}}, "required": ["shape", "size", "count"]}},
+    },
+    "required": ["base", "flanges", "holes"],
 }
 MAX_COUNT = 40   # more bends or holes than this from a list means the answer broke down
 
@@ -281,8 +291,6 @@ class PdfShapeEstimator:
             if vr is not None:
                 recount = self._recount(client, *vr, RECOUNT_VIEWS_PROMPT, "投影図")
         bends, holes, quality = self._counts(flat, first, recount, warnings)
-        usage = {k: v for k, v in client.usage.as_dict().items() if isinstance(v, (int, float))} \
-            if hasattr(client, "usage") else {}
         uncertain = " ".join(raw.get("uncertain") or [])
         evidence = {"first": first, "recount": recount}
 
@@ -292,19 +300,18 @@ class PdfShapeEstimator:
             analysis = SheetMetalAnalysis(
                 status="unsupported", file_name=name, thickness_mm=thickness_mm, reason_code=REASON_CODE,
                 reason_codes=[REASON_CODE], message="図面PDFから形状の値を推定できませんでした", warnings=warnings)
-            return PdfShapeResult(analysis, dims, first[0], first[1], flat, {**raw, "_counts": evidence}, usage)
+            return PdfShapeResult(analysis, dims, first[0], first[1], flat, {**raw, "_counts": evidence}, _usage(client))
 
-        metrics = estimate_metrics(dims, thickness_mm, bends or 0, holes or 0) if bends is not None and holes is not None else {}
         dims_conf = "low" if off_layer or "overall_dimensions" in uncertain else "medium"
-        evidence_dims = ["外形寸法 " + " × ".join(f"{v:g}" for v in dims) + " mm（図面の寸法）"]
         q = {
             "hole_count": MetricQuality(method=METHOD, confidence=quality["holes"], evidence=[quality["holes_how"]]),
             "bend_count": MetricQuality(method=METHOD, confidence=quality["bends"], evidence=[quality["bends_how"]]),
         }
+        metrics, how, conf = self._measure(client, pages, flat, dims, thickness_mm, evidence, warnings)
         if metrics:
-            q["blank_area_mm2"] = MetricQuality(method=METHOD, confidence="low", evidence=evidence_dims + ["外形寸法からの概算式"])
-            q["cut_length_mm"] = MetricQuality(method=METHOD, confidence=_lower(dims_conf, quality["bends"], quality["holes"]),
-                                               evidence=evidence_dims + [f"曲げ {bends}・穴 {holes} を含む概算式"])
+            dims_text = "外形寸法 " + " × ".join(f"{v:g}" for v in dims) + " mm（図面に書かれた寸法）"
+            for key in ("cut_length_mm", "blank_area_mm2"):
+                q[key] = MetricQuality(method=METHOD, confidence=_lower(dims_conf, conf), evidence=how + [dims_text])
         if thickness_mm is not None:
             q["thickness_mm"] = MetricQuality(method="drawing", confidence="medium", evidence=["図面に書かれた板厚"])
         analysis = SheetMetalAnalysis(
@@ -312,7 +319,56 @@ class PdfShapeEstimator:
             reason_code=REASON_CODE, reason_codes=[REASON_CODE],
             message="図面PDFから推定した概算の形状（CADデータがあれば置き換えてください）",
             warnings=warnings, assumptions=[ASSUMPTION], metric_quality=q, **metrics)
-        return PdfShapeResult(analysis, dims, first[0], first[1], flat, {**raw, "_counts": evidence}, usage)
+        return PdfShapeResult(analysis, dims, first[0], first[1], flat, {**raw, "_counts": evidence}, _usage(client))
+
+    # ------------------------------------------------------------ lengths
+    def _measure(self, client, pages, flat, dims, thickness_mm, evidence, warnings) -> tuple[dict, list, str]:
+        """Cut length and blank area, measured: from the flat pattern on the drawing when it can be scaled by
+        folding it into the written overall dimensions (src/pdf_fold.py), else from the part as Claude describes
+        it (base + flanges) when that description folds into the written dimensions. Neither: none (the person
+        enters them)."""
+        from src.pdf_fold import build_model, check_model, fold_scale
+
+        t = thickness_mm
+        if flat and flat.get("ok"):
+            scale = fold_scale(flat, dims, t)
+            evidence["fold"] = scale
+            if scale:
+                k = scale["px_per_mm"]
+                cut = (flat["outer_px"] + sum(flat["holes_px"])) / k
+                area = flat["area_px"] / (k * k)
+                angles = "・".join(f"{abs(a)}°" for a in scale["angles"]) or "なし"
+                how = [f"展開図の外周と穴の周長・面積を画像で測った（{flat['outer_px']:.0f} px ほか）",
+                       f"展開図を曲げ線で折った形（曲げ角 {angles}）が外形寸法と合う縮尺 1 mm = {k:.3f} px で換算"
+                       f"（折った形の外形 {' × '.join(f'{v:g}' for v in scale['extents_mm'])} mm）"]
+                conf = "medium"
+                if scale["ambiguous"] or not scale["span_matches"]:
+                    conf = "low"
+                    warnings.append("展開図の縮尺が1つに決まりませんでした（外形寸法に合う折り方が複数あります）。"
+                                    "切断長・展開面積を確かめてください")
+                return {"cut_length_mm": round(cut, 1), "blank_area_mm2": round(area, 1)}, how, conf
+            warnings.append("展開図を折った形が図面の外形寸法と合いませんでした（縮尺を決められません）")
+        model = self._model(client, pages)
+        evidence["model"] = model
+        built = build_model(model, t) if isinstance(model, dict) else None
+        if built:
+            check = check_model(built, dims, t)
+            evidence["model_check"] = check
+            if check["ok"]:
+                how = ["展開図から測れないため、投影図から部品をベースとフランジの組み合わせとして書き出し（LLM）、その展開形の外周と穴の周長を計算",
+                       f"書き出した形を折ると外形 {' × '.join(f'{v:g}' for v in check['extents_mm'])} mm で、図面の外形寸法と一致"]
+                return {"cut_length_mm": built["cut_length_mm"], "blank_area_mm2": built["blank_area_mm2"]}, how, "low"
+            warnings.append("投影図から書き出した部品の形が図面の外形寸法と合いませんでした")
+        warnings.append("切断長・展開面積を図面から測れませんでした。値を入力してください")
+        return {}, [], "low"
+
+    def _model(self, client, pages) -> dict | None:
+        content = self._content(pages)[:-1] + [{"type": "text", "text": "この部品をベースとフランジの組み合わせとして report で返してください。"}]
+        try:
+            raw = _repair(client.complete_json(MODEL_PROMPT, content, MODEL_SCHEMA, max_tokens=3000))
+        except RuntimeError:
+            return None
+        return raw if isinstance(raw, dict) else None
 
     # ------------------------------------------------------------ counts
     @staticmethod
@@ -415,6 +471,10 @@ class PdfShapeEstimator:
                 return raw
             last = ValueError(problem)
         raise RuntimeError(f"図面の形状の読み取り結果が形式に合いません: {last}")
+
+
+def _usage(client) -> dict:
+    return {k: v for k, v in client.usage.as_dict().items() if isinstance(v, (int, float))} if hasattr(client, "usage") else {}
 
 
 def _repair(raw):

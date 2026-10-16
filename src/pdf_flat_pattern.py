@@ -76,7 +76,7 @@ def measure_flat_pattern(gray: np.ndarray, px_per_mm: float, box: dict) -> dict:
     raw = _ink(crop)
     ppm = px_per_mm
     specks = _speck_density(raw, ppm)
-    if specks > MAX_SPECKS_PER_100MM2:
+    if specks > MAX_SPECKS_PER_100MM2:   # FAX: its lines break into dots and lose whole stretches; tried, not measurable
         return {"ok": False, "reason": "画像のノイズが多く、線を数えられない", "specks_per_100mm2": round(specks, 2)}
     target = (bx[0] - cx0, bx[1] - cy0, bx[2] - cx0, bx[3] - cy0)
     found = None
@@ -145,7 +145,7 @@ def _count_inside(lab, objs, oid, sl, filled, outline, ppm) -> dict:
     # the outside of the outline, with a border around the slice (a rectangular outline fills its whole slice)
     outside = np.pad(~filled, 1, constant_values=True)
     reach = ndi.binary_dilation(outside, iterations=max(2, int(0.6 * ppm)))[1:-1, 1:-1]
-    panel_ids, enclosed_holes = [], 0
+    panel_ids, enclosed_holes, enclosed_perims = [], 0, []
     min_region = (0.6 * ppm) ** 2
     for r, size in enumerate(sizes, 1):
         if size < min_region:
@@ -155,15 +155,16 @@ def _count_inside(lab, objs, oid, sl, filled, outline, ppm) -> dict:
             panel_ids.append(r)
         else:
             enclosed_holes += 1   # a hole drawn touching the outline (blur / close to an edge)
+            enclosed_perims.append((_perimeter(region)[0], int(size)))
     panels = len(panel_ids)
-    leaders = _leader_chords(rl, panel_ids, filled, outline, ppm) if panels > 1 else 0
+    leaders, chord_segments = _leader_chords(rl, panel_ids, filled, outline, ppm) if panels > 1 else (0, [])
     chords = max(0, panels - 1 - leaders)
 
     # --- other ink inside the outline
     y0, x0 = sl[0].start, sl[1].start
     inner_ids = np.unique(lab[sl][inner])
     inner_ids = inner_ids[(inner_ids != 0) & (inner_ids != oid)]
-    holes, dashes = 0, []
+    holes, dashes, hole_perims, hole_areas, ring_widths = 0, [], [], [], []
     for j in inner_ids:
         s2 = objs[j - 1]
         piece = lab[s2] == j
@@ -176,9 +177,16 @@ def _count_inside(lab, objs, oid, sl, filled, outline, ppm) -> dict:
         enclosed = int(ndi.binary_fill_holes(piece).sum() - piece.sum())
         if enclosed > (0.25 * ppm) ** 2 and min(h, w) > 0.6 * ppm:
             holes += 1
+            whole = ndi.binary_fill_holes(piece)
+            outer_len, inner_len = _perimeter(whole)[0], _perimeter(whole & ~piece)[0]
+            hole_perims.append((outer_len + inner_len) / 2)   # the centre of the drawn line
+            hole_areas.append((int(whole.sum()) + int((whole & ~piece).sum())) / 2)
+            ring_widths.append(max(0.0, (outer_len - inner_len) / (2 * math.pi)))
             continue
         if min(h, w) > 0.6 * ppm and max(h, w) < 2.5 * min(h, w) and piece.sum() > 0.45 * h * w:
             holes += 1   # a small hole drawn as a dot
+            hole_perims.append(math.pi * (h + w) / 2)
+            hole_areas.append(math.pi * (h + w) ** 2 / 16)
             continue
         pts = np.stack([xs, ys], 1).astype(float)
         if len(pts) < 3:
@@ -191,11 +199,35 @@ def _count_inside(lab, objs, oid, sl, filled, outline, ppm) -> dict:
             continue
         dashes.append((centre, vt[0], length))
     lines = _lines(dashes, ppm)
+    # --- lengths (page pixels) for the cut length: the outer contour, the holes, and the straight edges / bend
+    # lines that the scale is found from (src/pdf_shape.py)
+    line_w = float(np.median(ring_widths)) if ring_widths else 0.3 * ppm
+    hole_perims += [p + math.pi * line_w for p, _ in enclosed_perims]   # traced inside the drawn line
+    hole_areas += [a + p * line_w / 2 for p, a in enclosed_perims]
+    body = ndi.binary_opening(filled, structure=_disk(max(2, int(round(0.4 * ppm)))))   # without leaders sticking out
+    outer_len, polygon = _perimeter(body)
+    edges = [float(np.hypot(*(polygon[(k + 1) % len(polygon)] - polygon[k]))) for k in range(len(polygon))]
+    segments = list(chord_segments)   # bend lines as (end, end) in pixels of the slice
+    for members in lines:
+        c = np.array([dashes[j][0] for j in members])
+        d = dashes[members[0]][1]
+        t = c @ d
+        half = float(np.mean([dashes[j][2] for j in members])) / 2
+        o = c.mean(0) - d * float(t.mean())
+        segments.append((o + d * (t.min() - half), o + d * (t.max() + half)))
+    bend_lengths = [float(np.hypot(*(b - a))) for a, b in segments]
+    structure = _spans(body, segments, line_w, ppm)
     return {"bends": chords + len(lines), "holes": holes + enclosed_holes, "solid_bend_lines": chords, "leader_lines": leaders,
-            "dashed_bend_lines": len(lines), "panels": panels, "dash_pieces": len(dashes)}
+            "dashed_bend_lines": len(lines), "panels": panels, "dash_pieces": len(dashes),
+            "outer_px": round(outer_len, 1), "holes_px": [round(p, 1) for p in hole_perims],
+            "area_px": round(float(body.sum()) - outer_len * line_w / 2 - sum(hole_areas), 1),
+            "edges_px": [round(e, 1) for e in edges if e >= 3 * ppm], "bend_lines_px": [round(b, 1) for b in bend_lengths],
+            "line_width_px": round(line_w, 2), "spans_px": structure["spans"],
+            "panels_px": structure["panels"], "folds_px": structure["folds"], "base_panel": structure["base"],
+            "bbox_px": [float(np.ptp(np.nonzero(body)[1]) + 1 - line_w), float(np.ptp(np.nonzero(body)[0]) + 1 - line_w)]}
 
 
-def _leader_chords(rl, panel_ids, filled, outline, ppm) -> int:
+def _leader_chords(rl, panel_ids, filled, outline, ppm) -> tuple[int, list]:
     """Straight lines that split the inside of the outline but go on outside the part (a leader or a dimension
     line drawn across it) are not bend lines: count them."""
     from scipy import ndimage as ndi
@@ -207,7 +239,7 @@ def _leader_chords(rl, panel_ids, filled, outline, ppm) -> int:
     chord_px = outline & (cover >= 2)
     body = ndi.binary_opening(filled, iterations=max(2, int(round(1.0 * ppm))))   # the part without thin lines
     cl, cn = ndi.label(chord_px, structure=np.ones((3, 3)))
-    leaders = 0
+    leaders, lengths = 0, []
     H, W = outline.shape
     for k in range(1, cn + 1):
         ys, xs = np.nonzero(cl == k)
@@ -218,6 +250,7 @@ def _leader_chords(rl, panel_ids, filled, outline, ppm) -> int:
         _, _, vt = np.linalg.svd(pts - c, full_matrices=False)
         d = vt[0]
         t = (pts - c) @ d
+        leader = False
         for end, sign in ((t.max(), 1.0), (t.min(), -1.0)):
             hits = 0
             for step in np.arange(1.0, 3.0, 0.25) * ppm:
@@ -227,9 +260,13 @@ def _leader_chords(rl, panel_ids, filled, outline, ppm) -> int:
                         and not body[yi, xi]:
                     hits += 1
             if hits >= 6:   # the line goes on outside the part
-                leaders += 1
+                leader = True
                 break
-    return leaders
+        if leader:
+            leaders += 1
+        else:
+            lengths.append((c + d * t.min(), c + d * t.max()))
+    return leaders, lengths
 
 
 def _lines(dashes: list, ppm: float) -> list[list[int]]:
@@ -272,3 +309,201 @@ def _lines(dashes: list, ppm: float) -> list[list[int]]:
         lines.append(best)
         remaining -= set(best)
     return lines
+
+
+# ---------------------------------------------------------------- contour lengths
+def _disk(r: int) -> np.ndarray:
+    yy, xx = np.ogrid[-r:r + 1, -r:r + 1]
+    return (xx * xx + yy * yy) <= r * r
+
+
+def _trace(mask: np.ndarray) -> np.ndarray:
+    """The outer boundary of the largest connected region of `mask`, as ordered pixel centres (x, y)
+    (Moore-neighbour tracing)."""
+    from scipy import ndimage as ndi
+
+    lab, n = ndi.label(mask, structure=np.ones((3, 3)))
+    if n == 0:
+        return np.zeros((0, 2))
+    if n > 1:
+        lab = lab == (int(np.argmax(np.bincount(lab.ravel())[1:])) + 1)
+    m = np.pad(lab > 0, 1)
+    ys, xs = np.nonzero(m)
+    k = int(np.lexsort((xs, ys))[0])
+    start = (int(ys[k]), int(xs[k]))
+    nb = [(0, -1), (-1, -1), (-1, 0), (-1, 1), (0, 1), (1, 1), (1, 0), (1, -1)]   # clockwise from west
+    cur, back = start, (start[0], start[1] - 1)
+    first_back = back
+    pts = [cur]
+    for _ in range(4 * int(m.sum()) + 8):
+        i = nb.index((back[0] - cur[0], back[1] - cur[1]))
+        for step in range(1, 9):
+            dy, dx = nb[(i + step) % 8]
+            cand = (cur[0] + dy, cur[1] + dx)
+            if m[cand]:
+                pdy, pdx = nb[(i + step - 1) % 8]
+                back = (cur[0] + pdy, cur[1] + pdx)
+                cur = cand
+                break
+        else:
+            break   # a single pixel
+        if cur == start and back == first_back:
+            break
+        pts.append(cur)
+    return np.array([(x - 1, y - 1) for y, x in pts], dtype=float)
+
+
+def _simplify(pts: np.ndarray, eps: float) -> np.ndarray:
+    """Douglas-Peucker on a closed polygon (the pixel staircase becomes straight edges)."""
+    if len(pts) < 4:
+        return pts
+    far = int(np.argmax(np.hypot(*(pts - pts[0]).T)))
+
+    def dp(seg):
+        a, b = seg[0], seg[-1]
+        if len(seg) < 3:
+            return [a, b]
+        ab = b - a
+        n = np.hypot(*ab)
+        rel = seg - a
+        d = np.abs(ab[0] * rel[:, 1] - ab[1] * rel[:, 0]) / n if n > 0 else np.hypot(*rel.T)
+        k = int(np.argmax(d))
+        if d[k] <= eps:
+            return [a, b]
+        return dp(seg[:k + 1])[:-1] + dp(seg[k:])
+
+    half1 = dp(np.vstack([pts[:far + 1]]))
+    half2 = dp(np.vstack([pts[far:], pts[:1]]))
+    return np.array(half1[:-1] + half2[:-1])
+
+
+def _perimeter(mask: np.ndarray, eps: float = 1.0) -> tuple[float, np.ndarray]:
+    """Length (px) of the outer boundary of the largest region of `mask`, and the simplified polygon."""
+    pts = _trace(mask)
+    if len(pts) < 3:
+        return 0.0, pts
+    poly = _simplify(pts, eps)
+    if len(poly) < 3:
+        return 0.0, poly
+    closed = np.vstack([poly, poly[:1]])
+    return float(np.hypot(*np.diff(closed, axis=0).T).sum()), poly
+
+
+# ---------------------------------------------------------------- lengths kept by folding
+def _spans(body: np.ndarray, segments: list, line_w: float, ppm: float) -> dict:
+    """Lengths of the flat pattern that folding does not change (page pixels).
+
+    Folding about a bend line keeps every distance measured along that line. So for each direction of bend
+    lines, the panels reached from the base panel through bend lines of that direction only keep their extent
+    along it: the folded part measures the same along that axis. With no bend line (a flat part) the outline's
+    width and height are the part's. Returned: [{"px": length, "dir": angle in degrees, "kind": ...}]."""
+    from scipy import ndimage as ndi
+
+    if not segments:
+        ys, xs = np.nonzero(body)
+        if len(xs) == 0:
+            return {"spans": [], "panels": [], "folds": [], "base": 0}
+        return {"spans": [{"px": float(np.ptp(xs) + 1 - line_w), "dir": 0.0, "kind": "plate"},
+                          {"px": float(np.ptp(ys) + 1 - line_w), "dir": 90.0, "kind": "plate"}],
+                "panels": [_hull(body, line_w)], "folds": [], "base": 0}
+    # panels: the part with the bend lines cut out of it
+    cut = np.zeros(body.shape, dtype=bool)
+    H, W = body.shape
+    r = max(1, int(math.ceil(line_w / 2 + 1)))
+    ext = []
+    for a, b in segments:   # a dashed line stops short of the outline: carry it on to the edge of the part
+        d = (b - a) / max(1e-9, np.hypot(*(b - a)))
+        ends = []
+        for e, sign in ((a, -1.0), (b, 1.0)):
+            for step in range(1, int(4 * ppm)):
+                x, y = e + sign * d * step
+                xi, yi = int(round(x)), int(round(y))
+                if not (0 <= xi < W and 0 <= yi < H) or not body[yi, xi]:
+                    break
+            ends.append(e + sign * d * step)
+        ext.append((ends[0], ends[1]))
+    segments = ext
+    for a, b in segments:
+        n = int(np.hypot(*(b - a))) + 2
+        for x, y in np.linspace(a, b, n):
+            xi, yi = int(round(x)), int(round(y))
+            cut[max(0, yi - r):yi + r + 1, max(0, xi - r):xi + r + 1] = True
+    lab, n = ndi.label(body & ~cut)
+    if n == 0:
+        return {"spans": [], "panels": [], "folds": [], "base": 0}
+    sizes = np.bincount(lab.ravel())
+    sizes[0] = 0
+    keep = sizes >= (1.5 * ppm) ** 2
+    # which panels each bend line joins: look a little to both sides along its length
+    edges = []
+    for k, (a, b) in enumerate(segments):
+        d = (b - a) / max(1e-9, np.hypot(*(b - a)))
+        nrm = np.array([-d[1], d[0]])
+        sides = ([], [])
+        for f in (0.2, 0.35, 0.5, 0.65, 0.8):
+            q = a + (b - a) * f
+            for side, sign in ((0, 1.0), (1, -1.0)):
+                for off in (r + 2, r + 4, r + 7):
+                    x, y = q + sign * nrm * off
+                    xi, yi = int(round(x)), int(round(y))
+                    if 0 <= xi < W and 0 <= yi < H and lab[yi, xi] and keep[lab[yi, xi]]:
+                        sides[side].append(int(lab[yi, xi]))
+                        break
+        if sides[0] and sides[1]:
+            p0, p1 = max(set(sides[0]), key=sides[0].count), max(set(sides[1]), key=sides[1].count)
+            if p0 != p1:
+                ang = math.degrees(math.atan2(d[1], d[0])) % 180
+                edges.append((p0, p1, ang, d, a))
+    base = int(np.argmax(sizes))
+    ys, xs = np.nonzero(lab)
+    labels = lab[ys, xs]
+    out = []
+    groups: list[list] = []
+    for e in edges:   # bend lines of one direction (within 8 degrees)
+        for g in groups:
+            if min(abs(e[2] - g[0][2]), 180 - abs(e[2] - g[0][2])) < 8:
+                g.append(e)
+                break
+        else:
+            groups.append([e])
+    for g in groups:
+        d = g[0][3]
+        reached, todo = {base}, [base]
+        while todo:
+            cur = todo.pop()
+            for p0, p1, *_ in g:
+                for u, v in ((p0, p1), (p1, p0)):
+                    if u == cur and v not in reached:
+                        reached.add(v)
+                        todo.append(v)
+        sel = np.isin(labels, list(reached))
+        proj = xs[sel] * d[0] + ys[sel] * d[1]
+        out.append({"px": float(np.ptp(proj) + 1 - line_w), "dir": round(g[0][2], 1), "kind": "along_bends",
+                    "panels": len(reached), "bend_lines": len(g)})
+        sel = labels == base   # the base panel across these bend lines (not kept exactly: the bends add a little)
+        proj = xs[sel] * -d[1] + ys[sel] * d[0]
+        out.append({"px": float(np.ptp(proj) + 1), "dir": round((g[0][2] + 90) % 180, 1), "kind": "base_across"})
+    # the panels and the bend lines joining them, to fold the flat pattern into the part (src/pdf_fold.py)
+    ids = sorted({base} | {e[0] for e in edges} | {e[1] for e in edges})
+    index = {pid: k for k, pid in enumerate(ids)}
+    panels = [_hull(lab == pid, line_w) for pid in ids]
+    folds = [{"panels": [index[e[0]], index[e[1]]], "point": [round(float(v), 1) for v in e[4]],
+              "dir": [round(float(v), 4) for v in e[3]]} for e in edges]
+    return {"spans": out, "panels": panels, "folds": folds, "base": index[base]}
+
+
+def _hull(mask: np.ndarray, line_w: float) -> list:
+    """Convex hull of a region (page pixels), as [[x, y], ...]: enough to fold it and take the extents."""
+    from scipy import ndimage as ndi
+    from scipy.spatial import ConvexHull
+
+    edge = mask & ~ndi.binary_erosion(mask)
+    ys, xs = np.nonzero(edge)
+    pts = np.stack([xs, ys], 1).astype(float)
+    if len(pts) < 3:
+        return pts.tolist()
+    try:
+        hull = ConvexHull(pts)
+    except Exception:   # a degenerate (straight) region
+        return pts[[0, -1]].tolist()
+    return pts[hull.vertices].round(1).tolist()

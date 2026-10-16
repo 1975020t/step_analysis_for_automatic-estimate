@@ -366,7 +366,7 @@ def hint_items(inputs: QuoteInputs, analysis: dict | None, reading: dict | None,
             q.confidence in {"medium", "low"} for q in a.metric_quality.values())
         if a.status in ("success", "partial") and a.reason_code == PDF_SHAPE_ESTIMATE:
             entered = [SHAPE_FIELDS[k] for k in SHAPE_FIELDS if getattr(inputs.shape, k) is not None]
-            out.append({"message": "形状の値は図面PDFからの概算です（CADデータがないため、図面の外形寸法・曲げ数・穴数から計算。"
+            out.append({"message": "形状の値は図面PDFからの概算です（CADデータがないため、図面の展開図か投影図から測った値。"
                                    "金額の誤差の目安は±20%）" + (f"。入力した値：{'・'.join(entered)}" if entered else ""),
                         "field": "shape", "label": "寸法の値"})
             out += [{"message": f"図面からの推定：{n}", "field": "shape", "label": "寸法の値"} for n in notes(analysis)

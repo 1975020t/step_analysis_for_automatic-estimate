@@ -1,5 +1,5 @@
-"""Shape values from a drawing PDF alone (src/pdf_shape.py, src/pdf_flat_pattern.py) and their use in the screens'
-API. No Claude API call: a fake client returns fixed answers, the platform uses a fake estimator."""
+"""Shape values from a drawing PDF alone (src/pdf_shape.py, src/pdf_flat_pattern.py, src/pdf_fold.py) and their use
+in the screens' API. No Claude API call: a fake client returns fixed answers, the platform uses a fake estimator."""
 from __future__ import annotations
 
 import copy
@@ -15,8 +15,9 @@ from api.main import create_app
 from src.claude_api import ClaudeClient
 from src.models import SheetMetalAnalysis
 from src.pdf_flat_pattern import measure_flat_pattern
+from src.pdf_fold import build_model, check_model, fold_scale
 from src.pdf_shape import (REASON_CODE, PdfShapeEstimator, PdfShapeResult, RecordedShapeEstimator, _repair,
-                           _schema_problem, estimate_metrics)
+                           _schema_problem)
 from src.services.platform.core import RecordedReader
 from src.services.settings import Settings
 
@@ -25,18 +26,21 @@ VECTOR_PDF = ROOT / "pdf_data" / "pdf" / "Lv0_0001.pdf"   # dimensions 205.3 and
 RECORDED = ROOT / "docs" / "scripts" / "recorded_reading.json"
 
 
-# ---------------------------------------------------------------- the formula
-def test_metrics_come_from_the_dimensions_and_counts_by_rule():
-    m = estimate_metrics([120, 80, 30], 1.6, bend_count=2, hole_count=4)
-    a, b, c = 120, 80, 30
-    assert m["cut_length_mm"] == pytest.approx(2.279 * (a + b + c) + 23.636 * 2 + 38.436 * 4 - 55.351, abs=0.1)
-    assert m["blank_area_mm2"] == pytest.approx(0.959 * a * b + 0.373 * c * (a + b) + 0.377 * c * c, abs=0.1)
-    # a flat part: the thickness is the third dimension; the cut length is never below the rectangle's perimeter
-    flat = estimate_metrics([30, 20], 1.0, bend_count=0, hole_count=0)
-    assert flat["cut_length_mm"] == pytest.approx(2 * (30 + 20))
-    assert estimate_metrics([20, 30], 1.0, 0, 0) == flat   # order does not matter
-    with pytest.raises(ValueError):
-        estimate_metrics([100], 1.0, 0, 0)
+# ---------------------------------------------------------------- folding: the scale and the part described
+def test_a_part_described_as_base_and_flanges_is_unfolded_and_checked_against_the_dimensions():
+    model = {"base": {"width": 200, "depth": 100}, "holes": [{"shape": "round", "size": 6, "count": 4}],
+             "flanges": [{"edge": "right", "length": 40, "angle": 90, "direction": "up"},
+                         {"edge": "left", "length": 40, "angle": 90, "direction": "up"}]}
+    built = build_model(model, 1.6)
+    flat_w = 200 + 2 * (40 - 0.8)                       # each flange is drawn to the outside of its bend
+    assert built["cut_length_mm"] == pytest.approx(2 * (flat_w + 100) + 4 * np.pi * 6, abs=0.2)
+    assert built["blank_area_mm2"] == pytest.approx(flat_w * 100 - 4 * np.pi * 9, abs=0.5)
+    assert check_model(built, [200, 100, 40], 1.6)["ok"]          # a U channel 200 x 100 x 40
+    assert not check_model(built, [200, 100, 80], 1.6)["ok"]      # the drawing says otherwise: not used
+    tab = build_model({"base": {"width": 200, "depth": 100}, "holes": [], "flanges": [
+        {"edge": "back", "length": 30, "angle": 90, "direction": "down", "width": 50, "offset": 20,
+         "then": [{"length": 20, "angle": 90, "direction": "up"}]}]}, 1.0)   # a Z-bent tab
+    assert len(tab["panels"]) == 3 and check_model(tab, [200, 100 + 19.5, 30], 1.0)["ok"]
 
 
 # ---------------------------------------------------------------- Claude's answer
@@ -70,24 +74,36 @@ def test_lists_or_the_whole_answer_returned_as_a_string_are_repaired():
     assert _repair(nested)["overall_dimensions"][0]["value"] == "205.3"
 
 
-def test_counts_from_claude_alone_are_a_low_confidence_estimate():
-    client = FakeClient([answer()])
+PLATE = {"base": {"width": 205.3, "depth": 110.6}, "flanges": [],
+         "holes": [{"shape": "round", "size": 12, "count": 1}, {"shape": "round", "size": 3.4, "count": 1}]}
+
+
+def test_without_a_flat_pattern_the_part_claude_describes_is_used_only_when_it_folds_into_the_dimensions():
+    client = FakeClient([answer(), PLATE])
     result = PdfShapeEstimator(client=client).estimate(VECTOR_PDF, thickness_mm=2.3)
     a = result.analysis
     assert a.status == "partial" and a.reason_code == REASON_CODE
     assert (a.bend_count, a.hole_count, a.thickness_mm) == (1, 2, 2.3)
     assert result.dimensions_mm == [205.3, 110.6]
-    expected = estimate_metrics([205.3, 110.6], 2.3, 1, 2)
-    assert (a.blank_area_mm2, a.cut_length_mm) == (expected["blank_area_mm2"], expected["cut_length_mm"])
+    assert a.cut_length_mm == pytest.approx(2 * (205.3 + 110.6) + np.pi * (12 + 3.4), abs=0.1)
+    assert a.blank_area_mm2 == pytest.approx(205.3 * 110.6 - np.pi * (36 + 1.7 ** 2), abs=0.5)
+    assert a.metric_quality["cut_length_mm"].confidence == "low"
     assert a.metric_quality["bend_count"].confidence == "low"
     assert any("画像で確かめられませんでした" in w for w in a.warnings)
-    assert client.calls == 1 and result.usage["llm_input_tokens"] == 1000
+    assert client.calls == 2 and result.usage["llm_input_tokens"] == 2000
+    # a described part that does not have the written dimensions is not used: the person enters the lengths
+    wrong = {**PLATE, "base": {"width": 150, "depth": 110.6}}
+    a = PdfShapeEstimator(client=FakeClient([answer(), wrong])).estimate(VECTOR_PDF, thickness_mm=2.3).analysis
+    assert a.status == "partial" and a.cut_length_mm is None and a.blank_area_mm2 is None
+    assert any("外形寸法と合いませんでした" in w for w in a.warnings)
+    assert any("値を入力してください" in w for w in a.warnings)
 
 
 def test_a_dimension_missing_from_the_text_layer_is_flagged_and_a_broken_answer_is_retried():
-    client = FakeClient([{"bends": "?"}, answer(overall_dimensions=[{"value": 205.3}, {"value": 999.9}])])
+    client = FakeClient([{"bends": "?"}, answer(overall_dimensions=[{"value": 205.3}, {"value": 999.9}]),
+                         {**PLATE, "base": {"width": 999.9, "depth": 205.3}}])
     a = PdfShapeEstimator(client=client).estimate(VECTOR_PDF, thickness_mm=2.3).analysis
-    assert client.calls == 2 and a.status == "partial"
+    assert client.calls == 3 and a.status == "partial"
     assert any("図面の文字にない外形寸法" in w and "999.9" in w for w in a.warnings)
     assert a.metric_quality["cut_length_mm"].confidence == "low"
 
@@ -114,6 +130,11 @@ def test_a_flat_pattern_is_counted_on_the_image_and_its_count_wins():
     a = result.analysis
     assert (a.bend_count, a.hole_count) == (truth["bend_count"], truth["hole_count"])
     assert any("画像の計測" in w for w in a.warnings)
+    # the cut length and the area are measured on the flat pattern, scaled by the written dimensions
+    assert result.raw["_counts"]["fold"]["px_per_mm"] > 0
+    assert a.cut_length_mm == pytest.approx(truth["cut_length_mm"], rel=0.03)
+    assert a.blank_area_mm2 == pytest.approx(truth["blank_area_mm2"], rel=0.03)
+    assert a.metric_quality["cut_length_mm"].confidence == "medium"
 
 
 # ---------------------------------------------------------------- image measurement
@@ -153,6 +174,22 @@ def test_bend_lines_and_holes_are_counted_on_the_image(kw, bends, holes):
     assert r["ok"] and (r["bends"], r["holes"]) == (bends, holes)
 
 
+def test_lengths_are_measured_and_the_fold_finds_the_scale():
+    r = measure_flat_pattern(flat_page(), 10.0, BOX)   # a 60 mm square, bend lines at 20 and 40 mm, one hole
+    assert r["outer_px"] == pytest.approx(4 * 598.5, rel=0.01)       # along the middle of the drawn line
+    assert r["holes_px"][0] == pytest.approx(2 * np.pi * 14, rel=0.03)
+    assert r["area_px"] == pytest.approx(598.5 ** 2 - np.pi * 14 ** 2, rel=0.01)
+    # the drawing is at 1:2 (5 px per mm of the page's 10 px/mm): folded at 90 degrees it is a U channel
+    # 120 long, 40 wide, 40 high, which are the written dimensions
+    scale = fold_scale(r, [120, 40, 40], 1.0)
+    assert scale["px_per_mm"] == pytest.approx(5.0, rel=0.03) and not scale["ambiguous"]
+    assert [abs(a) for a in scale["angles"]] == [90, 90]
+    assert fold_scale(r, [120, 40, 10], 1.0) is None or fold_scale(r, [120, 40, 10], 1.0)["angles"] != [90, 90]
+    plate = measure_flat_pattern(flat_page(dashed=()), 10.0, BOX)
+    assert fold_scale(plate, [30, 30], 1.0)["px_per_mm"] == pytest.approx(20.0, rel=0.02)
+    assert fold_scale(plate, [30, 60], 1.0) is None           # a square cannot be 30 x 60
+
+
 def test_a_noisy_page_is_not_measured():
     r = measure_flat_pattern(flat_page(specks=2000), 10.0, BOX)
     assert not r["ok"] and "ノイズ" in r["reason"]
@@ -165,12 +202,11 @@ class FakeShapeEstimator:
 
     def estimate(self, path, thickness_mm=None):
         FakeShapeEstimator.calls += 1
-        metrics = estimate_metrics([205.3, 110.6], thickness_mm or 2.3, 1, 2)
         a = SheetMetalAnalysis(status="partial", file_name=Path(path).name, thickness_mm=thickness_mm, bend_count=1,
                                hole_count=2, reason_code=REASON_CODE, reason_codes=[REASON_CODE],
                                message="図面PDFから推定した概算の形状", assumptions=[
-                                   "図面PDFから推定した値（外形寸法・曲げ数・穴数から概算。CADデータがあれば置き換える）"],
-                               **metrics)
+                                   "図面PDFから測った値（展開図を外形寸法で縮尺を合わせて計測。CADデータがあれば置き換える）"],
+                               cut_length_mm=680.2, blank_area_mm2=22520.0)
         return PdfShapeResult(a, [205.3, 110.6])
 
 

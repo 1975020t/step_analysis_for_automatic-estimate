@@ -6,8 +6,8 @@
     "status": "partial",
     "file_name": "Lv1_0032.pdf",
     "thickness_mm": 1.0,
-    "blank_area_mm2": 10086.7,
-    "cut_length_mm": 634.6,
+    "blank_area_mm2": 11489.6,
+    "cut_length_mm": 640.2,
     "hole_count": 4,
     "bend_count": 1,
     "reason_code": "PDF_SHAPE_ESTIMATE",
@@ -20,9 +20,11 @@
     "thickness_evidence": [],
     "bend_evidence": [],
     "hole_evidence": [],
-    "warnings": [],
+    "warnings": [
+     "展開図を折った形が図面の外形寸法と合いませんでした（縮尺を決められません）"
+    ],
     "assumptions": [
-     "図面PDFから推定した値（外形寸法・曲げ数・穴数から概算。CADデータがあれば置き換える）"
+     "図面PDFから測った値（展開図を外形寸法で縮尺を合わせて計測、展開図がなければ投影図から組んだ形。CADデータがあれば置き換える）"
     ],
     "metric_quality": {
      "hole_count": {
@@ -39,20 +41,22 @@
        "展開図の曲げ線を画像で数えた（1。LLMの数 1）"
       ]
      },
+     "cut_length_mm": {
+      "method": "drawing_pdf_estimate",
+      "confidence": "low",
+      "evidence": [
+       "展開図から測れないため、投影図から部品をベースとフランジの組み合わせとして書き出し（LLM）、その展開形の外周と穴の周長を計算",
+       "書き出した形を折ると外形 132.7 × 53.6 × 38.1 mm で、図面の外形寸法と一致",
+       "外形寸法 38.1 × 132.7 × 54.1 mm（図面に書かれた寸法）"
+      ]
+     },
      "blank_area_mm2": {
       "method": "drawing_pdf_estimate",
       "confidence": "low",
       "evidence": [
-       "外形寸法 38.1 × 132.7 × 54.1 mm（図面の寸法）",
-       "外形寸法からの概算式"
-      ]
-     },
-     "cut_length_mm": {
-      "method": "drawing_pdf_estimate",
-      "confidence": "medium",
-      "evidence": [
-       "外形寸法 38.1 × 132.7 × 54.1 mm（図面の寸法）",
-       "曲げ 1・穴 4 を含む概算式"
+       "展開図から測れないため、投影図から部品をベースとフランジの組み合わせとして書き出し（LLM）、その展開形の外周と穴の周長を計算",
+       "書き出した形を折ると外形 132.7 × 53.6 × 38.1 mm で、図面の外形寸法と一致",
+       "外形寸法 38.1 × 132.7 × 54.1 mm（図面に書かれた寸法）"
       ]
      },
      "thickness_mm": {

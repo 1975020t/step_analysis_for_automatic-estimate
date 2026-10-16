@@ -467,7 +467,7 @@ function ShapePanel({ q }: { q: any }) {
       <div className="row"><span className={a?.state === "確定" ? "tag soft" : "tag solid"}>{statusText}</span>
         <span className="small muted">{q.drawing?.shape_name}</span></div>
       {a?.failure && <div className="small">{a.failure}。「条件修正」で寸法の値を入力してください。</div>}
-      {fromPdf && !a?.failure && <div className="small">CADデータがないため、図面PDFの寸法・曲げ・穴から形状の値を概算しました（金額の誤差の目安は±20%）。「条件修正」で書き換えられます。</div>}
+      {fromPdf && !a?.failure && <div className="small">CADデータがないため、図面PDFの展開図か投影図から形状の値を測りました（金額の誤差の目安は±20%）。「条件修正」で書き換えられます。</div>}
       {(a?.notes || []).length > 0 && <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>{a.notes.map((x: string, i: number) => <li key={i}>{x}</li>)}</ul>}
       <table className="rule">
         <tbody>
